@@ -1,4 +1,3 @@
-delay(3)
 setwindowsize(737,600)
 setimageA(JackMyth.png,0,0,1,1,1,1)
 delay(3)
@@ -830,6 +829,7 @@ setchat(【梦美】\n「真不好意思，现在投影仪存在着严重的故障。
 我实在是无话可说了。,1)
 waitclick(0)
 save(0)
+stopvoice()
 setimageA(pic\b2.png,0,0,1,1,10,1)
 stopbgm()
 setimageA(pic\EV08_002.png,0.02,0.02,0.9,0.8,0,4)
