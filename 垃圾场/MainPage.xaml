@@ -1,0 +1,18 @@
+﻿<Page
+    x:Class="垃圾场.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:垃圾场"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Button x:Name="button01" Content="打开音乐" HorizontalAlignment="Left" Margin="67,65,0,0" VerticalAlignment="Top" Click="Button_ClickAsync"/>
+        <MediaElement x:Name="mediaElement" HorizontalAlignment="Left" Height="32" Margin="170,65,0,0" VerticalAlignment="Top" Width="142" AutoPlay="False"/>
+        <Button Content="Play" HorizontalAlignment="Left" Margin="67,154,0,0" VerticalAlignment="Top" Click="Button_Click"/>
+        <Button Content="Pause" HorizontalAlignment="Left" Margin="247,154,0,0" VerticalAlignment="Top" Click="Button_Click_1"/>
+        <ProgressBar x:Name="pBar" HorizontalAlignment="Left" Height="4" Margin="67,119,0,0" VerticalAlignment="Top" Width="239"/>
+        <Rectangle Fill="#00F4F4F5" HorizontalAlignment="Left" Height="37" Margin="67,102,0,0" Stroke="Black" VerticalAlignment="Top" Width="239" Tapped="Rectangle_Tapped"/>
+    </Grid>
+</Page>
