@@ -10,7 +10,7 @@ class Shader
 	GLenum ShaderType;
 	std::string Name;
 	std::string LastError;
-	Shader();
+	Shader()=default;
 public:
 	inline GLuint GetObjectID()
 	{

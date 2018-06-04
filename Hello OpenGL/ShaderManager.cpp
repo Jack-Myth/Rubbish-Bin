@@ -171,7 +171,7 @@ void ShaderManager::InsertShaderProgramRef(ShaderProgram* pShaderProgram)
 
 void ShaderManager::RemoveShaderProgramRef(ShaderProgram* pShaderProgram)
 {
-	ShaderProgramList.erase(std::find(ShaderList.begin(), ShaderList.end(), pShaderProgram));
+	ShaderProgramList.erase(std::find(ShaderProgramList.begin(), ShaderProgramList.end(), pShaderProgram));
 }
 
 ShaderManager& ShaderManager::Get()
@@ -188,6 +188,7 @@ Shader * ShaderManager::FindShader(const std::string Name)
 		if (pShader->GetName() == Name)
 			return pShader;
 	}
+	return nullptr;
 }
 
 ShaderProgram * ShaderManager::FindShaderProgram(const std::string Name)
@@ -197,4 +198,5 @@ ShaderProgram * ShaderManager::FindShaderProgram(const std::string Name)
 		if (pShaderProgram->GetName() == Name)
 			return pShaderProgram;
 	}
+	return nullptr;
 }

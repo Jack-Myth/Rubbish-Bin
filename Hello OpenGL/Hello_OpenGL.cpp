@@ -8,14 +8,19 @@
 #include <streambuf>  
 #pragma comment(lib,"glfw3.lib")
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 void ProcessInput(GLFWwindow* window);
 void TryCompileShader();
 void TryBindVAO();
 void TryBindEBO();
 void TryRender(GLFWwindow* window);
+void TryCreateTexture();
 
 GLFWwindow* pMainWindow = nullptr;
 GLuint ShaderProgram,VAO,VAO2,EBO;
+GLuint MyTexture;
 int RenderMod = 0;
 bool IsSwitchRenderModPress = false;
 int WINAPI wWinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nShowCmd )
@@ -46,7 +51,7 @@ int WINAPI wWinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 	TryCompileShader();
 	TryBindEBO();
 	TryBindVAO();
-	
+	TryCreateTexture();
 	while (!glfwWindowShouldClose(pMainWindow))
 	{
 		ProcessInput(pMainWindow);
@@ -129,9 +134,9 @@ void TryBindVAO()
 {
 	float vertices[] =
 	{
-		-0.5f,-0.5f,0.f,
-		0.5f,-0.5f,0.f,
-		0.f,0.5f,0.f
+		-0.5f,-0.5f,0.f, -0.2f,0.f,
+		0.5f,-0.5f,0.f,1.2f,0.f,
+		0.f,0.5f,0.f,0.5f,1.2f
 	};
 	GLuint VertexBufferOID;
 	glGenBuffers(1, &VertexBufferOID);
@@ -139,8 +144,10 @@ void TryBindVAO()
 	glBindVertexArray(VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, VertexBufferOID);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3*sizeof(float)));
 	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(2);
 	glBindVertexArray(NULL);
 }
 
@@ -170,7 +177,7 @@ void TryBindEBO()
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(3 * sizeof(float)));
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), 0);
+	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 7 * sizeof(float), 0);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
@@ -179,7 +186,24 @@ void TryBindEBO()
 
 void TryCreateTexture()
 {
-
+	glGenTextures(1, &MyTexture);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, MyTexture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	int width, height,channels;
+	stbi_set_flip_vertically_on_load(true);
+	unsigned char* MyTexturePixelData= stbi_load("MyTexture.jpg", &width, &height, &channels, 0);
+	if (!MyTexturePixelData)
+	{
+		SHOW_DEBUG_DIALOG("Failed To Create Texture!");
+		return;
+	}
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, MyTexturePixelData);
+	//glGenerateMipmap(GL_TEXTURE_2D);
+	stbi_image_free(MyTexturePixelData);
 }
 
 void TryRender(GLFWwindow* window)
@@ -187,6 +211,9 @@ void TryRender(GLFWwindow* window)
 	glUseProgram(ShaderProgram);
 	float gTime = (float)glfwGetTime();
 	glUniform1f(glGetUniformLocation(ShaderProgram, "DynamicColor"),gTime);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, MyTexture);
+	glUniform1i(glGetUniformLocation(ShaderProgram, "MyTexture"), 0);
 	switch (RenderMod)
 	{
 		case 0:
