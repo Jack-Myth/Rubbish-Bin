@@ -6,10 +6,13 @@
 #include "GlobalMacros.h"
 #include <string>
 #include <streambuf>  
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
 #pragma comment(lib,"glfw3.lib")
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+#include "glm/gtc/type_ptr.inl"
 
 void ProcessInput(GLFWwindow* window);
 void TryCompileShader();
@@ -17,12 +20,15 @@ void TryBindVAO();
 void TryBindEBO();
 void TryRender(GLFWwindow* window);
 void TryCreateTexture();
+void BuildTransformMartrix();
 
 GLFWwindow* pMainWindow = nullptr;
 GLuint ShaderProgram,VAO,VAO2,EBO;
 GLuint MyTexture;
 int RenderMod = 0;
 bool IsSwitchRenderModPress = false;
+glm::mat4x4 TransformMatrix = glm::mat4x4(1.f);
+glm::mat4x4 RotationMatrix = glm::mat4x4(1.f);
 int WINAPI wWinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nShowCmd )
 {
 	glfwInit();
@@ -52,6 +58,7 @@ int WINAPI wWinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 	TryBindEBO();
 	TryBindVAO();
 	TryCreateTexture();
+	BuildTransformMartrix();
 	while (!glfwWindowShouldClose(pMainWindow))
 	{
 		ProcessInput(pMainWindow);
@@ -206,6 +213,12 @@ void TryCreateTexture()
 	stbi_image_free(MyTexturePixelData);
 }
 
+void BuildTransformMartrix()
+{
+	TransformMatrix=glm::scale(TransformMatrix, glm::vec3(1.2f, 1.2f, 1.2f));
+	RotationMatrix=glm::rotate(RotationMatrix,glm::radians(1.f), glm::vec3(0.0f, 0.0f, 1.f));
+}
+
 void TryRender(GLFWwindow* window)
 {
 	glUseProgram(ShaderProgram);
@@ -214,6 +227,9 @@ void TryRender(GLFWwindow* window)
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, MyTexture);
 	glUniform1i(glGetUniformLocation(ShaderProgram, "MyTexture"), 0);
+	glUniformMatrix4fv(glGetUniformLocation(ShaderProgram, "TransformMatrix"), 1, GL_FALSE, glm::value_ptr(TransformMatrix));
+	RotationMatrix = glm::rotate(RotationMatrix, glm::radians(3.f), glm::vec3(0.0f, 0.0f, 1.f));
+	glUniformMatrix4fv(glGetUniformLocation(ShaderProgram, "RotationMatrix"), 1, GL_FALSE, glm::value_ptr(RotationMatrix));
 	switch (RenderMod)
 	{
 		case 0:
