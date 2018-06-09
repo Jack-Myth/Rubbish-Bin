@@ -1,3 +1,4 @@
+#define STB_IMAGE_IMPLEMENTATION
 #include <iostream>
 #include <fstream>
 #include <windows.h>
@@ -9,10 +10,10 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #pragma comment(lib,"glfw3.lib")
-
-#define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
-#include "glm/gtc/type_ptr.inl"
+#include "glm/gtc/type_ptr.hpp"
+#include "SimpleCamera.h"
+#include "glm/gtc/matrix_transform.hpp"
 
 void ProcessInput(GLFWwindow* window);
 void TryCompileShader();
@@ -29,8 +30,12 @@ int RenderMod = 0;
 bool IsSwitchRenderModPress = false;
 glm::mat4x4 TransformMatrix = glm::mat4x4(1.f);
 glm::mat4x4 RotationMatrix = glm::mat4x4(1.f);
+glm::mat4x4 ModelMatrixs[10] = { glm::mat4x4(1.f) };
+glm::mat4x4 ProjectionMatrix = glm::mat4x4(1.f);
+SimpleCamera PlayerCamera;
 int WINAPI wWinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nShowCmd )
 {
+	srand((unsigned int)hInstance);
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -87,6 +92,26 @@ void ProcessInput(GLFWwindow* window)
 		SwitchRenderMode();
 	}
 	IsSwitchRenderModPress = glfwGetKey(window, GLFW_KEY_C) == GLFW_RELEASE ? false : true;
+	//~~Begin Camera Movement
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+		PlayerCamera.MoveCamera(glm::vec3(0, 0, -0.1f));
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+		PlayerCamera.MoveCamera(glm::vec3(0, 0, 0.1f));
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+		PlayerCamera.MoveCamera(glm::vec3(0.1, 0, 0.f));
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+		PlayerCamera.MoveCamera(glm::vec3(-0.1, 0, 0.f));
+	//~~End Camera Movement
+	//~~Begin Camera Rotation
+	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+		PlayerCamera.AddCameraRotation(glm::vec3(0,1,0));
+	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+		PlayerCamera.AddCameraRotation(glm::vec3(0, -1, 0));
+	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+		PlayerCamera.AddCameraRotation(glm::vec3(0, 0, -1));
+	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+		PlayerCamera.AddCameraRotation(glm::vec3(0, 0, 1));
+	//~~End Camera Rotation
 }
 
 void TryCompileShader()
@@ -141,20 +166,29 @@ void TryBindVAO()
 {
 	float vertices[] =
 	{
-		-0.5f,-0.5f,0.f, -0.2f,0.f,
-		0.5f,-0.5f,0.f,1.2f,0.f,
-		0.f,0.5f,0.f,0.5f,1.2f
+		-0.6f,0,0, 
+		0.6f,0,0,
+		0,0,-0.6f,  //底面三角形三边
+		0,0.6f,0  //上方顶点
+	};
+	unsigned int indices[] = { // 注意索引从0开始! 
+		0, 1, 2, // 第一个三角形
+		0, 1, 3,  // 第二个三角形
+		0,2,3,//第三个三角形
+		1,2,3
 	};
 	GLuint VertexBufferOID;
 	glGenBuffers(1, &VertexBufferOID);
 	glGenVertexArrays(1, &VAO);
+	GLuint tmpEBO;
+	glGenBuffers(1, &tmpEBO);
 	glBindVertexArray(VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, VertexBufferOID);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0);
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3*sizeof(float)));
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tmpEBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
 	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(2);
 	glBindVertexArray(NULL);
 }
 
@@ -216,7 +250,14 @@ void TryCreateTexture()
 void BuildTransformMartrix()
 {
 	TransformMatrix=glm::scale(TransformMatrix, glm::vec3(1.2f, 1.2f, 1.2f));
-	RotationMatrix=glm::rotate(RotationMatrix,glm::radians(1.f), glm::vec3(0.0f, 0.0f, 1.f));
+	ProjectionMatrix = glm::perspective(glm::radians(90.f), 4.f / 3.f, 0.1f, 100.f);
+	for (int i=1;i<10;i++)
+	{
+		ModelMatrixs[i] = glm::rotate(ModelMatrixs[0], glm::radians((float)(rand()%360)), glm::vec3((float)rand()/INT_MAX, (float)rand() / INT_MAX, (float)rand() / INT_MAX));
+		ModelMatrixs[i] = glm::translate(ModelMatrixs[i], glm::vec3(rand() % 10 - 5, rand() % 10 - 5, rand() % 10 - 5));
+	}
+	glEnable(GL_DEPTH_TEST);
+
 }
 
 void TryRender(GLFWwindow* window)
@@ -228,13 +269,18 @@ void TryRender(GLFWwindow* window)
 	glBindTexture(GL_TEXTURE_2D, MyTexture);
 	glUniform1i(glGetUniformLocation(ShaderProgram, "MyTexture"), 0);
 	glUniformMatrix4fv(glGetUniformLocation(ShaderProgram, "TransformMatrix"), 1, GL_FALSE, glm::value_ptr(TransformMatrix));
-	RotationMatrix = glm::rotate(RotationMatrix, glm::radians(3.f), glm::vec3(0.0f, 0.0f, 1.f));
-	glUniformMatrix4fv(glGetUniformLocation(ShaderProgram, "RotationMatrix"), 1, GL_FALSE, glm::value_ptr(RotationMatrix));
+	glUniformMatrix4fv(glGetUniformLocation(ShaderProgram, "ViewMatrix"), 1, GL_FALSE, glm::value_ptr(PlayerCamera.GetViewMatrix()));
+	glUniformMatrix4fv(glGetUniformLocation(ShaderProgram, "ProjectionMatrix"), 1, GL_FALSE, glm::value_ptr(ProjectionMatrix));
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	switch (RenderMod)
 	{
 		case 0:
 			glBindVertexArray(VAO);
-			glDrawArrays(GL_TRIANGLES, 0, 3);
+			for (int i = 0; i < 10; i++)
+			{
+				glUniformMatrix4fv(glGetUniformLocation(ShaderProgram, "ModelMatrix"), 1, GL_FALSE, glm::value_ptr(ModelMatrixs[i]));
+				glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, nullptr);
+			}
 			break;
 		case 1:
 			glBindVertexArray(VAO2);

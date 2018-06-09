@@ -136,11 +136,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="SimpleCamera.cpp" />
     <ClCompile Include="glad\glad.c" />
     <ClCompile Include="Hello_OpenGL.cpp" />
     <ClCompile Include="ShaderManager.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="SimpleCamera.h" />
     <ClInclude Include="glad\glad.h" />
     <ClInclude Include="GlobalMacros.h" />
     <ClInclude Include="ShaderManager.h" />
