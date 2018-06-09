@@ -1,32 +1,35 @@
 #include "SimpleCamera.h"
 #include <glfw3.h>
 
-SimpleCamera::SimpleCamera()
+void SimpleCamera::MoveCameraLocal(glm::vec3 LocationOffset)
 {
-	cameraDirection = glm::normalize(cameraPos - cameraTarget);
-	cameraRight = glm::normalize(glm::cross(glm::vec3(0.0f, 1.0f, 0.0f), cameraDirection));
-	cameraUp = glm::normalize(glm::cross(cameraDirection, cameraRight));
-}
-
-void SimpleCamera::MoveCamera(glm::vec3 LocationOffset)
-{
-	cameraPos += LocationOffset;
-	ViewMatrix=glm::translate(ViewMatrix, -LocationOffset);
+	glm::vec3 cameraDirection = glm::vec3(0, 0, -1.f);
+	glm::vec3 cameraRight;
+	glm::mat4x4 rotationMartix(1.f);
+	rotationMartix = glm::rotate(rotationMartix, glm::radians(cameraRotation.z), glm::vec3(0, 1, 0));
+	rotationMartix = glm::rotate(rotationMartix, glm::radians(cameraRotation.y), glm::vec3(1, 0, 0));
+	cameraDirection = (rotationMartix*glm::vec4(cameraDirection.r, cameraDirection.g, cameraDirection.b, 1.f));
+	cameraDirection = glm::normalize(cameraDirection);
+	cameraPos += cameraDirection * LocationOffset.z;
+	cameraRight = glm::cross(glm::vec3(0, 1, 0), cameraDirection);
+	cameraPos += cameraRight * LocationOffset.x;
 }
 
 void SimpleCamera::AddCameraRotation(glm::vec3 RotationOffset)
 {
-	
+		cameraRotation += RotationOffset;
 }
 
 const glm::mat4x4 SimpleCamera::GetViewMatrix()
 {
-	//glm::translate(ViewMatrix, glm::vec3(0, 0, -10.f));
 	glm::mat4x4 LookAtMatrix;
-	float radius = 7.f;
-	float camX = sin(glfwGetTime())*radius;
-	float camY = cos(glfwGetTime())*radius;
-	LookAtMatrix = glm::lookAt(glm::vec3(camX, 0, camY),glm::vec3(0,0,0),glm::vec3(0,1,0));
+	glm::vec3 cameraDirection=glm::vec3(0,0,-1.f);
+	glm::mat4x4 rotationMartix(1.f);
+	rotationMartix = glm::rotate(rotationMartix, glm::radians(cameraRotation.z), glm::vec3(0, 1, 0));
+	rotationMartix = glm::rotate(rotationMartix, glm::radians(cameraRotation.y), glm::vec3(1, 0, 0));
+	cameraDirection = (rotationMartix*glm::vec4(cameraDirection.r, cameraDirection.g, cameraDirection.b, 1.f));
+	cameraDirection = glm::normalize(cameraDirection);
+	LookAtMatrix = glm::lookAt(cameraPos,cameraPos+cameraDirection,glm::vec3(0,1,0));
 	return LookAtMatrix;
 }
 

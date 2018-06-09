@@ -94,13 +94,13 @@ void ProcessInput(GLFWwindow* window)
 	IsSwitchRenderModPress = glfwGetKey(window, GLFW_KEY_C) == GLFW_RELEASE ? false : true;
 	//~~Begin Camera Movement
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-		PlayerCamera.MoveCamera(glm::vec3(0, 0, -0.1f));
+		PlayerCamera.MoveCameraLocal(glm::vec3(0, 0, 0.1f));
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-		PlayerCamera.MoveCamera(glm::vec3(0, 0, 0.1f));
+		PlayerCamera.MoveCameraLocal(glm::vec3(0, 0, -0.1f));
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-		PlayerCamera.MoveCamera(glm::vec3(0.1, 0, 0.f));
+		PlayerCamera.MoveCameraLocal(glm::vec3(-0.1, 0, 0.f));
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-		PlayerCamera.MoveCamera(glm::vec3(-0.1, 0, 0.f));
+		PlayerCamera.MoveCameraLocal(glm::vec3(0.1, 0, 0.f));
 	//~~End Camera Movement
 	//~~Begin Camera Rotation
 	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
@@ -108,9 +108,9 @@ void ProcessInput(GLFWwindow* window)
 	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
 		PlayerCamera.AddCameraRotation(glm::vec3(0, -1, 0));
 	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
-		PlayerCamera.AddCameraRotation(glm::vec3(0, 0, -1));
-	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
 		PlayerCamera.AddCameraRotation(glm::vec3(0, 0, 1));
+	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+		PlayerCamera.AddCameraRotation(glm::vec3(0, 0, -1));
 	//~~End Camera Rotation
 }
 
