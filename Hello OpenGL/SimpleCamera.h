@@ -15,5 +15,5 @@ public:
 	SimpleCamera();
 	void MoveCamera(glm::vec3 LocationOffset);
 	void AddCameraRotation(glm::vec3 RotationOffset);
-	const glm::mat4x4& GetViewMatrix();
+	const glm::mat4x4 GetViewMatrix();
 };

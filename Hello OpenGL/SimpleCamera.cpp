@@ -1,4 +1,5 @@
 #include "SimpleCamera.h"
+#include <glfw3.h>
 
 SimpleCamera::SimpleCamera()
 {
@@ -18,10 +19,14 @@ void SimpleCamera::AddCameraRotation(glm::vec3 RotationOffset)
 	
 }
 
-const glm::mat4x4& SimpleCamera::GetViewMatrix()
+const glm::mat4x4 SimpleCamera::GetViewMatrix()
 {
 	//glm::translate(ViewMatrix, glm::vec3(0, 0, -10.f));
-	//LookAtMatrix=glm::lookAt(cameraPos)
-	return ViewMatrix;
+	glm::mat4x4 LookAtMatrix;
+	float radius = 7.f;
+	float camX = sin(glfwGetTime())*radius;
+	float camY = cos(glfwGetTime())*radius;
+	LookAtMatrix = glm::lookAt(glm::vec3(camX, 0, camY),glm::vec3(0,0,0),glm::vec3(0,1,0));
+	return LookAtMatrix;
 }
 
