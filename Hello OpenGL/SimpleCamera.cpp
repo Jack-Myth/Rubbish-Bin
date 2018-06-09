@@ -1,6 +1,8 @@
 #include "SimpleCamera.h"
 #include <glfw3.h>
 
+extern glm::mat4x4 ProjectionMatrix;
+extern glm::vec2 ScreenSize;
 void SimpleCamera::MoveCameraLocal(glm::vec3 LocationOffset)
 {
 	glm::vec3 cameraDirection = glm::vec3(0, 0, -1.f);
@@ -20,6 +22,17 @@ void SimpleCamera::AddCameraRotation(glm::vec3 RotationOffset)
 		cameraRotation += RotationOffset;
 		if (cameraRotation.y > 85 || cameraRotation.y < -85)
 			cameraRotation.y -= RotationOffset.y;
+}
+
+void SimpleCamera::SetFOV(float newFOV)
+{
+	fov = newFOV;
+	ProjectionMatrix = glm::perspective(fov, ScreenSize.x / ScreenSize.y, 0.1f, 1000.f);
+}
+
+float SimpleCamera::GetFOV()
+{
+	return fov;
 }
 
 const glm::mat4x4 SimpleCamera::GetViewMatrix()

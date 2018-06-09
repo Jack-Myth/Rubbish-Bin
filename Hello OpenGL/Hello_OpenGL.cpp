@@ -36,6 +36,7 @@ glm::mat4x4 ModelMatrixs[10] = { glm::mat4x4(1.f) };
 glm::mat4x4 ProjectionMatrix = glm::mat4x4(1.f);
 SimpleCamera PlayerCamera;
 glm::vec2 MousePos(400, 300);
+glm::vec2 ScreenSize(800, 600);
 int WINAPI wWinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nShowCmd )
 {
 	srand((unsigned int)hInstance);
@@ -61,6 +62,8 @@ int WINAPI wWinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 	glfwSetFramebufferSizeCallback(pMainWindow, [](GLFWwindow* window, int width, int height)
 								   {
 									   glViewport(0, 0, width, height);
+									   ScreenSize.x = width;
+									   ScreenSize.y = height;
 								   });
 	TryCompileShader();
 	TryBindEBO();
@@ -73,6 +76,10 @@ int WINAPI wWinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 			PlayerCamera.AddCameraRotation(glm::vec3(0, MousePos.y- ypos, MousePos.x- xpos)*MOUSE_SPEED);
 			MousePos.y = ypos;
 			MousePos.x = xpos;
+		});
+	glfwSetScrollCallback(pMainWindow, [](GLFWwindow* window, double xoffset, double yoffset)
+		{
+			PlayerCamera.SetFOV(PlayerCamera.GetFOV() + yoffset/10.f);
 		});
 	while (!glfwWindowShouldClose(pMainWindow))
 	{

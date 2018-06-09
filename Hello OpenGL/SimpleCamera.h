@@ -8,9 +8,12 @@ class SimpleCamera
 	glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
 	glm::vec3 cameraRotation=glm::vec3(0,0,0);
 	glm::mat4x4 ViewMatrix = glm::mat4x4(1.f);
+	float fov=90;
 public:
 	SimpleCamera()=default;
 	void MoveCameraLocal(glm::vec3 LocationOffset);
 	void AddCameraRotation(glm::vec3 RotationOffset);
+	void SetFOV(float newFOV);
+	float GetFOV();
 	const glm::mat4x4 GetViewMatrix();
 };
