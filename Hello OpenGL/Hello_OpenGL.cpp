@@ -15,6 +15,8 @@
 #include "SimpleCamera.h"
 #include "glm/gtc/matrix_transform.hpp"
 
+#define MOUSE_SPEED 0.2f
+
 void ProcessInput(GLFWwindow* window);
 void TryCompileShader();
 void TryBindVAO();
@@ -33,6 +35,7 @@ glm::mat4x4 RotationMatrix = glm::mat4x4(1.f);
 glm::mat4x4 ModelMatrixs[10] = { glm::mat4x4(1.f) };
 glm::mat4x4 ProjectionMatrix = glm::mat4x4(1.f);
 SimpleCamera PlayerCamera;
+glm::vec2 MousePos(400, 300);
 int WINAPI wWinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nShowCmd )
 {
 	srand((unsigned int)hInstance);
@@ -64,6 +67,13 @@ int WINAPI wWinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 	TryBindVAO();
 	TryCreateTexture();
 	BuildTransformMartrix();
+	glfwSetInputMode(pMainWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSetCursorPosCallback(pMainWindow, [](GLFWwindow* window, double xpos, double ypos)
+		{
+			PlayerCamera.AddCameraRotation(glm::vec3(0, MousePos.y- ypos, MousePos.x- xpos)*MOUSE_SPEED);
+			MousePos.y = ypos;
+			MousePos.x = xpos;
+		});
 	while (!glfwWindowShouldClose(pMainWindow))
 	{
 		ProcessInput(pMainWindow);
@@ -80,6 +90,11 @@ int WINAPI wWinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 void SwitchRenderMode()
 {
 	RenderMod = (RenderMod + 1) % 2;
+	for (int i = 1; i < 10; i++)
+	{
+		ModelMatrixs[i] = glm::rotate(ModelMatrixs[0], glm::radians((float)(rand() % 360)), glm::vec3((float)rand() / INT_MAX, (float)rand() / INT_MAX, (float)rand() / INT_MAX));
+		ModelMatrixs[i] = glm::translate(ModelMatrixs[i], glm::vec3(rand() % 10 - 5, rand() % 10 - 5, rand() % 10 - 5));
+	}
 }
 
 void ProcessInput(GLFWwindow* window)
@@ -257,7 +272,6 @@ void BuildTransformMartrix()
 		ModelMatrixs[i] = glm::translate(ModelMatrixs[i], glm::vec3(rand() % 10 - 5, rand() % 10 - 5, rand() % 10 - 5));
 	}
 	glEnable(GL_DEPTH_TEST);
-
 }
 
 void TryRender(GLFWwindow* window)

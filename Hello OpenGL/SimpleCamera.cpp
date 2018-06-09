@@ -18,6 +18,8 @@ void SimpleCamera::MoveCameraLocal(glm::vec3 LocationOffset)
 void SimpleCamera::AddCameraRotation(glm::vec3 RotationOffset)
 {
 		cameraRotation += RotationOffset;
+		if (cameraRotation.y > 85 || cameraRotation.y < -85)
+			cameraRotation.y -= RotationOffset.y;
 }
 
 const glm::mat4x4 SimpleCamera::GetViewMatrix()
