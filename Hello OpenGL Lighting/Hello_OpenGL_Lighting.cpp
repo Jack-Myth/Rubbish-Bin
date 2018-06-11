@@ -8,6 +8,7 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "Shader.h"
+#include <time.h>
 #pragma comment(lib,"glfw3.lib")
 #pragma comment(lib,"opengl32.lib")
 
@@ -47,7 +48,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	AllocConsole();
 	freopen("CONOUT$", "w", stdout);
 #endif
-	srand((unsigned int)hInstance);
+	srand((unsigned int)time(NULL));
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -85,9 +86,9 @@ void ProcessInput(GLFWwindow* pWindow)
 	if (glfwGetKey(pWindow, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(pWindow, GL_TRUE);
 	if (glfwGetKey(pWindow, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-		moveSpeed = 1.f;
+		moveSpeed = 10.f;
 	else
-		moveSpeed = 0.2f;
+		moveSpeed = 1.f;
 	if (glfwGetKey(pWindow, GLFW_KEY_W) == GLFW_PRESS)
 		pMyCamera->Move(glm::vec3(0, 0, -0.2f)*moveSpeed);
 	if (glfwGetKey(pWindow, GLFW_KEY_S) == GLFW_PRESS)
@@ -105,7 +106,7 @@ void BuildScene()
 	{
 	VAOCollection.push_back(VAOCollection[0]);
 	}
-	ModelMatrixs.push_back(glm::mat4x4(1.f));
+	ModelMatrixs.push_back(glm::scale(glm::mat4x4(1.f),glm::vec3(10.f)));
 	for (int i = 0; i < 9; i++)
 	{
 		ModelMatrixs.push_back(CreateRandModelMatrix());
@@ -114,7 +115,7 @@ void BuildScene()
 	//Build Light
 	LightSourceVAO=TryBuiltLightVAO();
 	LightedMat.ambient = glm::vec3(1, 1, 1);
-	LightedMat.diffuse = glm::vec3(1, 1, 1);
+	LightedMat.diffuse = glm::vec3(5, 5, 5);
 	LightedMat.shininess = 32;
 	LightedMat.specular = glm::vec3(0.5, 0.5, 0.5);
 }
@@ -264,7 +265,8 @@ glm::mat4x4 CreateRandModelMatrix()
 	glm::mat4x4 defMatrix(1.f);
 	defMatrix = glm::rotate(defMatrix, glm::radians((float)(rand() % 360)), 
 		glm::vec3(rand() / (float)INT_MAX, rand() / (float)INT_MAX, rand() / (float)INT_MAX));
-	defMatrix = glm::translate(defMatrix, glm::vec3(rand() % 20 - 10, rand() % 20 - 10, rand() % 20 - 10));
+	defMatrix = glm::translate(defMatrix, glm::vec3(rand() % 100 - 50, rand() % 100 - 50, rand() % 100 - 50));
+	defMatrix = glm::scale(defMatrix, glm::vec3(10.f));
 	return defMatrix;
 }
 
@@ -286,7 +288,7 @@ GLuint TryBuiltLightVAO()
 
 void AutoMove()
 {
-	LightPos = glm::vec3(sin(glfwGetTime()*2)*2, 2.f, 2*cos(glfwGetTime()*2));
+	LightPos = glm::vec3(sin(glfwGetTime()*2)*20, 2.f, 20*cos(glfwGetTime()*2));
 }
 
 void TryRender()
@@ -307,16 +309,18 @@ void TryRender()
 	LightedShader->SetVec3("objectColor", glm::vec3(1.0f, 1, 1.f));
 	LightedShader->SetMatrix4x4("ViewMatrix", ViewMatrix);
 	LightedShader->SetMatrix4x4("ProjectionMatrix", ProjectionMatrix);
-	//LightedShader->SetVec3("LightPos", ViewMatrix*glm::vec4(LightPos, 1.f));
-	LightedShader->SetVec3("aLightDir", glm::vec3(-0.2f, -1.0f, -0.3f));
-	LightedShader->SetVec3("diffuseColor", LightedMat.diffuse);
-	LightedShader->SetVec3("ambientColor", LightedMat.ambient);
-	LightedShader->SetVec3("specularColor", LightedMat.specular);
+	LightedShader->SetVec3("Light.LightPos", ViewMatrix*glm::vec4(LightPos, 1.f));
+	LightedShader->SetVec3("Light.diffuseColor", LightedMat.diffuse);
+	LightedShader->SetVec3("Light.ambientColor", LightedMat.ambient);
+	LightedShader->SetVec3("Light.specularColor", LightedMat.specular);
+	LightedShader->SetFloat("Light.constant", 1.0f);
+	LightedShader->SetFloat("Light.linear", 0.045f);
+	LightedShader->SetFloat("Light.quadratic", 0.0075f);
 	LightedShader->SetFloat("shininess", LightedMat.shininess);
 	LightedShader->SetMatrix3x3("VectorMatrix", glm::transpose(glm::inverse(ViewMatrix)));
-	for (int i=1;i<ModelMatrixs.size();i++)
+	for (unsigned int i=1;i<ModelMatrixs.size();i++)
 	{
-		int x = VAOCollection.size() > i ? i : VAOCollection.size() - 1;
+		unsigned int x = VAOCollection.size() > i ? i : VAOCollection.size() - 1;
 		LightedShader->SetMatrix4x4("ModelMatrix",ModelMatrixs[i]);
 		LightedShader->SetMatrix3x3("NormalMatrix", glm::transpose(glm::inverse(ViewMatrix*ModelMatrixs[i])));
 		glBindVertexArray(VAOCollection[x]);
@@ -324,7 +328,7 @@ void TryRender()
 	}
 	glm::mat4x4 LightTransform(1.f);
 	LightTransform = glm::translate(LightTransform, LightPos);
-	LightTransform = glm::scale(LightTransform, glm::vec3(0.2f));
+	LightTransform = glm::scale(LightTransform, glm::vec3(2.f));
 	LightShader->Use();
 	glBindVertexArray(LightSourceVAO);
 	LightShader->SetMatrix4x4("ViewMatrix", ViewMatrix);
