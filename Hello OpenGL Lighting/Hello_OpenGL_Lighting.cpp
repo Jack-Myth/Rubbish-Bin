@@ -294,37 +294,6 @@ void TryRender()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glm::mat4x4 ViewMatrix = pMyCamera->GetViewMatrix();
 	glm::mat4x4 ProjectionMatrix = pMyCamera->GetProjectionMatrix();
-	DefaultShader->Use();
-	DefaultShader->SetInt("TextureBack", 0);
-	DefaultShader->SetInt("TextureFront", 1);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, TextureBack);
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, TextureFront);
-	DefaultShader->SetMatrix4x4("ViewMatrix", ViewMatrix);
-	DefaultShader->SetMatrix4x4("ProjectionMatrix", ProjectionMatrix);
-	DefaultShader->SetVec3("LightPos", ViewMatrix*glm::vec4(LightPos, 1.f));
-	DefaultShader->SetVec3("diffuseColor", LightedMat.diffuse);
-	DefaultShader->SetVec3("ambientColor", LightedMat.ambient);
-	DefaultShader->SetVec3("specularColor", LightedMat.specular);
-	DefaultShader->SetFloat("shininess", LightedMat.shininess);
-	for (int i=1;i<ModelMatrixs.size();i++)
-	{
-		int x = VAOCollection.size() > i ? i : VAOCollection.size() - 1;
-		DefaultShader->SetMatrix4x4("ModelMatrix",ModelMatrixs[i]);
-		DefaultShader->SetMatrix3x3("NormalMatrix", glm::transpose(glm::inverse(ViewMatrix*ModelMatrixs[i])));
-		glBindVertexArray(VAOCollection[x]);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-	}
-	glm::mat4x4 LightTransform(1.f);
-	LightTransform = glm::translate(LightTransform, LightPos);
-	LightTransform = glm::scale(LightTransform, glm::vec3(0.2f));
-	LightShader->Use();
-	glBindVertexArray(LightSourceVAO);
-	LightShader->SetMatrix4x4("ViewMatrix", ViewMatrix);
-	LightShader->SetMatrix4x4("ProjectionMatrix", ProjectionMatrix);
-	LightShader->SetMatrix4x4("ModelMatrix", LightTransform);
-	glDrawArrays(GL_TRIANGLES, 0, 36);
 	LightedShader->Use();
 	LightedShader->SetInt("TextureBack", 0);
 	LightedShader->SetInt("TextureFront", 1);
@@ -338,13 +307,31 @@ void TryRender()
 	LightedShader->SetVec3("objectColor", glm::vec3(1.0f, 1, 1.f));
 	LightedShader->SetMatrix4x4("ViewMatrix", ViewMatrix);
 	LightedShader->SetMatrix4x4("ProjectionMatrix", ProjectionMatrix);
-	LightedShader->SetMatrix4x4("ModelMatrix", ModelMatrixs[0]);
 	LightedShader->SetVec3("LightPos", ViewMatrix*glm::vec4(LightPos, 1.f));
-	LightedShader->SetMatrix3x3("NormalMatrix", glm::transpose(glm::inverse(ViewMatrix*ModelMatrixs[0])));
 	LightedShader->SetVec3("diffuseColor", LightedMat.diffuse);
 	LightedShader->SetVec3("ambientColor", LightedMat.ambient);
 	LightedShader->SetVec3("specularColor", LightedMat.specular);
 	LightedShader->SetFloat("shininess", LightedMat.shininess);
+	for (int i=1;i<ModelMatrixs.size();i++)
+	{
+		int x = VAOCollection.size() > i ? i : VAOCollection.size() - 1;
+		LightedShader->SetMatrix4x4("ModelMatrix",ModelMatrixs[i]);
+		LightedShader->SetMatrix3x3("NormalMatrix", glm::transpose(glm::inverse(ViewMatrix*ModelMatrixs[i])));
+		glBindVertexArray(VAOCollection[x]);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+	}
+	glm::mat4x4 LightTransform(1.f);
+	LightTransform = glm::translate(LightTransform, LightPos);
+	LightTransform = glm::scale(LightTransform, glm::vec3(0.2f));
+	LightShader->Use();
+	glBindVertexArray(LightSourceVAO);
+	LightShader->SetMatrix4x4("ViewMatrix", ViewMatrix);
+	LightShader->SetMatrix4x4("ProjectionMatrix", ProjectionMatrix);
+	LightShader->SetMatrix4x4("ModelMatrix", LightTransform);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+	LightedShader->Use();
+	LightedShader->SetMatrix4x4("ModelMatrix", ModelMatrixs[0]);
+	LightedShader->SetMatrix3x3("NormalMatrix", glm::transpose(glm::inverse(ViewMatrix*ModelMatrixs[0])));
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 	glBindVertexArray(NULL);
 }
