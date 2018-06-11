@@ -12,6 +12,7 @@
 #pragma comment(lib,"opengl32.lib")
 
 GLuint BuildABox(GLuint* pVBO = nullptr, GLuint* pEBO = nullptr);
+GLuint BuildNewBox(GLuint* pVBO = nullptr);
 glm::mat4x4 CreateRandModelMatrix();
 GLuint LoadTexture(std::string ImagePath);
 void TryRender();
@@ -80,7 +81,7 @@ void ProcessInput(GLFWwindow* pWindow)
 
 void BuildScene()
 {
-	VAOCollection.push_back(BuildABox(&BoxVBO,&BoxEBO));
+	VAOCollection.push_back(BuildNewBox(&BoxVBO));
 	for (int i=0;i<9;i++)
 	{
 	VAOCollection.push_back(VAOCollection[0]);
@@ -95,6 +96,70 @@ void BuildScene()
 	LightSourceVAO=TryBuiltLightVAO();
 	LightTransform = glm::translate(LightTransform, glm::vec3(0, 1.f, 5.f));
 	LightTransform = glm::scale(LightTransform, glm::vec3(0.2f));
+}
+
+GLuint BuildNewBox(GLuint* pVBO/*=nullptr*/)
+{
+	float vertices[] = {
+		//坐标(XYZ),贴图坐标(XY),面法线(XYZ)
+		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,  0.0f,  0.0f, -1.0f,
+		0.5f, -0.5f, -0.5f,  1.0f, 0.0f,  0.0f,  0.0f, -1.0f,
+		0.5f,  0.5f, -0.5f,  1.0f, 1.0f,  0.0f,  0.0f, -1.0f,
+		0.5f,  0.5f, -0.5f,  1.0f, 1.0f,  0.0f,  0.0f, -1.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,  0.0f,  0.0f, -1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,  0.0f,  0.0f, -1.0f,
+
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,  0.0f,  0.0f, 1.0f,
+		0.5f, -0.5f,  0.5f,  1.0f, 0.0f,  0.0f,  0.0f, 1.0f,
+		0.5f,  0.5f,  0.5f,  1.0f, 1.0f,  0.0f,  0.0f, 1.0f,
+		0.5f,  0.5f,  0.5f,  1.0f, 1.0f,  0.0f,  0.0f, 1.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f, 1.0f,  0.0f,  0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,  0.0f,  0.0f, 1.0f,
+
+		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f, -1.0f,  0.0f,  0.0f,
+		-0.5f,  0.5f, -0.5f,  1.0f, 1.0f, -1.0f,  0.0f,  0.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f, -1.0f,  0.0f,  0.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f, -1.0f,  0.0f,  0.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f, -1.0f,  0.0f,  0.0f,
+		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f, -1.0f,  0.0f,  0.0f,
+
+		0.5f,  0.5f,  0.5f,  1.0f, 0.0f,  1.0f,  0.0f,  0.0f,
+		0.5f,  0.5f, -0.5f,  1.0f, 1.0f,  1.0f,  0.0f,  0.0f,
+		0.5f, -0.5f, -0.5f,  0.0f, 1.0f,  1.0f,  0.0f,  0.0f,
+		0.5f, -0.5f, -0.5f,  0.0f, 1.0f,  1.0f,  0.0f,  0.0f,
+		0.5f, -0.5f,  0.5f,  0.0f, 0.0f,  1.0f,  0.0f,  0.0f,
+		0.5f,  0.5f,  0.5f,  1.0f, 0.0f,  1.0f,  0.0f,  0.0f,
+
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,  0.0f, -1.0f,  0.0f,
+		0.5f, -0.5f, -0.5f,  1.0f, 1.0f,  0.0f, -1.0f,  0.0f,
+		0.5f, -0.5f,  0.5f,  1.0f, 0.0f,  0.0f, -1.0f,  0.0f,
+		0.5f, -0.5f,  0.5f,  1.0f, 0.0f,  0.0f, -1.0f,  0.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,  0.0f, -1.0f,  0.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,  0.0f, -1.0f,  0.0f,
+
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,  0.0f,  1.0f,  0.0f,
+		0.5f,  0.5f, -0.5f,  1.0f, 1.0f,  0.0f,  1.0f,  0.0f,
+		0.5f,  0.5f,  0.5f,  1.0f, 0.0f,  0.0f,  1.0f,  0.0f,
+		0.5f,  0.5f,  0.5f,  1.0f, 0.0f,  0.0f,  1.0f,  0.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,  0.0f,  1.0f,  0.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,  0.0f,  1.0f,  0.0f
+	};
+	GLuint VAO, VBO;
+	glGenVertexArrays(1, &VAO);
+	glGenBuffers(1, &VBO);
+	glBindVertexArray(VAO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), 0); //Vertices Position;
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float))); //Texture Coodination
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float))); //Surface Normal Vector
+	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
+	glEnableVertexAttribArray(2);
+	glBindVertexArray(NULL);
+	if (pVBO)
+		*pVBO = VBO;
+	return VAO;
 }
 
 GLuint BuildABox(GLuint* pVBO/*=nullptr*/, GLuint* pEBO/*=nullptr*/)
@@ -188,9 +253,12 @@ GLuint TryBuiltLightVAO()
 	glGenVertexArrays(1, &LightVAO);
 	glBindVertexArray(LightVAO);
 	glBindBuffer(GL_ARRAY_BUFFER, BoxVBO);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, BoxEBO);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), 0); //Vertices Position;
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float))); //Texture Coodination
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float))); //Surface Normal Vector
 	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
+	glEnableVertexAttribArray(2);
 	glBindVertexArray(NULL);
 	return LightVAO;
 }
@@ -200,7 +268,7 @@ void TryRender()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glm::mat4x4 ViewMatrix = pMyCamera->GetViewMatrix();
 	glm::mat4x4 ProjectionMatrix = pMyCamera->GetProjectionMatrix();
-	/*DefaultShader->Use();
+	DefaultShader->Use();
 	DefaultShader->SetInt("TextureBack", 0);
 	DefaultShader->SetInt("TextureFront", 1);
 	glActiveTexture(GL_TEXTURE0);
@@ -209,25 +277,25 @@ void TryRender()
 	glBindTexture(GL_TEXTURE_2D, TextureFront);
 	DefaultShader->SetMatrix4x4("ViewMatrix", ViewMatrix);
 	DefaultShader->SetMatrix4x4("ProjectionMatrix", ProjectionMatrix);
-	for (int i=0;i<ModelMatrixs.size();i++)
+	for (int i=1;i<ModelMatrixs.size();i++)
 	{
 		int x = VAOCollection.size() > i ? i : VAOCollection.size() - 1;
 		DefaultShader->SetMatrix4x4("ModelMatrix",ModelMatrixs[i]);
 		glBindVertexArray(VAOCollection[x]);
-		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
-	}*/
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+	}
 	LightShader->Use();
 	glBindVertexArray(LightSourceVAO);
 	LightShader->SetMatrix4x4("ViewMatrix", ViewMatrix);
 	LightShader->SetMatrix4x4("ProjectionMatrix", ProjectionMatrix);
 	LightShader->SetMatrix4x4("ModelMatrix", LightTransform);
-	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
 	LightedShader->Use();
 	LightedShader->SetVec3("objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
 	LightedShader->SetVec3("lightColor", glm::vec3(1.0f, 1.f, 1.f));
 	LightedShader->SetMatrix4x4("ViewMatrix", ViewMatrix);
 	LightedShader->SetMatrix4x4("ProjectionMatrix", ProjectionMatrix);
 	LightedShader->SetMatrix4x4("ModelMatrix", ModelMatrixs[0]);
-	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
 	glBindVertexArray(NULL);
 }
