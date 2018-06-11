@@ -89,6 +89,11 @@ bool Shader::Link()
 	return true;
 }
 
+void Shader::SetFloat(std::string VarName, GLfloat Value)
+{
+	glUniform1f(glGetUniformLocation(ShaderProgramID, VarName.c_str()), Value);
+}
+
 void Shader::SetInt(std::string VarName, GLint Value)
 {
 	glUniform1i(glGetUniformLocation(ShaderProgramID, VarName.c_str()), Value);

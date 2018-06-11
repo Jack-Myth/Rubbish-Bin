@@ -13,6 +13,14 @@
 
 #define MOVE_SPEED 0.5f
 
+struct FMaterial
+{
+	glm::vec3 ambient;
+	glm::vec3 diffuse;
+	glm::vec3 specular;
+	float shininess;
+};
+
 GLuint BuildABox(GLuint* pVBO = nullptr, GLuint* pEBO = nullptr);
 GLuint BuildNewBox(GLuint* pVBO = nullptr);
 glm::mat4x4 CreateRandModelMatrix();
@@ -32,6 +40,7 @@ Shader* DefaultShader=nullptr,*LightShader=nullptr, *LightedShader = nullptr;
 GLuint BoxVBO,BoxEBO;
 GLuint LightSourceVAO;
 glm::vec3 LightPos(1.f,3.f,2.f);
+FMaterial LightedMat;
 int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nShowCmd)
 {
 #ifdef _DEBUG
@@ -98,6 +107,10 @@ void BuildScene()
 
 	//Build Light
 	LightSourceVAO=TryBuiltLightVAO();
+	LightedMat.ambient = glm::vec3(1, 1, 1);
+	LightedMat.diffuse = glm::vec3(1, 1, 1);
+	LightedMat.shininess = 32;
+	LightedMat.specular = glm::vec3(0.2, 0.7, 0.8);
 }
 
 GLuint BuildNewBox(GLuint* pVBO/*=nullptr*/)
@@ -267,7 +280,7 @@ GLuint TryBuiltLightVAO()
 
 void AutoMove()
 {
-	LightPos = glm::vec3(sin(glfwGetTime()*2), 2.f, cos(glfwGetTime()*2));
+	LightPos = glm::vec3(sin(glfwGetTime()*2)*2, 2.f, 2*cos(glfwGetTime()*2));
 }
 
 void TryRender()
@@ -284,10 +297,16 @@ void TryRender()
 	glBindTexture(GL_TEXTURE_2D, TextureFront);
 	DefaultShader->SetMatrix4x4("ViewMatrix", ViewMatrix);
 	DefaultShader->SetMatrix4x4("ProjectionMatrix", ProjectionMatrix);
+	DefaultShader->SetVec3("LightPos", ViewMatrix*glm::vec4(LightPos, 1.f));
+	DefaultShader->SetVec3("diffuseColor", LightedMat.diffuse);
+	DefaultShader->SetVec3("ambientColor", LightedMat.ambient);
+	DefaultShader->SetVec3("specularColor", LightedMat.specular);
+	DefaultShader->SetFloat("shininess", LightedMat.shininess);
 	for (int i=1;i<ModelMatrixs.size();i++)
 	{
 		int x = VAOCollection.size() > i ? i : VAOCollection.size() - 1;
 		DefaultShader->SetMatrix4x4("ModelMatrix",ModelMatrixs[i]);
+		DefaultShader->SetMatrix3x3("NormalMatrix", glm::transpose(glm::inverse(ViewMatrix*ModelMatrixs[i])));
 		glBindVertexArray(VAOCollection[x]);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 	}
@@ -307,13 +326,16 @@ void TryRender()
 	glBindTexture(GL_TEXTURE_2D, TextureBack);
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, TextureFront);
-	LightedShader->SetVec3("LightPos", ViewMatrix*glm::vec4(LightPos,1.f));
-	LightedShader->SetVec3("objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
-	LightedShader->SetVec3("lightColor", glm::vec3(1.0f, 1.f, 1.f));
+	LightedShader->SetVec3("objectColor", glm::vec3(1.0f, 1, 1.f));
 	LightedShader->SetMatrix4x4("ViewMatrix", ViewMatrix);
 	LightedShader->SetMatrix4x4("ProjectionMatrix", ProjectionMatrix);
 	LightedShader->SetMatrix4x4("ModelMatrix", ModelMatrixs[0]);
+	LightedShader->SetVec3("LightPos", ViewMatrix*glm::vec4(LightPos, 1.f));
 	LightedShader->SetMatrix3x3("NormalMatrix", glm::transpose(glm::inverse(ViewMatrix*ModelMatrixs[0])));
+	LightedShader->SetVec3("diffuseColor", LightedMat.diffuse);
+	LightedShader->SetVec3("ambientColor", LightedMat.ambient);
+	LightedShader->SetVec3("specularColor", LightedMat.specular);
+	LightedShader->SetFloat("shininess", LightedMat.shininess);
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 	glBindVertexArray(NULL);
 }

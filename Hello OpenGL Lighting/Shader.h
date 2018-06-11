@@ -33,6 +33,7 @@ public:
 	{
 		return LastError;
 	}
+	void SetFloat(std::string VarName, GLfloat Value);
 	void SetInt(std::string VarName, GLint Value);
 	void SetMatrix4x4(std::string MatrixName, const glm::mat4x4 Martix);
 	void SetMatrix3x3(std::string MatrixName, const glm::mat3x3 Martix);
