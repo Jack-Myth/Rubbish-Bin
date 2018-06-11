@@ -55,5 +55,11 @@
     <None Include="VertexShader.vert">
       <Filter>Source Files\Shaders</Filter>
     </None>
+    <None Include="LightedObjShader.glsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="LightShader.glsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

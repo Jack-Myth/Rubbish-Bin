@@ -41,6 +41,11 @@ bool Shader::AttachShader(GLenum ShaderType, std::string ShaderFilePath)
 	}
 	GLuint tmpShaderID=glCreateShader(ShaderType);
 	std::ifstream tmpFileStream = std::ifstream(ShaderFilePath);
+	if (!tmpFileStream.is_open())
+	{
+		LastError = "Unable To Open File:" + ShaderFilePath;
+		return false;
+	}
 	std::string FileDataStr = std::string(std::istreambuf_iterator<char>(tmpFileStream), std::istreambuf_iterator<char>());
 	const char* pDataStr = FileDataStr.c_str();
 	glShaderSource(tmpShaderID, 1, &pDataStr, nullptr);
@@ -92,4 +97,14 @@ void Shader::SetInt(std::string VarName, GLint Value)
 void Shader::SetMatrix4x4(std::string MatrixName, const glm::mat4x4 Martix)
 {
 	glUniformMatrix4fv(glGetUniformLocation(ShaderProgramID, MatrixName.c_str()), 1,GL_FALSE,glm::value_ptr(Martix));
+}
+
+void Shader::SetVec3(std::string VarName, glm::vec3 Value)
+{
+	glUniform3f(glGetUniformLocation(ShaderProgramID,VarName.c_str()), Value.x, Value.y, Value.z);
+}
+
+void Shader::SetVec4(std::string VarName, glm::vec4 Value)
+{
+	glUniform4f(glGetUniformLocation(ShaderProgramID, VarName.c_str()), Value.x, Value.y, Value.z,Value.w);
 }

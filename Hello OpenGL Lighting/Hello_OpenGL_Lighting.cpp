@@ -11,18 +11,23 @@
 #pragma comment(lib,"glfw3.lib")
 #pragma comment(lib,"opengl32.lib")
 
-GLuint BuildABox();
+GLuint BuildABox(GLuint* pVBO = nullptr, GLuint* pEBO = nullptr);
 glm::mat4x4 CreateRandModelMatrix();
 GLuint LoadTexture(std::string ImagePath);
 void TryRender();
 void ProcessInput(GLFWwindow* pWindow);
+GLuint TryBuiltLightVAO();
+void BuildScene();
 
 GLFWMainWindow* pMainWindow=nullptr;
 Camera* pMyCamera=nullptr;
 std::vector<GLuint> VAOCollection;
 std::vector<glm::mat4x4> ModelMatrixs;
 GLuint TextureBack = 0, TextureFront = 0;
-Shader* DefaultShader=nullptr;
+Shader* DefaultShader=nullptr,*LightShader=nullptr, *LightedShader = nullptr;
+GLuint BoxVBO,BoxEBO;
+GLuint LightSourceVAO;
+glm::mat4x4 LightTransform(1.f);
 int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nShowCmd)
 {
 #ifdef _DEBUG
@@ -39,16 +44,9 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	pMyCamera = new Camera(4.f / 3.f);
 	pMainWindow->AttachCamera(pMyCamera);
 	DefaultShader = new Shader("VertexShader.vert", "FragmentShader.glsl");
-	VAOCollection.push_back(BuildABox());
-	/*for (int i=0;i<9;i++)
-	{
-		VAOCollection.push_back(VAOCollection[0]);
-	}*/
-	ModelMatrixs.push_back(glm::mat4x4(1.f));
-	for (int i = 0; i < 9; i++)
-	{
-		ModelMatrixs.push_back(CreateRandModelMatrix());
-	}
+	LightShader = new Shader("VertexShader.vert", "LightShader.glsl");
+	LightedShader = new Shader("VertexShader.vert", "LightedObjShader.glsl");
+	BuildScene();
 	TextureBack = LoadTexture("MyTextureBack.jpg");
 	TextureFront = LoadTexture("MyTextureFront.jpg");
 	glEnable(GL_DEPTH_TEST);
@@ -56,7 +54,8 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	while (!glfwWindowShouldClose(pMainWindow->GetWindow()))
 	{
 		ProcessInput(pMainWindow->GetWindow());
-		glClearColor(0.2f, 0.4f, 0.6f, 0.1f);
+		//glClearColor(0.2f, 0.4f, 0.6f, 0.1f);
+		glClearColor(0, 0, 0, 1.f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		TryRender();
 		glfwSwapBuffers(pMainWindow->GetWindow());
@@ -79,7 +78,26 @@ void ProcessInput(GLFWwindow* pWindow)
 		pMyCamera->Move(glm::vec3(0.2f, 0, 0));
 }
 
-GLuint BuildABox()
+void BuildScene()
+{
+	VAOCollection.push_back(BuildABox(&BoxVBO,&BoxEBO));
+	for (int i=0;i<9;i++)
+	{
+	VAOCollection.push_back(VAOCollection[0]);
+	}
+	ModelMatrixs.push_back(glm::mat4x4(1.f));
+	for (int i = 0; i < 9; i++)
+	{
+		ModelMatrixs.push_back(CreateRandModelMatrix());
+	}
+
+	//Build Light
+	LightSourceVAO=TryBuiltLightVAO();
+	LightTransform = glm::translate(LightTransform, glm::vec3(0, 1.f, 5.f));
+	LightTransform = glm::scale(LightTransform, glm::vec3(0.2f));
+}
+
+GLuint BuildABox(GLuint* pVBO/*=nullptr*/, GLuint* pEBO/*=nullptr*/)
 {
 	float vertexs[] =
 	{
@@ -121,6 +139,10 @@ GLuint BuildABox()
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
 	glBindVertexArray(NULL);
+	if (pVBO)
+		*pVBO = VBO;
+	if (pEBO)
+		*pEBO = EBO;
 	return VAO;
 }
 
@@ -156,15 +178,29 @@ glm::mat4x4 CreateRandModelMatrix()
 	glm::mat4x4 defMatrix(1.f);
 	defMatrix = glm::rotate(defMatrix, glm::radians((float)(rand() % 360)), 
 		glm::vec3(rand() / (float)INT_MAX, rand() / (float)INT_MAX, rand() / (float)INT_MAX));
-	defMatrix = glm::translate(defMatrix, glm::vec3(rand() % 10 - 5, rand() % 10 - 5, rand() % 10 - 5));
+	defMatrix = glm::translate(defMatrix, glm::vec3(rand() % 20 - 10, rand() % 20 - 10, rand() % 20 - 10));
 	return defMatrix;
+}
+
+GLuint TryBuiltLightVAO()
+{
+	GLuint LightVAO;
+	glGenVertexArrays(1, &LightVAO);
+	glBindVertexArray(LightVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, BoxVBO);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, BoxEBO);
+	glEnableVertexAttribArray(0);
+	glBindVertexArray(NULL);
+	return LightVAO;
 }
 
 void TryRender()
 {
-	DefaultShader->Use();
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glm::mat4x4 ViewMatrix = pMyCamera->GetViewMatrix();
 	glm::mat4x4 ProjectionMatrix = pMyCamera->GetProjectionMatrix();
+	/*DefaultShader->Use();
 	DefaultShader->SetInt("TextureBack", 0);
 	DefaultShader->SetInt("TextureFront", 1);
 	glActiveTexture(GL_TEXTURE0);
@@ -173,13 +209,25 @@ void TryRender()
 	glBindTexture(GL_TEXTURE_2D, TextureFront);
 	DefaultShader->SetMatrix4x4("ViewMatrix", ViewMatrix);
 	DefaultShader->SetMatrix4x4("ProjectionMatrix", ProjectionMatrix);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	for (int i=0;i<ModelMatrixs.size();i++)
 	{
 		int x = VAOCollection.size() > i ? i : VAOCollection.size() - 1;
 		DefaultShader->SetMatrix4x4("ModelMatrix",ModelMatrixs[i]);
 		glBindVertexArray(VAOCollection[x]);
 		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
-	}
+	}*/
+	LightShader->Use();
+	glBindVertexArray(LightSourceVAO);
+	LightShader->SetMatrix4x4("ViewMatrix", ViewMatrix);
+	LightShader->SetMatrix4x4("ProjectionMatrix", ProjectionMatrix);
+	LightShader->SetMatrix4x4("ModelMatrix", LightTransform);
+	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
+	LightedShader->Use();
+	LightedShader->SetVec3("objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
+	LightedShader->SetVec3("lightColor", glm::vec3(1.0f, 1.f, 1.f));
+	LightedShader->SetMatrix4x4("ViewMatrix", ViewMatrix);
+	LightedShader->SetMatrix4x4("ProjectionMatrix", ProjectionMatrix);
+	LightedShader->SetMatrix4x4("ModelMatrix", ModelMatrixs[0]);
+	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
 	glBindVertexArray(NULL);
 }
