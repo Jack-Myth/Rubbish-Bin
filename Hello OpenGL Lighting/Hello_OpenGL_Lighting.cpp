@@ -94,7 +94,7 @@ void BuildScene()
 
 	//Build Light
 	LightSourceVAO=TryBuiltLightVAO();
-	LightTransform = glm::translate(LightTransform, glm::vec3(0, 1.f, 5.f));
+	LightTransform = glm::translate(LightTransform, glm::vec3(1.f, 3.f, 2.f));
 	LightTransform = glm::scale(LightTransform, glm::vec3(0.2f));
 }
 
@@ -291,8 +291,15 @@ void TryRender()
 	LightShader->SetMatrix4x4("ModelMatrix", LightTransform);
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 	LightedShader->Use();
+	LightedShader->SetInt("TextureBack", 0);
+	LightedShader->SetInt("TextureFront", 1);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, TextureBack);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, TextureFront);
+	LightedShader->SetVec3("LightPos", glm::vec3(1.f, 3.f, 2.f));
 	LightedShader->SetVec3("objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
-	LightedShader->SetVec3("lightColor", glm::vec3(1.0f, 1.f, 1.f));
+	LightedShader->SetVec3("lightColor", glm::vec3(2.0f, 2.f, 2.f));
 	LightedShader->SetMatrix4x4("ViewMatrix", ViewMatrix);
 	LightedShader->SetMatrix4x4("ProjectionMatrix", ProjectionMatrix);
 	LightedShader->SetMatrix4x4("ModelMatrix", ModelMatrixs[0]);

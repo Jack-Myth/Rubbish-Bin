@@ -1,11 +1,26 @@
 #version 330 core
 out vec4 FragColor;
 
+in vec3 aNormal;
+in vec2 pTextureCoordinate;
+in vec3 PixelPos;
 uniform vec3 objectColor;
 uniform vec3 lightColor;
+uniform vec3 LightPos;
+uniform sampler2D TextureBack;
+uniform sampler2D TextureFront;
 
 void main()
 {
-	float ambientStrength=2;
-    FragColor = vec4(ambientStrength*lightColor * objectColor, 1.0);
+	//物体的基本颜色(贴图)
+	vec4 px=texture(TextureFront,pTextureCoordinate);
+	float MixAlpha=1-(px.x+px.y+px.z)/3.f;
+	vec4 FragColorx=mix(texture(TextureBack,pTextureCoordinate),texture(TextureFront,pTextureCoordinate),clamp(MixAlpha*100,0,1.f));
+	//~~
+	vec3 Normal=normalize(aNormal);
+	vec3 LightDir=normalize(LightPos-PixelPos);
+	float DiffStrength=clamp(dot(Normal,LightDir),0,1);
+	vec3 diffuse=DiffStrength*lightColor;
+	float ambientStrength=0.3;
+    FragColor = vec4((ambientStrength+diffuse) * FragColorx.xyz, 1.0);
 }
