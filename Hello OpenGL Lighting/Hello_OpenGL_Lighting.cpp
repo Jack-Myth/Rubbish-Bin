@@ -115,7 +115,7 @@ void BuildScene()
 	//Build Light
 	LightSourceVAO=TryBuiltLightVAO();
 	LightedMat.ambient = glm::vec3(1, 1, 1);
-	LightedMat.diffuse = glm::vec3(5, 5, 5);
+	LightedMat.diffuse = glm::vec3(4, 4, 4);
 	LightedMat.shininess = 32;
 	LightedMat.specular = glm::vec3(0.5, 0.5, 0.5);
 }
@@ -316,6 +316,19 @@ void TryRender()
 	LightedShader->SetFloat("Light.constant", 1.0f);
 	LightedShader->SetFloat("Light.linear", 0.045f);
 	LightedShader->SetFloat("Light.quadratic", 0.0075f);
+	LightedShader->SetVec3("Spotlight.LightPos", glm::vec3(0,0,0));
+	LightedShader->SetVec3("Spotlight.LightDir", glm::vec3(0, 0, -1));
+	LightedShader->SetFloat("Spotlight.InnerCos", glm::cos(glm::radians(10.f)));
+	LightedShader->SetFloat("Spotlight.OutterCos", glm::cos(glm::radians(40.f)));
+	LightedShader->SetVec3("Spotlight.diffuseColor", LightedMat.diffuse/4.f);
+	LightedShader->SetVec3("Spotlight.ambientColor", LightedMat.ambient);
+	LightedShader->SetVec3("Spotlight.specularColor", LightedMat.specular);
+	LightedShader->SetFloat("Spotlight.constant", 1.0f);
+	LightedShader->SetFloat("Spotlight.linear", 0.045f);
+	LightedShader->SetFloat("Spotlight.quadratic", 0.0075f);
+	LightedShader->SetFloat("Spotlight.constant", 1.0f);
+	LightedShader->SetFloat("Spotlight.linear", 0.045f);
+	LightedShader->SetFloat("Spotlight.quadratic", 0.0075f);
 	LightedShader->SetFloat("shininess", LightedMat.shininess);
 	LightedShader->SetMatrix3x3("VectorMatrix", glm::transpose(glm::inverse(ViewMatrix)));
 	for (unsigned int i=1;i<ModelMatrixs.size();i++)

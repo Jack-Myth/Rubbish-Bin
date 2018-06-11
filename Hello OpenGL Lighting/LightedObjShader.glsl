@@ -14,7 +14,7 @@ uniform mat3x3 VectorMatrix;
 uniform float shininess;
 
 //Point Light
-uniform struct LightInfo
+uniform struct PointLightInfo
 {
 	vec3 LightPos;
 	vec3 diffuseColor;
@@ -25,7 +25,23 @@ uniform struct LightInfo
     float quadratic;
 };
 
-uniform LightInfo Light;
+//Point Light
+uniform struct SpotlightInfo
+{
+	vec3 LightPos;
+	vec3 LightDir;
+	float InnerCos;
+	float OutterCos;
+	vec3 diffuseColor;
+	vec3 ambientColor;
+	vec3 specularColor;
+	float constant;
+    float linear;
+    float quadratic;
+};
+
+uniform PointLightInfo Light;
+uniform SpotlightInfo Spotlight;
 void main()
 {
 	//物体的基本颜色(贴图)
@@ -37,6 +53,7 @@ void main()
 	if(abs(xtmpC.x)>0.4||abs(xtmpC.y)>0.4)
 		FragColorx=texture(TextureBack,pTextureCoordinate);
 	//~~
+	//PointLight
 	vec3 Normal=normalize(NormalMatrix*aNormal);
 	vec3 LightDir=normalize(Light.LightPos-PixelPos);
 	vec3 ViewDir = normalize(vec3(0,0,0) - PixelPos);
@@ -48,5 +65,17 @@ void main()
 	vec3 diffuse=DiffStrength * FragColorx.xyz;
 	vec3 Specular=SpecularStrength*Light.specularColor*texture(SpecMap,pTextureCoordinate).xyz;
 	float ambientStrength=0.1;
-    FragColor = vec4(ambientStrength*Light.ambientColor*FragColorx.xyz+diffuse*Light.diffuseColor+Specular, 1.0);
+	FragColor = vec4(ambientStrength*Light.ambientColor*FragColorx.xyz+diffuse*Light.diffuseColor+Specular, 1.0);
+	//Spotlight
+	LightDir=normalize(Spotlight.LightPos-PixelPos);
+	Distance=length(Spotlight.LightPos-PixelPos);
+	Fatt=1.f/(Spotlight.constant+Spotlight.linear*Distance+Spotlight.quadratic*pow(Distance,2));
+	float theta = dot(LightDir, normalize(-Spotlight.LightDir));
+	DiffStrength=(theta-Spotlight.OutterCos)/(Spotlight.InnerCos-Spotlight.OutterCos);
+	diffuse=DiffStrength * FragColorx.xyz*Fatt;
+	ReflectDir = reflect(-LightDir, Normal);
+	SpecularStrength=pow(clamp(dot(ReflectDir,ViewDir),0,1),shininess)*DiffStrength;
+	Specular=SpecularStrength*Light.specularColor*texture(SpecMap,pTextureCoordinate).xyz;
+	//if(theta>Spotlight.OutterCos)
+	FragColor = FragColor+vec4(diffuse*Spotlight.diffuseColor+Specular, 1.0);
 }

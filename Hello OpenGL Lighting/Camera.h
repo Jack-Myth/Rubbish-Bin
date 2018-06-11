@@ -29,4 +29,5 @@ public:
 	void SetAspect(float newAspect);
 	float GetFOV();
 	void SetFOV(float newFOV);
+	glm::vec3 GetForwardVector();
 };

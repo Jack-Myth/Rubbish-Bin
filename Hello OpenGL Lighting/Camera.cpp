@@ -81,3 +81,14 @@ void Camera::SetFOV(float newFOV)
 	fov = newFOV;
 	ProjectionMatrix = glm::perspective(glm::radians(fov), Aspect, 0.001f, 10000.f);
 }
+
+glm::vec3 Camera::GetForwardVector()
+{
+	glm::mat4x4 RotationMatrix(1.f);
+	glm::vec3 Direction(0, 0, -1);
+	RotationMatrix = glm::rotate(RotationMatrix, glm::radians(CameraRotation.z), glm::vec3(0, 1, 0));
+	RotationMatrix = glm::rotate(RotationMatrix, glm::radians(CameraRotation.y), glm::vec3(1, 0, 0));
+	//RotationMatrix Will Ignore the Roll axis.
+	Direction = RotationMatrix * glm::vec4(Direction, 1.f);
+	return Direction;
+}
