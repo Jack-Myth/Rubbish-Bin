@@ -307,11 +307,13 @@ void TryRender()
 	LightedShader->SetVec3("objectColor", glm::vec3(1.0f, 1, 1.f));
 	LightedShader->SetMatrix4x4("ViewMatrix", ViewMatrix);
 	LightedShader->SetMatrix4x4("ProjectionMatrix", ProjectionMatrix);
-	LightedShader->SetVec3("LightPos", ViewMatrix*glm::vec4(LightPos, 1.f));
+	//LightedShader->SetVec3("LightPos", ViewMatrix*glm::vec4(LightPos, 1.f));
+	LightedShader->SetVec3("aLightDir", glm::vec3(-0.2f, -1.0f, -0.3f));
 	LightedShader->SetVec3("diffuseColor", LightedMat.diffuse);
 	LightedShader->SetVec3("ambientColor", LightedMat.ambient);
 	LightedShader->SetVec3("specularColor", LightedMat.specular);
 	LightedShader->SetFloat("shininess", LightedMat.shininess);
+	LightedShader->SetMatrix3x3("VectorMatrix", glm::transpose(glm::inverse(ViewMatrix)));
 	for (int i=1;i<ModelMatrixs.size();i++)
 	{
 		int x = VAOCollection.size() > i ? i : VAOCollection.size() - 1;
