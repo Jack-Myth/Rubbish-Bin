@@ -34,5 +34,6 @@ void main()
 	vec3 diffuse=DiffStrength * FragColorx.xyz;
 	vec3 Specular=SpecularStrength*specularColor*texture(SpecMap,pTextureCoordinate).xyz;
 	float ambientStrength=0.1;
-    FragColor = vec4(ambientStrength*ambientColor*FragColorx.xyz+diffuse+Specular, 1.0);
+	float Emissive=clamp(FragColorx.z-(FragColorx.x+FragColorx.y)/2.f,0,1);
+    FragColor = vec4(ambientStrength*ambientColor*FragColorx.xyz+diffuse+Specular+Emissive*FragColorx.xyz, 1.0);
 }
