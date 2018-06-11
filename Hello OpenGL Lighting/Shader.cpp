@@ -56,7 +56,7 @@ bool Shader::AttachShader(GLenum ShaderType, std::string ShaderFilePath)
 	{
 		char ErrMsg[10240];
 		glGetShaderInfoLog(tmpShaderID, sizeof(ErrMsg), nullptr, ErrMsg);
-		LastError = ErrMsg;
+		LastError = "In Shader "+ShaderFilePath+":\n"+ErrMsg;
 		glDeleteShader(tmpShaderID);
 		return false;
 	}

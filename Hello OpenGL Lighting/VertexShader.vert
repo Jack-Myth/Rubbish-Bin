@@ -7,11 +7,13 @@ out vec2 pTextureCoordinate;
 out vec3 aNormal;
 out vec3 PixelPos;
 uniform mat4 ModelMatrix,ViewMatrix,ProjectionMatrix;
+out mat4x4 aViewMatrix;
 
 void main()
 {
 	gl_Position= ProjectionMatrix*ViewMatrix*ModelMatrix*vec4(aPos,1.f);
 	pTextureCoordinate=vTextureCoordinate;
 	aNormal=vNormal;
-	PixelPos=(ModelMatrix*vec4(aPos,1.f)).xyz;
+	PixelPos=(ViewMatrix*ModelMatrix*vec4(aPos,1.f)).xyz;
+	aViewMatrix=ViewMatrix;
 }

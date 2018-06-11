@@ -299,14 +299,13 @@ void TryRender()
 	glBindTexture(GL_TEXTURE_2D, TextureBack);
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, TextureFront);
-	LightedShader->SetVec3("LightPos", glm::vec3(1.f, 3.f, 2.f));
+	LightedShader->SetVec3("LightPos", ViewMatrix*glm::vec4(1.f, 3.f, 2.f,1.f));
 	LightedShader->SetVec3("objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
 	LightedShader->SetVec3("lightColor", glm::vec3(1.0f, 1.f, 1.f));
 	LightedShader->SetMatrix4x4("ViewMatrix", ViewMatrix);
 	LightedShader->SetMatrix4x4("ProjectionMatrix", ProjectionMatrix);
 	LightedShader->SetMatrix4x4("ModelMatrix", ModelMatrixs[0]);
-	LightedShader->SetMatrix3x3("NormalMatrix", glm::transpose(glm::inverse(ModelMatrixs[0])));
-	LightedShader->SetVec3("CameraPos", pMyCamera->GetCameraLocation());
+	LightedShader->SetMatrix3x3("NormalMatrix", glm::transpose(glm::inverse(ViewMatrix*ModelMatrixs[0])));
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 	glBindVertexArray(NULL);
 }
