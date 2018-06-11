@@ -11,7 +11,7 @@
 #pragma comment(lib,"glfw3.lib")
 #pragma comment(lib,"opengl32.lib")
 
-#define MOVE_SPEED 0.5f
+float moveSpeed = 0.2f;
 
 struct FMaterial
 {
@@ -35,7 +35,7 @@ GLFWMainWindow* pMainWindow=nullptr;
 Camera* pMyCamera=nullptr;
 std::vector<GLuint> VAOCollection;
 std::vector<glm::mat4x4> ModelMatrixs;
-GLuint TextureBack = 0, TextureFront = 0;
+GLuint TextureBack = 0, TextureFront = 0, Container2 = 0, Container2Spec = 0;
 Shader* DefaultShader=nullptr,*LightShader=nullptr, *LightedShader = nullptr;
 GLuint BoxVBO,BoxEBO;
 GLuint LightSourceVAO;
@@ -62,6 +62,8 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	BuildScene();
 	TextureBack = LoadTexture("MyTextureBack.jpg");
 	TextureFront = LoadTexture("MyTextureFront.jpg");
+	Container2 = LoadTexture("Container2.png");
+	Container2Spec = LoadTexture("Container2_specular.png");
 	glEnable(GL_DEPTH_TEST);
 	//Render Loop
 	while (!glfwWindowShouldClose(pMainWindow->GetWindow()))
@@ -82,14 +84,18 @@ void ProcessInput(GLFWwindow* pWindow)
 {
 	if (glfwGetKey(pWindow, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(pWindow, GL_TRUE);
+	if (glfwGetKey(pWindow, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+		moveSpeed = 1.f;
+	else
+		moveSpeed = 0.2f;
 	if (glfwGetKey(pWindow, GLFW_KEY_W) == GLFW_PRESS)
-		pMyCamera->Move(glm::vec3(0, 0, -0.2f)*MOVE_SPEED);
+		pMyCamera->Move(glm::vec3(0, 0, -0.2f)*moveSpeed);
 	if (glfwGetKey(pWindow, GLFW_KEY_S) == GLFW_PRESS)
-		pMyCamera->Move(glm::vec3(0, 0, 0.2f)*MOVE_SPEED);
+		pMyCamera->Move(glm::vec3(0, 0, 0.2f)*moveSpeed);
 	if (glfwGetKey(pWindow, GLFW_KEY_A) == GLFW_PRESS)
-		pMyCamera->Move(glm::vec3(-0.2f, 0, 0)*MOVE_SPEED);
+		pMyCamera->Move(glm::vec3(-0.2f, 0, 0)*moveSpeed);
 	if (glfwGetKey(pWindow, GLFW_KEY_D) == GLFW_PRESS)
-		pMyCamera->Move(glm::vec3(0.2f, 0, 0)*MOVE_SPEED);
+		pMyCamera->Move(glm::vec3(0.2f, 0, 0)*moveSpeed);
 }
 
 void BuildScene()
@@ -110,7 +116,7 @@ void BuildScene()
 	LightedMat.ambient = glm::vec3(1, 1, 1);
 	LightedMat.diffuse = glm::vec3(1, 1, 1);
 	LightedMat.shininess = 32;
-	LightedMat.specular = glm::vec3(0.2, 0.7, 0.8);
+	LightedMat.specular = glm::vec3(0.5, 0.5, 0.5);
 }
 
 GLuint BuildNewBox(GLuint* pVBO/*=nullptr*/)
@@ -322,10 +328,13 @@ void TryRender()
 	LightedShader->Use();
 	LightedShader->SetInt("TextureBack", 0);
 	LightedShader->SetInt("TextureFront", 1);
+	LightedShader->SetInt("SpecMap", 2);
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, TextureBack);
+	glBindTexture(GL_TEXTURE_2D, Container2);
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, TextureFront);
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, Container2Spec);
 	LightedShader->SetVec3("objectColor", glm::vec3(1.0f, 1, 1.f));
 	LightedShader->SetMatrix4x4("ViewMatrix", ViewMatrix);
 	LightedShader->SetMatrix4x4("ProjectionMatrix", ProjectionMatrix);
