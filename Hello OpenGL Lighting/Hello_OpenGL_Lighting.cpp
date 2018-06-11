@@ -21,6 +21,7 @@ void TryRender();
 void ProcessInput(GLFWwindow* pWindow);
 GLuint TryBuiltLightVAO();
 void BuildScene();
+void AutoMove();
 
 GLFWMainWindow* pMainWindow=nullptr;
 Camera* pMyCamera=nullptr;
@@ -30,7 +31,7 @@ GLuint TextureBack = 0, TextureFront = 0;
 Shader* DefaultShader=nullptr,*LightShader=nullptr, *LightedShader = nullptr;
 GLuint BoxVBO,BoxEBO;
 GLuint LightSourceVAO;
-glm::mat4x4 LightTransform(1.f);
+glm::vec3 LightPos(1.f,3.f,2.f);
 int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nShowCmd)
 {
 #ifdef _DEBUG
@@ -58,6 +59,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	{
 		ProcessInput(pMainWindow->GetWindow());
 		//glClearColor(0.2f, 0.4f, 0.6f, 0.1f);
+		AutoMove();
 		glClearColor(0, 0, 0, 1.f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		TryRender();
@@ -96,8 +98,6 @@ void BuildScene()
 
 	//Build Light
 	LightSourceVAO=TryBuiltLightVAO();
-	LightTransform = glm::translate(LightTransform, glm::vec3(1.f, 3.f, 2.f));
-	LightTransform = glm::scale(LightTransform, glm::vec3(0.2f));
 }
 
 GLuint BuildNewBox(GLuint* pVBO/*=nullptr*/)
@@ -265,6 +265,11 @@ GLuint TryBuiltLightVAO()
 	return LightVAO;
 }
 
+void AutoMove()
+{
+	LightPos = glm::vec3(sin(glfwGetTime()*2), 2.f, cos(glfwGetTime()*2));
+}
+
 void TryRender()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -286,6 +291,9 @@ void TryRender()
 		glBindVertexArray(VAOCollection[x]);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 	}
+	glm::mat4x4 LightTransform(1.f);
+	LightTransform = glm::translate(LightTransform, LightPos);
+	LightTransform = glm::scale(LightTransform, glm::vec3(0.2f));
 	LightShader->Use();
 	glBindVertexArray(LightSourceVAO);
 	LightShader->SetMatrix4x4("ViewMatrix", ViewMatrix);
@@ -299,7 +307,7 @@ void TryRender()
 	glBindTexture(GL_TEXTURE_2D, TextureBack);
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, TextureFront);
-	LightedShader->SetVec3("LightPos", ViewMatrix*glm::vec4(1.f, 3.f, 2.f,1.f));
+	LightedShader->SetVec3("LightPos", ViewMatrix*glm::vec4(LightPos,1.f));
 	LightedShader->SetVec3("objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
 	LightedShader->SetVec3("lightColor", glm::vec3(1.0f, 1.f, 1.f));
 	LightedShader->SetMatrix4x4("ViewMatrix", ViewMatrix);
