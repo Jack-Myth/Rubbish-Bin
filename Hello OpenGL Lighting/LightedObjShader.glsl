@@ -9,6 +9,8 @@ uniform vec3 lightColor;
 uniform vec3 LightPos;
 uniform sampler2D TextureBack;
 uniform sampler2D TextureFront;
+uniform mat3x3 NormalMatrix;
+uniform vec3 CameraPos;
 
 void main()
 {
@@ -17,10 +19,15 @@ void main()
 	float MixAlpha=1-(px.x+px.y+px.z)/3.f;
 	vec4 FragColorx=mix(texture(TextureBack,pTextureCoordinate),texture(TextureFront,pTextureCoordinate),clamp(MixAlpha*100,0,1.f));
 	//~~
-	vec3 Normal=normalize(aNormal);
+	float specularStrength=0.5;		//ธ฿นโ
+	vec3 Normal=normalize(NormalMatrix*aNormal);
 	vec3 LightDir=normalize(LightPos-PixelPos);
+	vec3 ViewDir = normalize(CameraPos - PixelPos);
+	vec3 ReflectDir = reflect(-LightDir, Normal);
+	float SpecularLightStrength=pow(clamp(dot(ReflectDir,ViewDir),0,1),32);
 	float DiffStrength=clamp(dot(Normal,LightDir),0,1);
 	vec3 diffuse=DiffStrength*lightColor;
-	float ambientStrength=0.3;
-    FragColor = vec4((ambientStrength+diffuse) * FragColorx.xyz, 1.0);
+	vec3 Specular=SpecularLightStrength*lightColor;
+	float ambientStrength=0.1;
+    FragColor = vec4((ambientStrength+diffuse+Specular) * objectColor, 1.0);
 }

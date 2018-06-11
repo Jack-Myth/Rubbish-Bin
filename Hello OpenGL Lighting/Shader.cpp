@@ -99,6 +99,11 @@ void Shader::SetMatrix4x4(std::string MatrixName, const glm::mat4x4 Martix)
 	glUniformMatrix4fv(glGetUniformLocation(ShaderProgramID, MatrixName.c_str()), 1,GL_FALSE,glm::value_ptr(Martix));
 }
 
+void Shader::SetMatrix3x3(std::string MatrixName, const glm::mat3x3 Martix)
+{
+	glUniformMatrix3fv(glGetUniformLocation(ShaderProgramID, MatrixName.c_str()), 1, GL_FALSE, glm::value_ptr(Martix));
+}
+
 void Shader::SetVec3(std::string VarName, glm::vec3 Value)
 {
 	glUniform3f(glGetUniformLocation(ShaderProgramID,VarName.c_str()), Value.x, Value.y, Value.z);

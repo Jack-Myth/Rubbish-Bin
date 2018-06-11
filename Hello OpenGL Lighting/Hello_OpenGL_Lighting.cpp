@@ -11,6 +11,8 @@
 #pragma comment(lib,"glfw3.lib")
 #pragma comment(lib,"opengl32.lib")
 
+#define MOVE_SPEED 0.5f
+
 GLuint BuildABox(GLuint* pVBO = nullptr, GLuint* pEBO = nullptr);
 GLuint BuildNewBox(GLuint* pVBO = nullptr);
 glm::mat4x4 CreateRandModelMatrix();
@@ -70,13 +72,13 @@ void ProcessInput(GLFWwindow* pWindow)
 	if (glfwGetKey(pWindow, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(pWindow, GL_TRUE);
 	if (glfwGetKey(pWindow, GLFW_KEY_W) == GLFW_PRESS)
-		pMyCamera->Move(glm::vec3(0, 0, -0.2f));
+		pMyCamera->Move(glm::vec3(0, 0, -0.2f)*MOVE_SPEED);
 	if (glfwGetKey(pWindow, GLFW_KEY_S) == GLFW_PRESS)
-		pMyCamera->Move(glm::vec3(0, 0, 0.2f));
+		pMyCamera->Move(glm::vec3(0, 0, 0.2f)*MOVE_SPEED);
 	if (glfwGetKey(pWindow, GLFW_KEY_A) == GLFW_PRESS)
-		pMyCamera->Move(glm::vec3(-0.2f, 0, 0));
+		pMyCamera->Move(glm::vec3(-0.2f, 0, 0)*MOVE_SPEED);
 	if (glfwGetKey(pWindow, GLFW_KEY_D) == GLFW_PRESS)
-		pMyCamera->Move(glm::vec3(0.2f, 0, 0));
+		pMyCamera->Move(glm::vec3(0.2f, 0, 0)*MOVE_SPEED);
 }
 
 void BuildScene()
@@ -299,10 +301,12 @@ void TryRender()
 	glBindTexture(GL_TEXTURE_2D, TextureFront);
 	LightedShader->SetVec3("LightPos", glm::vec3(1.f, 3.f, 2.f));
 	LightedShader->SetVec3("objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
-	LightedShader->SetVec3("lightColor", glm::vec3(2.0f, 2.f, 2.f));
+	LightedShader->SetVec3("lightColor", glm::vec3(1.0f, 1.f, 1.f));
 	LightedShader->SetMatrix4x4("ViewMatrix", ViewMatrix);
 	LightedShader->SetMatrix4x4("ProjectionMatrix", ProjectionMatrix);
 	LightedShader->SetMatrix4x4("ModelMatrix", ModelMatrixs[0]);
+	LightedShader->SetMatrix3x3("NormalMatrix", glm::transpose(glm::inverse(ModelMatrixs[0])));
+	LightedShader->SetVec3("CameraPos", pMyCamera->GetCameraLocation());
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 	glBindVertexArray(NULL);
 }

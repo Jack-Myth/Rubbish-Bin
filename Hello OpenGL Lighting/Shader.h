@@ -35,6 +35,7 @@ public:
 	}
 	void SetInt(std::string VarName, GLint Value);
 	void SetMatrix4x4(std::string MatrixName, const glm::mat4x4 Martix);
+	void SetMatrix3x3(std::string MatrixName, const glm::mat3x3 Martix);
 	void SetVec3(std::string VarName, glm::vec3 Value);
 	void SetVec4(std::string VarName, glm::vec4 Value);
 };

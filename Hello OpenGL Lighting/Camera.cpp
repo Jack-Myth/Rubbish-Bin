@@ -45,6 +45,8 @@ void Camera::SetCameraRotation(glm::vec3 newRotation)
 void Camera::Rotate(glm::vec3 RotationOffset)
 {
 	CameraRotation += RotationOffset;
+	if (CameraRotation.y > 85 || CameraRotation.y < -85)
+		CameraRotation.y -= RotationOffset.y;
 }
 
 glm::mat4x4 Camera::GetViewMatrix()
