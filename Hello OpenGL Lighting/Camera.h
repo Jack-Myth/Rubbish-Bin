@@ -10,7 +10,7 @@ class Camera
 	float fov, Aspect;
 	glm::mat4x4 ProjectionMatrix;
 public:
-	Camera(float initAspect, float initFOV = 90.f, glm::vec3 initPos = glm::vec3(0, 0, -10.f));
+	Camera(float initAspect, float initFOV = 90.f, glm::vec3 initPos = glm::vec3(0, 0, 1.f));
 	Camera(int WindowWidth, int WindowHeight, float initFOV = 90.f, glm::vec3 initPos = glm::vec3(0, 0, 0))
 		:Camera((float)WindowWidth / WindowHeight, initFOV, initPos){};
 	void SetCameraLocation(glm::vec3 newPos);
