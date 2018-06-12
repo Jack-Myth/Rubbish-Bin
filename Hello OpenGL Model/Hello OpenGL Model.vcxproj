@@ -20,8 +20,8 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
-    <ProjectGuid>{653B0CE6-8D8A-4CBB-8F73-664D3E4606C5}</ProjectGuid>
-    <RootNamespace>HelloOpenGLLighting</RootNamespace>
+    <ProjectGuid>{F2F8E127-52E4-43BF-AEBC-3D43D479F302}</ProjectGuid>
+    <RootNamespace>HelloOpenGLModel</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -70,22 +70,21 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>D:\Visual Studio 2017\ThirdPartyLib\GLFW;$(ProjectDir);$(IncludePath)</IncludePath>
+    <IncludePath>D:\Visual Studio 2017\ThirdPartyLib\GLFW;$(IncludePath);$(ProjectDir)</IncludePath>
     <LibraryPath>D:\Visual Studio 2017\ThirdPartyLib\GLFW;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>D:\Visual Studio 2017\ThirdPartyLib\GLFW;$(ProjectDir);$(IncludePath)</IncludePath>
+    <IncludePath>D:\Visual Studio 2017\ThirdPartyLib\GLFW;$(IncludePath);$(ProjectDir)</IncludePath>
+    <LibraryPath>D:\Visual Studio 2017\ThirdPartyLib\GLFW;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <SDLCheck>false</SDLCheck>
+      <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
-    <Link>
-      <SubSystem>Windows</SubSystem>
-    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -103,6 +102,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -127,7 +127,7 @@
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="glad\glad.c" />
     <ClCompile Include="GLFWMainWindow.cpp" />
-    <ClCompile Include="Hello_OpenGL_Lighting.cpp" />
+    <ClCompile Include="Hello_OpenGL_Model.cpp" />
     <ClCompile Include="Light.cpp" />
     <ClCompile Include="Shader.cpp" />
   </ItemGroup>
@@ -139,7 +139,6 @@
     <ClInclude Include="stb_image.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="FragmentShader.glsl" />
     <None Include="LightedObjShader.glsl" />
     <None Include="LightShader.glsl" />
     <None Include="VertexShader.vert" />

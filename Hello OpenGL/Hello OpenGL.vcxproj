@@ -78,7 +78,7 @@
     <LibraryPath>D:\Visual Studio 2017\ThirdPartyLib\GLFW;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>D:\Visual Studio 2017\ThirdPartyLib\GLFW;E:\JackMyth\Documents\Visual Studio 2017\Projects\垃圾场\Hello OpenGL;$(IncludePath)</IncludePath>
+    <IncludePath>D:\Visual Studio 2017\ThirdPartyLib\GLFW;$(ProjectDir);$(IncludePath)</IncludePath>
     <LibraryPath>D:\Visual Studio 2017\ThirdPartyLib\GLFW;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
