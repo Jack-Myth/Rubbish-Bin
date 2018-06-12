@@ -9,6 +9,7 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "Shader.h"
 #include <time.h>
+#include "Light.h"
 #pragma comment(lib,"glfw3.lib")
 #pragma comment(lib,"opengl32.lib")
 
@@ -17,8 +18,6 @@ float moveSpeed = 0.2f;
 struct FMaterial
 {
 	glm::vec3 ambient;
-	glm::vec3 diffuse;
-	glm::vec3 specular;
 	float shininess;
 };
 
@@ -40,8 +39,11 @@ GLuint TextureBack = 0, TextureFront = 0, Container2 = 0, Container2Spec = 0;
 Shader* DefaultShader=nullptr,*LightShader=nullptr, *LightedShader = nullptr;
 GLuint BoxVBO,BoxEBO;
 GLuint LightSourceVAO;
-glm::vec3 LightPos(1.f,3.f,2.f);
+glm::vec3 LightPos[3] = { glm::vec3(1.f,3.f,2.f) };
 FMaterial LightedMat;
+FDirectionalLight DirLight;
+FPointLight PointLights[3];
+FSpotlight FlashLight;
 int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nShowCmd)
 {
 #ifdef _DEBUG
@@ -104,7 +106,7 @@ void BuildScene()
 	VAOCollection.push_back(BuildNewBox(&BoxVBO));
 	for (int i=0;i<9;i++)
 	{
-	VAOCollection.push_back(VAOCollection[0]);
+		VAOCollection.push_back(VAOCollection[0]);
 	}
 	ModelMatrixs.push_back(glm::scale(glm::mat4x4(1.f),glm::vec3(10.f)));
 	for (int i = 0; i < 9; i++)
@@ -115,9 +117,26 @@ void BuildScene()
 	//Build Light
 	LightSourceVAO=TryBuiltLightVAO();
 	LightedMat.ambient = glm::vec3(1, 1, 1);
-	LightedMat.diffuse = glm::vec3(4, 4, 4);
 	LightedMat.shininess = 32;
-	LightedMat.specular = glm::vec3(0.5, 0.5, 0.5);
+	DirLight.diffuse = glm::vec3(0.f, 0.f, 0.f);
+	//DirLight.diffuse = glm::vec3(0.5f, 0.5f, 0.5f);
+	DirLight.dir = glm::vec3(1, -1, -1);
+	for (FPointLight& pLight:PointLights)
+	{
+		pLight.diffuse = glm::vec3(4.f, 4.f, 4.f);
+		pLight.linear = 0.045f;
+		pLight.quadratic = 0.0075f;
+		pLight.specular = glm::vec3(1, 1, 1);
+		pLight.pos = glm::vec3(1000, 1000, 1000);
+	}
+	FlashLight.pos = glm::vec3(0, 0, 0);
+	FlashLight.diffuse = glm::vec3(1.5f, 1.5f, 1.5f);
+	FlashLight.specular = glm::vec3(1, 1, 1);
+	FlashLight.dir = glm::vec3(0, 0, -1.f);
+	FlashLight.InnerAngle = 10.f;
+	FlashLight.OutterAngle = 45.f;
+	FlashLight.linear = 0.045f;
+	FlashLight.quadratic = 0.0075f;
 }
 
 GLuint BuildNewBox(GLuint* pVBO/*=nullptr*/)
@@ -288,7 +307,9 @@ GLuint TryBuiltLightVAO()
 
 void AutoMove()
 {
-	LightPos = glm::vec3(sin(glfwGetTime()*2)*20, 2.f, 20*cos(glfwGetTime()*2));
+	LightPos[0] = glm::vec3(sin(glfwGetTime() * 3) * 20, 0.f, 20 * cos(glfwGetTime() * 3));
+	LightPos[1] = glm::vec3(0.f, sin(glfwGetTime() * 2) * 25, 25 * cos(glfwGetTime() * 2));
+	LightPos[2] = glm::vec3(sin(glfwGetTime()) * 30, 30 * cos(glfwGetTime()), 0.f);
 }
 
 void TryRender()
@@ -309,28 +330,17 @@ void TryRender()
 	LightedShader->SetVec3("objectColor", glm::vec3(1.0f, 1, 1.f));
 	LightedShader->SetMatrix4x4("ViewMatrix", ViewMatrix);
 	LightedShader->SetMatrix4x4("ProjectionMatrix", ProjectionMatrix);
-	LightedShader->SetVec3("Light.LightPos", ViewMatrix*glm::vec4(LightPos, 1.f));
-	LightedShader->SetVec3("Light.diffuseColor", LightedMat.diffuse);
-	LightedShader->SetVec3("Light.ambientColor", LightedMat.ambient);
-	LightedShader->SetVec3("Light.specularColor", LightedMat.specular);
-	LightedShader->SetFloat("Light.constant", 1.0f);
-	LightedShader->SetFloat("Light.linear", 0.045f);
-	LightedShader->SetFloat("Light.quadratic", 0.0075f);
-	LightedShader->SetVec3("Spotlight.LightPos", glm::vec3(0,0,0));
-	LightedShader->SetVec3("Spotlight.LightDir", glm::vec3(0, 0, -1));
-	LightedShader->SetFloat("Spotlight.InnerCos", glm::cos(glm::radians(10.f)));
-	LightedShader->SetFloat("Spotlight.OutterCos", glm::cos(glm::radians(40.f)));
-	LightedShader->SetVec3("Spotlight.diffuseColor", LightedMat.diffuse/4.f);
-	LightedShader->SetVec3("Spotlight.ambientColor", LightedMat.ambient);
-	LightedShader->SetVec3("Spotlight.specularColor", LightedMat.specular);
-	LightedShader->SetFloat("Spotlight.constant", 1.0f);
-	LightedShader->SetFloat("Spotlight.linear", 0.045f);
-	LightedShader->SetFloat("Spotlight.quadratic", 0.0075f);
-	LightedShader->SetFloat("Spotlight.constant", 1.0f);
-	LightedShader->SetFloat("Spotlight.linear", 0.045f);
-	LightedShader->SetFloat("Spotlight.quadratic", 0.0075f);
 	LightedShader->SetFloat("shininess", LightedMat.shininess);
 	LightedShader->SetMatrix3x3("VectorMatrix", glm::transpose(glm::inverse(ViewMatrix)));
+	DirLight.ApplyToShader(LightedShader, "DirectionalLight");
+	PointLights[0].pos = ViewMatrix * glm::vec4(LightPos[0], 1);
+	PointLights[1].pos = ViewMatrix * glm::vec4(LightPos[1], 1);
+	PointLights[2].pos = ViewMatrix * glm::vec4(LightPos[2], 1);
+	PointLights[0].ApplyToShader(LightedShader, "PointLight[0]");
+	PointLights[1].ApplyToShader(LightedShader, "PointLight[1]");
+	PointLights[2].ApplyToShader(LightedShader, "PointLight[2]");
+	FlashLight.pos = glm::vec3(0, 0, 0);
+	FlashLight.ApplyToShader(LightedShader, "FlashLight");
 	for (unsigned int i=1;i<ModelMatrixs.size();i++)
 	{
 		unsigned int x = VAOCollection.size() > i ? i : VAOCollection.size() - 1;
@@ -339,15 +349,18 @@ void TryRender()
 		glBindVertexArray(VAOCollection[x]);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 	}
-	glm::mat4x4 LightTransform(1.f);
-	LightTransform = glm::translate(LightTransform, LightPos);
-	LightTransform = glm::scale(LightTransform, glm::vec3(2.f));
-	LightShader->Use();
-	glBindVertexArray(LightSourceVAO);
-	LightShader->SetMatrix4x4("ViewMatrix", ViewMatrix);
-	LightShader->SetMatrix4x4("ProjectionMatrix", ProjectionMatrix);
-	LightShader->SetMatrix4x4("ModelMatrix", LightTransform);
-	glDrawArrays(GL_TRIANGLES, 0, 36);
+	for (int i = 0; i < 3; i++)
+	{
+		glm::mat4x4 LightTransform(1.f);
+		LightTransform = glm::translate(LightTransform, LightPos[i]);
+		LightTransform = glm::scale(LightTransform, glm::vec3(2.f));
+		LightShader->Use();
+		glBindVertexArray(LightSourceVAO);
+		LightShader->SetMatrix4x4("ViewMatrix", ViewMatrix);
+		LightShader->SetMatrix4x4("ProjectionMatrix", ProjectionMatrix);
+		LightShader->SetMatrix4x4("ModelMatrix", LightTransform);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+	}
 	LightedShader->Use();
 	LightedShader->SetMatrix4x4("ModelMatrix", ModelMatrixs[0]);
 	LightedShader->SetMatrix3x3("NormalMatrix", glm::transpose(glm::inverse(ViewMatrix*ModelMatrixs[0])));

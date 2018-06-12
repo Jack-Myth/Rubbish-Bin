@@ -128,11 +128,13 @@
     <ClCompile Include="glad\glad.c" />
     <ClCompile Include="GLFWMainWindow.cpp" />
     <ClCompile Include="Hello_OpenGL_Lighting.cpp" />
+    <ClCompile Include="Light.cpp" />
     <ClCompile Include="Shader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
     <ClInclude Include="GLFWMainWindow.h" />
+    <ClInclude Include="Light.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="stb_image.h" />
   </ItemGroup>
