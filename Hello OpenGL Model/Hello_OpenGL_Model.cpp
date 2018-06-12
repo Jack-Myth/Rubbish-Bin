@@ -5,7 +5,9 @@
 #include "GLFWMainWindow.h"
 #include "Camera.h"
 #include "Shader.h"
+#include "Light.h"
 #include <time.h>
+#include <Model.h>
 #pragma comment(lib,"glfw3.lib")
 #pragma comment(lib,"opengl32.lib")
 #pragma comment(lib,"assimp-vc140-mt.lib")
@@ -13,6 +15,7 @@
 void TryRender();
 void BuildScene();
 void ObjectAutomove();
+GLuint BuildNewBox(GLuint* pVBO = nullptr);
 
 void ProcessInput(GLFWwindow* pWindow);
 
@@ -20,6 +23,9 @@ float moveSpeed = 1.f;
 GLFWMainWindow* pMainWindow = nullptr;
 Camera* pMyCamera = nullptr;
 Shader* DefaultPhong = nullptr;
+Model* targetModel=nullptr;
+FPointLight Pointlight;
+GLuint BoxVAO;
 int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nShowCmd)
 {
 #ifdef _DEBUG
@@ -38,6 +44,8 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	pMainWindow->AttachCamera(pMyCamera);
 	DefaultPhong = new Shader("VertexShader.vert", "LightedObjShader.glsl","DefaultPhong");
 	BuildScene();
+	BoxVAO = BuildNewBox(nullptr);
+	glEnable(GL_DEPTH_TEST);
 	while(!glfwWindowShouldClose(pMainWindow->GetWindow()))
 	{
 		ProcessInput(pMainWindow->GetWindow());
@@ -67,9 +75,86 @@ void ProcessInput(GLFWwindow* pWindow)
 		pMyCamera->Move(glm::vec3(0.2f, 0, 0)*moveSpeed);
 }
 
+GLuint BuildNewBox(GLuint* pVBO/*=nullptr*/)
+{
+	float vertices[] = {
+		//坐标(XYZ),贴图坐标(XY),面法线(XYZ)
+		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,  0.0f,  0.0f, -1.0f,
+		0.5f, -0.5f, -0.5f,  1.0f, 0.0f,  0.0f,  0.0f, -1.0f,
+		0.5f,  0.5f, -0.5f,  1.0f, 1.0f,  0.0f,  0.0f, -1.0f,
+		0.5f,  0.5f, -0.5f,  1.0f, 1.0f,  0.0f,  0.0f, -1.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,  0.0f,  0.0f, -1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,  0.0f,  0.0f, -1.0f,
+
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,  0.0f,  0.0f, 1.0f,
+		0.5f, -0.5f,  0.5f,  1.0f, 0.0f,  0.0f,  0.0f, 1.0f,
+		0.5f,  0.5f,  0.5f,  1.0f, 1.0f,  0.0f,  0.0f, 1.0f,
+		0.5f,  0.5f,  0.5f,  1.0f, 1.0f,  0.0f,  0.0f, 1.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f, 1.0f,  0.0f,  0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,  0.0f,  0.0f, 1.0f,
+
+		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f, -1.0f,  0.0f,  0.0f,
+		-0.5f,  0.5f, -0.5f,  1.0f, 1.0f, -1.0f,  0.0f,  0.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f, -1.0f,  0.0f,  0.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f, -1.0f,  0.0f,  0.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f, -1.0f,  0.0f,  0.0f,
+		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f, -1.0f,  0.0f,  0.0f,
+
+		0.5f,  0.5f,  0.5f,  1.0f, 0.0f,  1.0f,  0.0f,  0.0f,
+		0.5f,  0.5f, -0.5f,  1.0f, 1.0f,  1.0f,  0.0f,  0.0f,
+		0.5f, -0.5f, -0.5f,  0.0f, 1.0f,  1.0f,  0.0f,  0.0f,
+		0.5f, -0.5f, -0.5f,  0.0f, 1.0f,  1.0f,  0.0f,  0.0f,
+		0.5f, -0.5f,  0.5f,  0.0f, 0.0f,  1.0f,  0.0f,  0.0f,
+		0.5f,  0.5f,  0.5f,  1.0f, 0.0f,  1.0f,  0.0f,  0.0f,
+
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,  0.0f, -1.0f,  0.0f,
+		0.5f, -0.5f, -0.5f,  1.0f, 1.0f,  0.0f, -1.0f,  0.0f,
+		0.5f, -0.5f,  0.5f,  1.0f, 0.0f,  0.0f, -1.0f,  0.0f,
+		0.5f, -0.5f,  0.5f,  1.0f, 0.0f,  0.0f, -1.0f,  0.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,  0.0f, -1.0f,  0.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,  0.0f, -1.0f,  0.0f,
+
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,  0.0f,  1.0f,  0.0f,
+		0.5f,  0.5f, -0.5f,  1.0f, 1.0f,  0.0f,  1.0f,  0.0f,
+		0.5f,  0.5f,  0.5f,  1.0f, 0.0f,  0.0f,  1.0f,  0.0f,
+		0.5f,  0.5f,  0.5f,  1.0f, 0.0f,  0.0f,  1.0f,  0.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,  0.0f,  1.0f,  0.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,  0.0f,  1.0f,  0.0f
+	};
+	GLuint VAO, VBO;
+	glGenVertexArrays(1, &VAO);
+	glGenBuffers(1, &VBO);
+	glBindVertexArray(VAO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), 0); //Vertices Position;
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float))); //Texture Coodination
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float))); //Surface Normal Vector
+	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
+	glEnableVertexAttribArray(2);
+	glBindVertexArray(NULL);
+	if (pVBO)
+		*pVBO = VBO;
+	return VAO;
+}
+
 void BuildScene()
 {
-
+	char FileP[1024] = {0};
+	OPENFILENAMEA OpenFN = {NULL};
+	OpenFN.lStructSize = sizeof(OPENFILENAMEA);
+	OpenFN.Flags = OFN_FILEMUSTEXIST;
+	OpenFN.lpstrFilter = "模型文件\0*.obj;*.fbx;*.3ds\0\0";
+	OpenFN.nMaxFile = MAX_PATH;
+	OpenFN.lpstrFile = FileP;
+	OpenFN.hInstance = GetModuleHandle(NULL);
+	OpenFN.lpstrTitle = "选择模型文件";
+	if (GetOpenFileNameA(&OpenFN))
+	{
+		targetModel = Model::LoadMesh(FileP);
+	}
+	Pointlight.diffuse = glm::vec3(1, 1, 1);
 }
 
 void ObjectAutomove()
@@ -79,5 +164,19 @@ void ObjectAutomove()
 
 void TryRender()
 {
-
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glm::mat4x4 ViewMatrix = pMyCamera->GetViewMatrix();
+	glm::mat4x4 ProjectionMatrix = pMyCamera->GetProjectionMatrix();
+	DefaultPhong->Use();
+	DefaultPhong->SetMatrix4x4("ViewMatrix", ViewMatrix);
+	DefaultPhong->SetMatrix4x4("ProjectionMatrix", ProjectionMatrix);
+	DefaultPhong->SetFloat("shininess", 32);
+	DefaultPhong->SetMatrix3x3("VectorMatrix", glm::transpose(glm::inverse(ViewMatrix)));
+	DefaultPhong->SetMatrix4x4("ModelMatrix", glm::mat4x4(1.f));
+	DefaultPhong->SetMatrix3x3("NormalMatrix", glm::transpose(glm::inverse(ViewMatrix)));
+	Pointlight.ApplyToShader(DefaultPhong, "PointLight[0]");
+	glBindVertexArray(BoxVAO);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+	if (targetModel)
+		targetModel->Draw(DefaultPhong);
 }

@@ -52,3 +52,5 @@ public:
 	static Shader* FindShaderByName(std::string Name);
 	virtual ~Shader();
 };
+
+GLuint LoadTexture(std::string ImagePath);

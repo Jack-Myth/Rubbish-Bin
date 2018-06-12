@@ -2,6 +2,8 @@
 #include <fstream>
 #include <streambuf>
 #include "glm/gtc/type_ptr.hpp"
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 std::vector<Shader*> Shader::ShaderList;
 
@@ -144,4 +146,31 @@ Shader* Shader::FindShaderByName(std::string Name)
 Shader::~Shader()
 {
 	ShaderList.erase(std::find(ShaderList.begin(), ShaderList.end(), this));
+}
+
+GLuint LoadTexture(std::string ImagePath)
+{
+	int x, y, channels;
+	stbi_set_flip_vertically_on_load(true);
+	unsigned char* imageData = stbi_load(ImagePath.c_str(), &x, &y, &channels, 0);
+	if (!imageData)
+	{
+		printf("Load Image \"%s\" Failed!", ImagePath.c_str());
+		return 0;
+	}
+	GLuint tmpTextureID = 0;
+	glGenTextures(1, &tmpTextureID);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glBindTexture(GL_TEXTURE_2D, tmpTextureID);
+	if (channels == 3)
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, x, y, 0, GL_RGB, GL_UNSIGNED_BYTE, imageData);
+	else
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, x, y, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageData);
+	glGenerateMipmap(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, NULL);
+	stbi_image_free(imageData);
+	return tmpTextureID;
 }
