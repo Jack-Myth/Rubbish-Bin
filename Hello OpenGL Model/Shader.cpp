@@ -173,7 +173,7 @@ GLuint LoadTexture(std::string ImagePath)
 	unsigned char* imageData = stbi_load(ImagePath.c_str(), &x, &y, &channels, 0);
 	if (!imageData)
 	{
-		printf("Load Image \"%s\" Failed!", ImagePath.c_str());
+		printf("Load Image \"%s\" Failed!\n", ImagePath.c_str());
 		return (GLuint)-1;
 	}
 	GLuint tmpTextureID = 0;

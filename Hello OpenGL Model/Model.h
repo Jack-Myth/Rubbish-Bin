@@ -11,9 +11,16 @@ struct FTransform
 	glm::vec3 Scale= glm::vec3(1, 1, 1);
 };
 
+struct TextureRef
+{
+	GLuint id;
+	std::string TexturePath;
+};
+
 class Model
 {
 	std::vector<Mesh*> meshes;
+	std::vector<TextureRef> TextureLoaded;
 	Model()=default;
 	void processNode(aiNode* node, const aiScene* scene);
 	Mesh* processMesh(aiMesh* ai_mesh, const aiScene* scene);

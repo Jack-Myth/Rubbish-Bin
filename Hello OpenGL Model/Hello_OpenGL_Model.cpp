@@ -162,8 +162,11 @@ void BuildScene()
 	if (GetOpenFileNameA(&OpenFN))
 	{
 		targetModel = Model::LoadMesh(FileP);
-		targetModel->Transform.Scale = glm::vec3(0.1f, 0.1f, 0.1f);
-		//targetModel->Transform.Rotation.z = 180.f;
+		if (targetModel)
+		{
+			targetModel->Transform.Scale = glm::vec3(0.1f, 0.1f, 0.1f);
+			//targetModel->Transform.Rotation.z = 180.f;
+		}
 	}
 	Pointlight.diffuse = glm::vec3(5, 5, 5);
 	Pointlight.linear = 0.022f;

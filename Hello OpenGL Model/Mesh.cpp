@@ -37,18 +37,21 @@ void Mesh::RefreshBuffer()
 void Mesh::Draw(Shader* UsedShader)
 {
 	int MaxTextureSize = textures.size() > 15 ? 15 : textures.size();
-	//UsedShader->SetInt("DiffuseMap", 0);
-	//UsedShader->SetInt("SpecularMap", 1);
-	//UsedShader->SetInt("NormalMap", 2);
+	UsedShader->SetInt("DiffuseMap", 0);
+	UsedShader->SetInt("SpecularMap", 1);
+	UsedShader->SetInt("UseDiffuseMap", GL_FALSE);
+	UsedShader->SetInt("UseSpecluarMap", GL_FALSE);
 	for (int i=0;i<MaxTextureSize;i++)
 	{
 		switch (textures[i].type)
 		{
 			case TextureType::DiffuseMap:
 				glActiveTexture(GL_TEXTURE0); //DiffuseMap
+				UsedShader->SetInt("UseDiffuseMap", GL_TRUE);
 				break;
 			case TextureType::SepcularMap:
 				glActiveTexture(GL_TEXTURE1);
+				UsedShader->SetInt("UseSpecluarMap", GL_TRUE);
 				break;
 			case TextureType::NormalMap:
 				glActiveTexture(GL_TEXTURE2);

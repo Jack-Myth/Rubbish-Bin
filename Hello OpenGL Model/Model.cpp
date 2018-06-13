@@ -47,11 +47,25 @@ Mesh* Model::processMesh(aiMesh* ai_mesh, const aiScene* scene)
 		Texture tmpTexture;
 		aiString TexPath;
 		tmpMat->GetTexture(aiTextureType_DIFFUSE, 0, &TexPath);
-		tmpTexture.id=LoadTexture(TexPath.C_Str());
-		if (tmpTexture.id + 1)
-		{
+		auto it = std::find_if(TextureLoaded.begin(), TextureLoaded.end(), [TexPath](TextureRef& texA)
+			{
+				return texA.TexturePath == TexPath.C_Str();
+			});
+		if (it != TextureLoaded.end())
+		{ 
+			tmpTexture.id = it->id;
 			tmpTexture.type = TextureType::DiffuseMap;
 			curMesh->textures.push_back(tmpTexture);
+		}
+		else
+		{
+			tmpTexture.id = LoadTexture(TexPath.C_Str());
+			if (tmpTexture.id + 1)
+			{
+				tmpTexture.type = TextureType::DiffuseMap;
+				curMesh->textures.push_back(tmpTexture);
+				TextureLoaded.push_back({ tmpTexture.id,TexPath.C_Str() });
+			}
 		}
 	}
 	if (tmpMat->GetTextureCount(aiTextureType_SPECULAR))
@@ -59,23 +73,25 @@ Mesh* Model::processMesh(aiMesh* ai_mesh, const aiScene* scene)
 		Texture tmpTexture;
 		aiString TexPath;
 		tmpMat->GetTexture(aiTextureType_DIFFUSE, 0, &TexPath);
-		tmpTexture.id = LoadTexture(TexPath.C_Str());
-		if (tmpTexture.id + 1)
+		auto it = std::find_if(TextureLoaded.begin(), TextureLoaded.end(), [TexPath](TextureRef& texA)
+			{
+				return texA.TexturePath == TexPath.C_Str();
+			});
+		if (it != TextureLoaded.end())
 		{
-			tmpTexture.type = TextureType::DiffuseMap;
+			tmpTexture.id = it->id;
+			tmpTexture.type = TextureType::SepcularMap;
 			curMesh->textures.push_back(tmpTexture);
 		}
-	}
-	if (tmpMat->GetTextureCount(aiTextureType_NORMALS))
-	{
-		Texture tmpTexture;
-		aiString TexPath;
-		tmpMat->GetTexture(aiTextureType_DIFFUSE, 0, &TexPath);
-		tmpTexture.id = LoadTexture(TexPath.C_Str());
-		if (tmpTexture.id + 1)
+		else
 		{
-			tmpTexture.type = TextureType::DiffuseMap;
-			curMesh->textures.push_back(tmpTexture);
+			tmpTexture.id = LoadTexture(TexPath.C_Str());
+			if (tmpTexture.id + 1)
+			{
+				tmpTexture.type = TextureType::SepcularMap;
+				curMesh->textures.push_back(tmpTexture);
+				TextureLoaded.push_back({ tmpTexture.id,TexPath.C_Str() });
+			}
 		}
 	}
 	curMesh->RefreshBuffer();

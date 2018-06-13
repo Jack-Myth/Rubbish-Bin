@@ -50,6 +50,8 @@ vec4 CaculateSpotlight(SpotlightInfo Spotlight);
 uniform DirectionalLightInfo DirectionalLight;
 uniform PointLightInfo PointLight[3];
 uniform SpotlightInfo FlashLight;
+uniform bool UseDiffuseMap;
+uniform bool UseSpecluarMap;
 
 vec3 Normal,ViewDir;
 vec4 FragColorx;
@@ -62,11 +64,13 @@ void main()
 	Normal=normalize(NormalMatrix*aNormal);
 	ViewDir = normalize(vec3(0,0,0) - PixelPos);
 	FragColor = vec4(ambientColor*0.1,1);
-	DiffuseMapPixelColor=texture(DiffuseMap,pTextureCoordinate);
-	//if(length(DiffuseMapPixelColor)<0.1f)
+	if(UseDiffuseMap)
+		DiffuseMapPixelColor=texture(DiffuseMap,pTextureCoordinate);
+	else
 		DiffuseMapPixelColor=vec4(0.5,0.5,0.5,1);
-	SpecularMapPixelColor=texture(SpecularMap,pTextureCoordinate);
-	//if(length(SpecularMapPixelColor)<0.1f)
+	if(UseSpecluarMap)
+		SpecularMapPixelColor=texture(SpecularMap,pTextureCoordinate);
+	else
 		SpecularMapPixelColor=vec4(0.5,0.5,0.5,1);
 	FragColor=FragColor + max(CaculateDirectionalLight(DirectionalLight),0);
 	for(int i=0;i<3;i++)
