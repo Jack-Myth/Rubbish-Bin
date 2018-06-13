@@ -96,37 +96,55 @@ bool Shader::Link()
 
 Shader& Shader::SetFloat(std::string VarName, GLfloat Value)
 {
-	glUniform1f(glGetUniformLocation(ShaderProgramID, VarName.c_str()), Value);
+	GLuint Location = glGetUniformLocation(ShaderProgramID, VarName.c_str());
+	glUniform1f(Location, Value);
+	if (!(Location+1))
+		printf("Unknow Location of Variable \"%s\"\n", VarName.c_str());
 	return *this;
 }
 
 Shader& Shader::SetInt(std::string VarName, GLint Value)
 {
-	glUniform1i(glGetUniformLocation(ShaderProgramID, VarName.c_str()), Value);
+	GLuint Location = glGetUniformLocation(ShaderProgramID, VarName.c_str());
+	glUniform1i(Location, Value);
+	if (!(Location+1))
+		printf("Unknow Location of Variable \"%s\"\n", VarName.c_str());
 	return *this;
 }
 
 Shader& Shader::SetMatrix4x4(std::string MatrixName, const glm::mat4x4 Martix)
 {
-	glUniformMatrix4fv(glGetUniformLocation(ShaderProgramID, MatrixName.c_str()), 1,GL_FALSE,glm::value_ptr(Martix));
+	GLuint Location = glGetUniformLocation(ShaderProgramID, MatrixName.c_str());
+	glUniformMatrix4fv(Location, 1,GL_FALSE,glm::value_ptr(Martix));
+	if (!(Location + 1))
+		printf("Unknow Location of Variable \"%s\"\n", MatrixName.c_str());
 	return *this;
 }
 
 Shader& Shader::SetMatrix3x3(std::string MatrixName, const glm::mat3x3 Martix)
 {
-	glUniformMatrix3fv(glGetUniformLocation(ShaderProgramID, MatrixName.c_str()), 1, GL_FALSE, glm::value_ptr(Martix));
+	GLuint Location = glGetUniformLocation(ShaderProgramID, MatrixName.c_str());
+	glUniformMatrix3fv(Location, 1, GL_FALSE, glm::value_ptr(Martix));
+	if (!(Location + 1))
+		printf("Unknow Location of Variable \"%s\"\n", MatrixName.c_str());
 	return *this;
 }
 
 Shader& Shader::SetVec3(std::string VarName, glm::vec3 Value)
 {
-	glUniform3f(glGetUniformLocation(ShaderProgramID,VarName.c_str()), Value.x, Value.y, Value.z);
+	GLuint Location = glGetUniformLocation(ShaderProgramID, VarName.c_str());
+	glUniform3f(Location, Value.x, Value.y, Value.z);
+	if (!(Location + 1))
+		printf("Unknow Location of Variable \"%s\"\n", VarName.c_str());
 	return *this;
 }
 
 Shader& Shader::SetVec4(std::string VarName, glm::vec4 Value)
 {
-	glUniform4f(glGetUniformLocation(ShaderProgramID, VarName.c_str()), Value.x, Value.y, Value.z,Value.w);
+	GLuint Location = glGetUniformLocation(ShaderProgramID, VarName.c_str());
+	glUniform4f(Location, Value.x, Value.y, Value.z,Value.w);
+	if (!(Location + 1))
+		printf("Unknow Location of Variable \"%s\"\n", VarName.c_str());
 	return *this;
 }
 
@@ -156,7 +174,7 @@ GLuint LoadTexture(std::string ImagePath)
 	if (!imageData)
 	{
 		printf("Load Image \"%s\" Failed!", ImagePath.c_str());
-		return 0;
+		return (GLuint)-1;
 	}
 	GLuint tmpTextureID = 0;
 	glGenTextures(1, &tmpTextureID);

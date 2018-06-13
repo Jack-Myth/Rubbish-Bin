@@ -1,4 +1,5 @@
 #include "Model.h"
+#include "glm/gtc/matrix_transform.hpp"
 
 void Model::processNode(aiNode* node, const aiScene* scene)
 {
@@ -47,8 +48,11 @@ Mesh* Model::processMesh(aiMesh* ai_mesh, const aiScene* scene)
 		aiString TexPath;
 		tmpMat->GetTexture(aiTextureType_DIFFUSE, 0, &TexPath);
 		tmpTexture.id=LoadTexture(TexPath.C_Str());
-		tmpTexture.type=TextureType::DiffuseMap;
-		curMesh->textures.push_back(tmpTexture);
+		if (tmpTexture.id + 1)
+		{
+			tmpTexture.type = TextureType::DiffuseMap;
+			curMesh->textures.push_back(tmpTexture);
+		}
 	}
 	if (tmpMat->GetTextureCount(aiTextureType_SPECULAR))
 	{
@@ -56,8 +60,11 @@ Mesh* Model::processMesh(aiMesh* ai_mesh, const aiScene* scene)
 		aiString TexPath;
 		tmpMat->GetTexture(aiTextureType_DIFFUSE, 0, &TexPath);
 		tmpTexture.id = LoadTexture(TexPath.C_Str());
-		tmpTexture.type = TextureType::DiffuseMap;
-		curMesh->textures.push_back(tmpTexture);
+		if (tmpTexture.id + 1)
+		{
+			tmpTexture.type = TextureType::DiffuseMap;
+			curMesh->textures.push_back(tmpTexture);
+		}
 	}
 	if (tmpMat->GetTextureCount(aiTextureType_NORMALS))
 	{
@@ -65,16 +72,20 @@ Mesh* Model::processMesh(aiMesh* ai_mesh, const aiScene* scene)
 		aiString TexPath;
 		tmpMat->GetTexture(aiTextureType_DIFFUSE, 0, &TexPath);
 		tmpTexture.id = LoadTexture(TexPath.C_Str());
-		tmpTexture.type = TextureType::DiffuseMap;
-		curMesh->textures.push_back(tmpTexture);
+		if (tmpTexture.id + 1)
+		{
+			tmpTexture.type = TextureType::DiffuseMap;
+			curMesh->textures.push_back(tmpTexture);
+		}
 	}
+	curMesh->RefreshBuffer();
 	return curMesh;
 }
 
 Model* Model::LoadMesh(std::string MeshPath)
 {
 	Assimp::Importer importer;
-	const aiScene* scene = importer.ReadFile(MeshPath, aiProcess_Triangulate | aiProcess_FlipUVs);
+	const aiScene* scene = importer.ReadFile(MeshPath, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenNormals);
 	if (!scene||scene->mFlags&AI_SCENE_FLAGS_INCOMPLETE||!scene->mRootNode)
 	{
 		printf("Failed to Load Mesh \"%s\"\n", MeshPath.c_str());
@@ -87,6 +98,14 @@ Model* Model::LoadMesh(std::string MeshPath)
 
 void Model::Draw(Shader* UsedShader)
 {
+	glm::mat4x4 ModelMatrix(1.f);
+	ModelMatrix = glm::rotate(ModelMatrix, glm::radians(Transform.Rotation.z), glm::vec3(0, 1, 0));
+	ModelMatrix = glm::rotate(ModelMatrix, glm::radians(Transform.Rotation.y - 90.f), glm::vec3(1, 0, 0));
+	ModelMatrix = glm::rotate(ModelMatrix, glm::radians(Transform.Rotation.x), glm::vec3(0, 0, 1));
+	ModelMatrix = glm::translate(ModelMatrix, Transform.Location);
+	//ModelMatrix = glm::rotate(ModelMatrix, glm::radians(-90.f), glm::vec3(1, 0, 0));
+	ModelMatrix = glm::scale(ModelMatrix, Transform.Scale);
+	UsedShader->SetMatrix4x4("ModelMatrix", ModelMatrix);
 	for (Mesh*& mesh : meshes)
 		mesh->Draw(UsedShader);
 }

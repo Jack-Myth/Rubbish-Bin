@@ -4,8 +4,8 @@
 
 struct FLight
 {
-	glm::vec3 diffuse;
-	glm::vec3 specular;
+	glm::vec3 diffuse=glm::vec3(1,1,1);
+	glm::vec3 specular= glm::vec3(1, 1, 1);
 	virtual void ApplyToShader(Shader* TargetShader, std::string LightVarName) = 0;
 };
 

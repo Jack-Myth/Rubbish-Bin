@@ -29,10 +29,12 @@ class Mesh
 {
 	GLuint VAO, VBO, EBO;
 public:
+	Mesh();
 	std::vector<Vertex> vertices;
 	std::vector<GLuint> indices;
 	std::vector<Texture> textures;
 	void FillData(std::vector<Vertex> newVertices, std::vector<GLuint> newIndices, std::vector<Texture> newTextures);
 	void RefreshBuffer();
 	void Draw(Shader* UsedShader);
+	virtual ~Mesh();
 };

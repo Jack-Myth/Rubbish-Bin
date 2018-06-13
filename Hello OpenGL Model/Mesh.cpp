@@ -1,5 +1,12 @@
 #include "Mesh.h"
 
+Mesh::Mesh()
+{
+	glGenBuffers(1, &VBO);
+	glGenBuffers(1, &EBO);
+	glGenVertexArrays(1, &VAO);
+}
+
 void Mesh::FillData(std::vector<Vertex> newVertices, std::vector<GLuint> newIndices, std::vector<Texture> newTextures)
 {
 	vertices = newVertices;
@@ -10,14 +17,11 @@ void Mesh::FillData(std::vector<Vertex> newVertices, std::vector<GLuint> newIndi
 
 void Mesh::RefreshBuffer()
 {
-	glGenBuffers(1, &VBO);
-	glGenBuffers(1, &EBO);
-	glGenVertexArrays(1, &VAO);
 	glBindVertexArray(VAO);
-	glBindBuffer(GL_ARRAY_BUFFER, VAO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_STATIC_DRAW);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(VBO, vertices.size() * sizeof(Vertex), vertices.data(), GL_STATIC_DRAW);
-	glBufferData(EBO, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
 	//Vertex Position
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Position));
 	glEnableVertexAttribArray(0);
@@ -33,9 +37,9 @@ void Mesh::RefreshBuffer()
 void Mesh::Draw(Shader* UsedShader)
 {
 	int MaxTextureSize = textures.size() > 15 ? 15 : textures.size();
-	UsedShader->SetInt("DiffuseMap", 0);
-	UsedShader->SetInt("SepcularMap", 1);
-	UsedShader->SetInt("NormalMap", 2);
+	//UsedShader->SetInt("DiffuseMap", 0);
+	//UsedShader->SetInt("SpecularMap", 1);
+	//UsedShader->SetInt("NormalMap", 2);
 	for (int i=0;i<MaxTextureSize;i++)
 	{
 		switch (textures[i].type)
@@ -55,4 +59,11 @@ void Mesh::Draw(Shader* UsedShader)
 	glBindVertexArray(VAO);
 	glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, nullptr);
 	glBindVertexArray(NULL);
+}
+
+Mesh::~Mesh()
+{
+	glDeleteVertexArrays(1,&VAO);
+	glDeleteBuffers(1, &VBO);
+	glDeleteBuffers(1, &EBO);
 }

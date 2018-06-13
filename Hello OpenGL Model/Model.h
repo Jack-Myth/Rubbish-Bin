@@ -6,9 +6,9 @@
 
 struct FTransform
 {
-	glm::vec3 Location;
-	glm::vec3 Rotation;
-	glm::vec3 Scale;
+	glm::vec3 Location=glm::vec3(0,0,0);
+	glm::vec3 Rotation= glm::vec3(0, 0, 0);
+	glm::vec3 Scale= glm::vec3(1, 1, 1);
 };
 
 class Model

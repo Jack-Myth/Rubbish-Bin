@@ -5,7 +5,6 @@ in vec3 aNormal;
 in vec2 pTextureCoordinate;
 in vec3 PixelPos;
 in mat4x4 aViewMatrix;
-uniform vec3 objectColor;
 uniform sampler2D DiffuseMap;
 uniform sampler2D SpecularMap;
 uniform mat3x3 NormalMatrix;
@@ -54,27 +53,35 @@ uniform SpotlightInfo FlashLight;
 
 vec3 Normal,ViewDir;
 vec4 FragColorx;
+vec4 DiffuseMapPixelColor;
+vec4 SpecularMapPixelColor;
 void main()
 {
-	FragColor=vec4(1,1,1,1);
-	return;
+	//FragColor = vec4(1,1,1,1);
+	//return;
 	Normal=normalize(NormalMatrix*aNormal);
 	ViewDir = normalize(vec3(0,0,0) - PixelPos);
 	FragColor = vec4(ambientColor*0.1,1);
-	FragColor=FragColor+CaculateDirectionalLight(DirectionalLight);
+	DiffuseMapPixelColor=texture(DiffuseMap,pTextureCoordinate);
+	//if(length(DiffuseMapPixelColor)<0.1f)
+		DiffuseMapPixelColor=vec4(0.5,0.5,0.5,1);
+	SpecularMapPixelColor=texture(SpecularMap,pTextureCoordinate);
+	//if(length(SpecularMapPixelColor)<0.1f)
+		SpecularMapPixelColor=vec4(0.5,0.5,0.5,1);
+	FragColor=FragColor + max(CaculateDirectionalLight(DirectionalLight),0);
 	for(int i=0;i<3;i++)
 	{
-		FragColor=FragColor+CaculatePointLight(PointLight[i]);
+		FragColor=FragColor + max(CaculatePointLight(PointLight[i]),0);
 	}
-	FragColor=FragColor+CaculateSpotlight(FlashLight);
+	FragColor=FragColor+max(CaculateSpotlight(FlashLight),0);
 }
 
 vec4 CaculateDirectionalLight(DirectionalLightInfo DirLight)
 {
 	DirLight.LightDir=VectorMatrix*normalize(DirLight.LightDir);
-	vec4 diff=clamp(dot(-DirLight.LightDir,Normal),0,1)*vec4(DirLight.diffuseColor,1)*texture(DiffuseMap,pTextureCoordinate);
+	vec4 diff=clamp(dot(-DirLight.LightDir,Normal),0,1)*vec4(DirLight.diffuseColor,1)*DiffuseMapPixelColor;
 	vec3 ReflectDir=reflect(DirLight.LightDir,Normal);
-	vec4 spec=pow(clamp(dot(ReflectDir,ViewDir),0,1.f),shininess)*vec4(DirLight.specularColor,1)*texture(SpecularMap,pTextureCoordinate);
+	vec4 spec=pow(clamp(dot(ReflectDir,ViewDir),0,1.f),shininess)*vec4(DirLight.specularColor,1)*SpecularMapPixelColor;
 	return spec+diff;
 }
 
@@ -83,9 +90,9 @@ vec4 CaculatePointLight(PointLightInfo pLight)
 	float Distance=length(pLight.LightPos-PixelPos);
 	float Fatt=1.f/(1.f+pLight.linear*Distance+pLight.quadratic*pow(Distance,2));
 	vec3 LightDir=normalize(pLight.LightPos-PixelPos);
-	vec4 diff=clamp(dot(LightDir,Normal),0,1)*vec4(pLight.diffuseColor,1.f)*Fatt*texture(DiffuseMap,pTextureCoordinate);
+	vec4 diff=clamp(dot(LightDir,Normal),0,1)*vec4(pLight.diffuseColor,1.f)*Fatt*DiffuseMapPixelColor;
 	vec3 reflectDir=reflect(-LightDir,Normal);
-	vec4 spec=pow(clamp(dot(reflectDir,ViewDir),0,1),shininess)*vec4(pLight.specularColor,1)*Fatt*texture(SpecularMap,pTextureCoordinate);
+	vec4 spec=pow(clamp(dot(reflectDir,ViewDir),0,1),shininess)*vec4(pLight.specularColor,1)*Fatt*SpecularMapPixelColor;
 	return diff+spec;
 }
 
@@ -96,9 +103,9 @@ vec4 CaculateSpotlight(SpotlightInfo Spotlight)
 	float Fatt=1.f/(1.f+Spotlight.linear*Distance+Spotlight.quadratic*pow(Distance,2));
 	float theta = dot(LightDir, normalize(-Spotlight.LightDir));
 	float DiffStrength=(theta-Spotlight.OutterCos)/(Spotlight.InnerCos-Spotlight.OutterCos);
-	vec3 diffuse=DiffStrength *Fatt*texture(DiffuseMap,pTextureCoordinate).xyz;
+	vec3 diffuse=DiffStrength *Fatt*DiffuseMapPixelColor.xyz;
     vec3 ReflectDir = reflect(-LightDir, Normal);
     float SpecularStrength=pow(clamp(dot(ReflectDir,ViewDir),0,1),shininess)*DiffStrength;
-    vec3 Specular=SpecularStrength*Spotlight.specularColor*texture(SpecularMap,pTextureCoordinate).xyz;
+    vec3 Specular=SpecularStrength*Spotlight.specularColor*SpecularMapPixelColor.xyz;
     return vec4(diffuse*Spotlight.diffuseColor+Specular,1.f);
 }

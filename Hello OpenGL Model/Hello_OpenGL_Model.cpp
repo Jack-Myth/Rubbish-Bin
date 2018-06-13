@@ -25,6 +25,8 @@ Camera* pMyCamera = nullptr;
 Shader* DefaultPhong = nullptr;
 Model* targetModel=nullptr;
 FPointLight Pointlight;
+FDirectionalLight DirLight;
+FSpotlight Flashlight;
 GLuint BoxVAO;
 int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nShowCmd)
 {
@@ -39,7 +41,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	pMainWindow = new GLFWMainWindow(1024, 768);
-	pMyCamera = new Camera(1024, 768);
+	pMyCamera = new Camera(4.f/3.f);
 	glfwSetInputMode(pMainWindow->GetWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	pMainWindow->AttachCamera(pMyCamera);
 	DefaultPhong = new Shader("VertexShader.vert", "LightedObjShader.glsl","DefaultPhong");
@@ -52,6 +54,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 		ObjectAutomove();
 		glClearColor(0, 0, 0, 1);
 		glClear(GL_COLOR_BUFFER_BIT);
+		TryRender();
 		glfwSwapBuffers(pMainWindow->GetWindow());
 		glfwPollEvents();
 	}
@@ -73,6 +76,12 @@ void ProcessInput(GLFWwindow* pWindow)
 		pMyCamera->Move(glm::vec3(-0.2f, 0, 0)*moveSpeed);
 	if (glfwGetKey(pWindow, GLFW_KEY_D) == GLFW_PRESS)
 		pMyCamera->Move(glm::vec3(0.2f, 0, 0)*moveSpeed);
+	if (glfwGetKey(pWindow, GLFW_KEY_X) == GLFW_PRESS)
+		targetModel->Transform.Rotation.x++;
+	if (glfwGetKey(pWindow, GLFW_KEY_Y) == GLFW_PRESS)
+		targetModel->Transform.Rotation.y++;
+	if (glfwGetKey(pWindow, GLFW_KEY_Z) == GLFW_PRESS)
+		targetModel->Transform.Rotation.z++;
 }
 
 GLuint BuildNewBox(GLuint* pVBO/*=nullptr*/)
@@ -128,8 +137,8 @@ GLuint BuildNewBox(GLuint* pVBO/*=nullptr*/)
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), 0); //Vertices Position;
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float))); //Texture Coodination
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float))); //Surface Normal Vector
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float))); //Surface Normal Vector
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float))); //Texture Coodination
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
 	glEnableVertexAttribArray(2);
@@ -153,8 +162,12 @@ void BuildScene()
 	if (GetOpenFileNameA(&OpenFN))
 	{
 		targetModel = Model::LoadMesh(FileP);
+		targetModel->Transform.Scale = glm::vec3(0.1f, 0.1f, 0.1f);
+		//targetModel->Transform.Rotation.z = 180.f;
 	}
-	Pointlight.diffuse = glm::vec3(1, 1, 1);
+	Pointlight.diffuse = glm::vec3(5, 5, 5);
+	Pointlight.linear = 0.022f;
+	Pointlight.quadratic = 0.0019f;
 }
 
 void ObjectAutomove()
@@ -174,7 +187,11 @@ void TryRender()
 	DefaultPhong->SetMatrix3x3("VectorMatrix", glm::transpose(glm::inverse(ViewMatrix)));
 	DefaultPhong->SetMatrix4x4("ModelMatrix", glm::mat4x4(1.f));
 	DefaultPhong->SetMatrix3x3("NormalMatrix", glm::transpose(glm::inverse(ViewMatrix)));
+	DefaultPhong->SetVec3("ambientColor", glm::vec3(1, 1, 1));
+	Pointlight.pos = ViewMatrix * glm::vec4(Pointlight.pos, 1.f);
 	Pointlight.ApplyToShader(DefaultPhong, "PointLight[0]");
+	DirLight.ApplyToShader(DefaultPhong, "DirectionalLight");
+	Flashlight.ApplyToShader(DefaultPhong, "FlashLight");
 	glBindVertexArray(BoxVAO);
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 	if (targetModel)
