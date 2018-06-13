@@ -73,6 +73,8 @@ void ProcessInput(GLFWwindow* pWindow)
 		moveSpeed = 10.f;
 	else
 		moveSpeed = 1.f;
+	if (glfwGetKey(pWindow, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+		moveSpeed = 0.1f;
 	if (glfwGetKey(pWindow, GLFW_KEY_W) == GLFW_PRESS)
 		pMyCamera->Move(glm::vec3(0, 0, -0.2f)*moveSpeed);
 	if (glfwGetKey(pWindow, GLFW_KEY_S) == GLFW_PRESS)
@@ -210,6 +212,7 @@ void TryRender()
 	glBindTexture(GL_TEXTURE_2D, StoneTexture);
 	glBindVertexArray(BoxVAO);
 	DefaultPhong->SetMatrix4x4("ModelMatrix", glm::mat4x4(1.f));
+	DefaultPhong->SetInt("UseDepthVisualization", GL_TRUE);
 	//glDrawArrays(GL_TRIANGLES, 0, 36);
 	for (int i = 0; i < 3; i++)
 	{

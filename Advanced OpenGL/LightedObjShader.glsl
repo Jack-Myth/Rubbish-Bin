@@ -52,6 +52,7 @@ uniform PointLightInfo PointLight[3];
 uniform SpotlightInfo FlashLight;
 uniform bool UseDiffuseMap;
 uniform bool UseSpecluarMap;
+uniform bool UseDepthVisualization;
 
 vec3 Normal,ViewDir;
 vec4 FragColorx;
@@ -59,8 +60,13 @@ vec4 DiffuseMapPixelColor;
 vec4 SpecularMapPixelColor;
 void main()
 {
-	//FragColor = vec4(1,1,1,1);
-	//return;
+	if(UseDepthVisualization)
+	{
+		float z = gl_FragCoord.z * 2.0 - 1.0;
+		float linearDepth = (2.0 * 0.001f * 10000.f) / (10000.f + 0.001f - z * (10000.f - 0.001f));
+		FragColor = vec4(vec3(linearDepth/50.f), 1.0);
+		return;
+	}
 	Normal=normalize(NormalMatrix*aNormal);
 	ViewDir = normalize(vec3(0,0,0) - PixelPos);
 	FragColor = vec4(ambientColor*0.1,1);
