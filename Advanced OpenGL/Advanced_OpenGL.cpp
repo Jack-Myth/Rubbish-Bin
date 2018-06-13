@@ -17,6 +17,7 @@ void TryRender();
 void BuildScene();
 void ObjectAutomove();
 GLuint BuildNewBox(GLuint* pVBO = nullptr);
+GLuint BuildSurface();
 
 void ProcessInput(GLFWwindow* pWindow);
 
@@ -28,9 +29,9 @@ Model* targetModel=nullptr;
 FPointLight Pointlight;
 FDirectionalLight DirLight;
 FSpotlight Flashlight;
-GLuint BoxVAO;
-FTransform ModelTransform[3];
-GLuint StoneTexture = 0;
+GLuint BoxVAO,SurfaceVAO;
+FTransform ModelTransform[4];
+GLuint StoneTexture,GrassTexture;
 int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nShowCmd)
 {
 #ifdef _DEBUG
@@ -50,10 +51,11 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	DefaultPhong = new Shader("VertexShader.vert", "LightedObjShader.glsl","DefaultPhong");
 	Unlit = new Shader("VertexShader.vert", "LightShader.glsl", "Unlit");
 	StoneTexture = LoadTexture("stone.jpg");
+	GrassTexture = LoadTexture("grass.png");
 	BuildScene();
 	BoxVAO = BuildNewBox(nullptr);
 	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_STENCIL_TEST);
+	glEnable(GL_BLEND);
 	//glDepthMask(GL_FALSE);
 	while(!glfwWindowShouldClose(pMainWindow->GetWindow()))
 	{
@@ -157,6 +159,38 @@ GLuint BuildNewBox(GLuint* pVBO/*=nullptr*/)
 	return VAO;
 }
 
+GLuint BuildSurface()
+{
+	float vertices[] =
+	{
+		0,0,0,0,0,1,0,0,
+		1,0,0,0,0,1,1,0,
+		1,1,0,0,0,1,1,1,
+		0,1,0,0,0,1,0,1
+	};
+	unsigned int indices[] =
+	{
+		0,1,2,0,2,3
+	};
+	GLuint VAO, VBO, EBO;
+	glGenVertexArrays(1, &VAO);
+	glGenBuffers(1, &VBO);
+	glGenBuffers(1, &EBO);
+	glBindVertexArray(VAO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices),vertices,GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), 0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+	glEnableVertexAttribArray(2);
+	glBindVertexArray(NULL);
+	return VAO;
+}
+
 void BuildScene()
 {
 	/*char FileP[1024] = {0};
@@ -185,6 +219,11 @@ void BuildScene()
 	ModelTransform[1].Scale = glm::vec3(10.f, 10.f, 10.f);
 	ModelTransform[2].Location = glm::vec3(15.f, 0.f, 0);
 	ModelTransform[2].Scale = glm::vec3(10.f, 10.f, 10.f);
+	
+	//Grass Texture
+	SurfaceVAO = BuildSurface();
+	ModelTransform[3].Location = glm::vec3(0, -4.5f, 11);
+	ModelTransform[3].Scale = glm::vec3(2, 2, 2);
 }
 
 void ObjectAutomove()
@@ -194,9 +233,7 @@ void ObjectAutomove()
 
 void TryRender()
 {
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-	glStencilMask(0x00);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glm::mat4x4 ViewMatrix = pMyCamera->GetViewMatrix();
 	glm::mat4x4 ProjectionMatrix = pMyCamera->GetProjectionMatrix();
 	DefaultPhong->Use();
@@ -218,24 +255,13 @@ void TryRender()
 	DefaultPhong->SetMatrix4x4("ModelMatrix", glm::mat4x4(1.f));
 	DefaultPhong->SetInt("UseDepthVisualization", GL_FALSE);
 	//glDrawArrays(GL_TRIANGLES, 0, 36);
-	for (int i = 0; i < 2; i++)
+	for (int i = 0; i < 3; i++)
 	{
 		DefaultPhong->SetMatrix4x4("ModelMatrix", ModelTransform[i].GenModelMatrix());
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 	}
-	glStencilFunc(GL_ALWAYS, 1, 0xFF);
-	glStencilMask(0xFF);	
-	//glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-	DefaultPhong->SetMatrix4x4("ModelMatrix", ModelTransform[2].GenModelMatrix());
-	glDrawArrays(GL_TRIANGLES, 0, 36);
-	glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-	glStencilMask(0x0);
-	glDisable(GL_DEPTH_TEST);
-	Unlit->Use();
-	Unlit->SetMatrix4x4("ModelMatrix", glm::scale(ModelTransform[2].GenModelMatrix(),glm::vec3(1.2f,1.2f,1.2f)));
-	Unlit->SetMatrix4x4("ViewMatrix", ViewMatrix);
-	Unlit->SetMatrix4x4("ProjectionMatrix", ProjectionMatrix);
-	glDrawArrays(GL_TRIANGLES, 0, 36);
-	glEnable(GL_DEPTH_TEST);
-	glStencilMask(0xFF);
+	glBindVertexArray(SurfaceVAO);
+	DefaultPhong->SetMatrix4x4("ModelMatrix", ModelTransform[3].GenModelMatrix());
+	glBindTexture(GL_TEXTURE_2D, GrassTexture);
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 }

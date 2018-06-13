@@ -84,6 +84,9 @@ void main()
 		FragColor=FragColor + max(CaculatePointLight(PointLight[i]),0);
 	}
 	FragColor=FragColor+max(CaculateSpotlight(FlashLight),0);
+	FragColor.a=DiffuseMapPixelColor.a;
+	if(FragColor.a<0.1)
+		discard;
 }
 
 vec4 CaculateDirectionalLight(DirectionalLightInfo DirLight)
