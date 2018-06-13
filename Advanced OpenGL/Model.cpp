@@ -131,3 +131,14 @@ Model::~Model()
 	for (Mesh*& mesh : meshes)
 		delete mesh;
 }
+
+glm::mat4x4 FTransform::GenModelMatrix()
+{
+	glm::mat4x4 ModelMatrix(1.f);
+	ModelMatrix = glm::translate(ModelMatrix, Location);
+	ModelMatrix = glm::rotate(ModelMatrix, glm::radians(Rotation.z), glm::vec3(0, 1, 0));
+	ModelMatrix = glm::rotate(ModelMatrix, glm::radians(Rotation.y), glm::vec3(1, 0, 0));
+	ModelMatrix = glm::rotate(ModelMatrix, glm::radians(Rotation.x), glm::vec3(0, 0, 1));
+	ModelMatrix = glm::scale(ModelMatrix, Scale);
+	return ModelMatrix;
+}

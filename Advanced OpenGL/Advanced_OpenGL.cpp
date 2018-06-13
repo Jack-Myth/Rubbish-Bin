@@ -23,13 +23,13 @@ void ProcessInput(GLFWwindow* pWindow);
 float moveSpeed = 1.f;
 GLFWMainWindow* pMainWindow = nullptr;
 Camera* pMyCamera = nullptr;
-Shader* DefaultPhong = nullptr;
+Shader* DefaultPhong = nullptr,*Unlit=nullptr;
 Model* targetModel=nullptr;
 FPointLight Pointlight;
 FDirectionalLight DirLight;
 FSpotlight Flashlight;
 GLuint BoxVAO;
-glm::mat4x4 ModelMatrix[3] = {glm::mat4x4(1.f),glm::mat4x4(1.f) ,glm::mat4x4(1.f) };
+FTransform ModelTransform[3];
 GLuint StoneTexture = 0;
 int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nShowCmd)
 {
@@ -48,10 +48,12 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	glfwSetInputMode(pMainWindow->GetWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	pMainWindow->AttachCamera(pMyCamera);
 	DefaultPhong = new Shader("VertexShader.vert", "LightedObjShader.glsl","DefaultPhong");
+	Unlit = new Shader("VertexShader.vert", "LightShader.glsl", "Unlit");
 	StoneTexture = LoadTexture("stone.jpg");
 	BuildScene();
 	BoxVAO = BuildNewBox(nullptr);
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_STENCIL_TEST);
 	//glDepthMask(GL_FALSE);
 	while(!glfwWindowShouldClose(pMainWindow->GetWindow()))
 	{
@@ -178,11 +180,11 @@ void BuildScene()
 	Pointlight.diffuse = glm::vec3(5, 5, 5);
 	Pointlight.linear = 0.022f;
 	Pointlight.quadratic = 0.0019f;
-	ModelMatrix[0] = glm::translate(ModelMatrix[0], glm::vec3(10, -5.f, 0));
-	ModelMatrix[0] = glm::scale(ModelMatrix[0], glm::vec3(50.f, 1.f, 50.f));
-	ModelMatrix[1] = glm::scale(ModelMatrix[1], glm::vec3(10.f, 10.f, 10.f));
-	ModelMatrix[2] = glm::translate(ModelMatrix[2], glm::vec3(15.f, 0.f, 0));
-	ModelMatrix[2] = glm::scale(ModelMatrix[2], glm::vec3(10.f, 10.f, 10.f));
+	ModelTransform[0].Location = glm::vec3(10.f, -5.f, 0);
+	ModelTransform[0].Scale = glm::vec3(50, 1, 50);
+	ModelTransform[1].Scale = glm::vec3(10.f, 10.f, 10.f);
+	ModelTransform[2].Location = glm::vec3(15.f, 0.f, 0);
+	ModelTransform[2].Scale = glm::vec3(10.f, 10.f, 10.f);
 }
 
 void ObjectAutomove()
@@ -192,7 +194,9 @@ void ObjectAutomove()
 
 void TryRender()
 {
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+	glStencilMask(0x00);
 	glm::mat4x4 ViewMatrix = pMyCamera->GetViewMatrix();
 	glm::mat4x4 ProjectionMatrix = pMyCamera->GetProjectionMatrix();
 	DefaultPhong->Use();
@@ -212,11 +216,26 @@ void TryRender()
 	glBindTexture(GL_TEXTURE_2D, StoneTexture);
 	glBindVertexArray(BoxVAO);
 	DefaultPhong->SetMatrix4x4("ModelMatrix", glm::mat4x4(1.f));
-	DefaultPhong->SetInt("UseDepthVisualization", GL_TRUE);
+	DefaultPhong->SetInt("UseDepthVisualization", GL_FALSE);
 	//glDrawArrays(GL_TRIANGLES, 0, 36);
-	for (int i = 0; i < 3; i++)
+	for (int i = 0; i < 2; i++)
 	{
-		DefaultPhong->SetMatrix4x4("ModelMatrix", ModelMatrix[i]);
+		DefaultPhong->SetMatrix4x4("ModelMatrix", ModelTransform[i].GenModelMatrix());
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 	}
+	glStencilFunc(GL_ALWAYS, 1, 0xFF);
+	glStencilMask(0xFF);	
+	//glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+	DefaultPhong->SetMatrix4x4("ModelMatrix", ModelTransform[2].GenModelMatrix());
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+	glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+	glStencilMask(0x0);
+	glDisable(GL_DEPTH_TEST);
+	Unlit->Use();
+	Unlit->SetMatrix4x4("ModelMatrix", glm::scale(ModelTransform[2].GenModelMatrix(),glm::vec3(1.2f,1.2f,1.2f)));
+	Unlit->SetMatrix4x4("ViewMatrix", ViewMatrix);
+	Unlit->SetMatrix4x4("ProjectionMatrix", ProjectionMatrix);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+	glEnable(GL_DEPTH_TEST);
+	glStencilMask(0xFF);
 }
