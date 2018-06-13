@@ -8,6 +8,7 @@
 #include "Light.h"
 #include <time.h>
 #include <Model.h>
+#include <glm/gtc/matrix_transform.hpp>
 #pragma comment(lib,"glfw3.lib")
 #pragma comment(lib,"opengl32.lib")
 #pragma comment(lib,"assimp-vc140-mt.lib")
@@ -28,6 +29,8 @@ FPointLight Pointlight;
 FDirectionalLight DirLight;
 FSpotlight Flashlight;
 GLuint BoxVAO;
+glm::mat4x4 ModelMatrix[3] = {glm::mat4x4(1.f),glm::mat4x4(1.f) ,glm::mat4x4(1.f) };
+GLuint StoneTexture = 0;
 int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nShowCmd)
 {
 #ifdef _DEBUG
@@ -45,9 +48,11 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	glfwSetInputMode(pMainWindow->GetWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	pMainWindow->AttachCamera(pMyCamera);
 	DefaultPhong = new Shader("VertexShader.vert", "LightedObjShader.glsl","DefaultPhong");
+	StoneTexture = LoadTexture("stone.jpg");
 	BuildScene();
 	BoxVAO = BuildNewBox(nullptr);
 	glEnable(GL_DEPTH_TEST);
+	//glDepthMask(GL_FALSE);
 	while(!glfwWindowShouldClose(pMainWindow->GetWindow()))
 	{
 		ProcessInput(pMainWindow->GetWindow());
@@ -150,7 +155,7 @@ GLuint BuildNewBox(GLuint* pVBO/*=nullptr*/)
 
 void BuildScene()
 {
-	char FileP[1024] = {0};
+	/*char FileP[1024] = {0};
 	OPENFILENAMEA OpenFN = {NULL};
 	OpenFN.lStructSize = sizeof(OPENFILENAMEA);
 	OpenFN.Flags = OFN_FILEMUSTEXIST;
@@ -167,10 +172,15 @@ void BuildScene()
 			targetModel->Transform.Scale = glm::vec3(0.1f, 0.1f, 0.1f);
 			//targetModel->Transform.Rotation.z = 180.f;
 		}
-	}
+	}*/
 	Pointlight.diffuse = glm::vec3(5, 5, 5);
 	Pointlight.linear = 0.022f;
 	Pointlight.quadratic = 0.0019f;
+	ModelMatrix[0] = glm::translate(ModelMatrix[0], glm::vec3(10, -5.f, 0));
+	ModelMatrix[0] = glm::scale(ModelMatrix[0], glm::vec3(50.f, 1.f, 50.f));
+	ModelMatrix[1] = glm::scale(ModelMatrix[1], glm::vec3(10.f, 10.f, 10.f));
+	ModelMatrix[2] = glm::translate(ModelMatrix[2], glm::vec3(15.f, 0.f, 0));
+	ModelMatrix[2] = glm::scale(ModelMatrix[2], glm::vec3(10.f, 10.f, 10.f));
 }
 
 void ObjectAutomove()
@@ -195,8 +205,15 @@ void TryRender()
 	Pointlight.ApplyToShader(DefaultPhong, "PointLight[0]");
 	DirLight.ApplyToShader(DefaultPhong, "DirectionalLight");
 	Flashlight.ApplyToShader(DefaultPhong, "FlashLight");
+	DefaultPhong->SetInt("UseDiffuseMap", GL_TRUE);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, StoneTexture);
 	glBindVertexArray(BoxVAO);
-	glDrawArrays(GL_TRIANGLES, 0, 36);
-	if (targetModel)
-		targetModel->Draw(DefaultPhong);
+	DefaultPhong->SetMatrix4x4("ModelMatrix", glm::mat4x4(1.f));
+	//glDrawArrays(GL_TRIANGLES, 0, 36);
+	for (int i = 0; i < 3; i++)
+	{
+		DefaultPhong->SetMatrix4x4("ModelMatrix", ModelMatrix[i]);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+	}
 }
