@@ -9,6 +9,7 @@
 #include <time.h>
 #include <Model.h>
 #include <glm/gtc/matrix_transform.hpp>
+#include <map>
 #pragma comment(lib,"glfw3.lib")
 #pragma comment(lib,"opengl32.lib")
 #pragma comment(lib,"assimp-vc140-mt.lib")
@@ -30,8 +31,8 @@ FPointLight Pointlight;
 FDirectionalLight DirLight;
 FSpotlight Flashlight;
 GLuint BoxVAO,SurfaceVAO;
-FTransform ModelTransform[4];
-GLuint StoneTexture,GrassTexture;
+FTransform ModelTransform[7];
+GLuint StoneTexture,GrassTexture,WindowTexture;
 int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nShowCmd)
 {
 #ifdef _DEBUG
@@ -52,6 +53,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	Unlit = new Shader("VertexShader.vert", "LightShader.glsl", "Unlit");
 	StoneTexture = LoadTexture("stone.jpg");
 	GrassTexture = LoadTexture("grass.png");
+	WindowTexture = LoadTexture("blending_transparent_window.png");
 	BuildScene();
 	BoxVAO = BuildNewBox(nullptr);
 	glEnable(GL_DEPTH_TEST);
@@ -224,6 +226,14 @@ void BuildScene()
 	SurfaceVAO = BuildSurface();
 	ModelTransform[3].Location = glm::vec3(0, -4.5f, 11);
 	ModelTransform[3].Scale = glm::vec3(2, 2, 2);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glBlendEquation(GL_FUNC_ADD);
+	ModelTransform[4].Location = glm::vec3(0, 0, 11);
+	ModelTransform[4].Scale = glm::vec3(5, 5, 5);
+	ModelTransform[5].Location = glm::vec3(2, -1.f, 12);
+	ModelTransform[5].Scale = glm::vec3(5, 5, 5);
+	ModelTransform[6].Location = glm::vec3(-2, 1.f, 13);
+	ModelTransform[6].Scale = glm::vec3(5, 5, 5);
 }
 
 void ObjectAutomove()
@@ -233,6 +243,7 @@ void ObjectAutomove()
 
 void TryRender()
 {
+	glDepthMask(GL_TRUE);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glm::mat4x4 ViewMatrix = pMyCamera->GetViewMatrix();
 	glm::mat4x4 ProjectionMatrix = pMyCamera->GetProjectionMatrix();
@@ -264,4 +275,17 @@ void TryRender()
 	DefaultPhong->SetMatrix4x4("ModelMatrix", ModelTransform[3].GenModelMatrix());
 	glBindTexture(GL_TEXTURE_2D, GrassTexture);
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+	glBindTexture(GL_TEXTURE_2D, WindowTexture);
+	glDepthMask(GL_FALSE);
+	std::map<float, FTransform*> sorted;
+	for (unsigned int i = 4; i < 7; i++)
+	{
+		float distance = glm::length(pMyCamera->GetCameraLocation() - ModelTransform[i].Location);
+		sorted[distance] = &ModelTransform[i];
+	}
+	for (auto it=sorted.rbegin(); it != sorted.rend(); ++it)
+	{
+		DefaultPhong->SetMatrix4x4("ModelMatrix", it->second->GenModelMatrix());
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+	}
 }
