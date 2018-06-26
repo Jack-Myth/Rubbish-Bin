@@ -76,5 +76,11 @@
     <None Include="VertexShader.vert">
       <Filter>Source Files\Shaders</Filter>
     </None>
+    <None Include="FrameBuffer_VertexShader.vert">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="FrameBuffer_FragShader.glsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

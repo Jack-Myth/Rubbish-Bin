@@ -25,14 +25,15 @@ void ProcessInput(GLFWwindow* pWindow);
 float moveSpeed = 1.f;
 GLFWMainWindow* pMainWindow = nullptr;
 Camera* pMyCamera = nullptr;
-Shader* DefaultPhong = nullptr,*Unlit=nullptr;
+Shader* DefaultPhong = nullptr,*Unlit=nullptr,*TestforFramebuffer=nullptr;
 Model* targetModel=nullptr;
 FPointLight Pointlight;
 FDirectionalLight DirLight;
 FSpotlight Flashlight;
 GLuint BoxVAO,SurfaceVAO;
 FTransform ModelTransform[7];
-GLuint StoneTexture,GrassTexture,WindowTexture;
+GLuint StoneTexture,GrassTexture,WindowTexture, texColorBuffer;
+GLuint FBO;
 int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nShowCmd)
 {
 #ifdef _DEBUG
@@ -49,8 +50,11 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	pMyCamera = new Camera(4.f/3.f);
 	glfwSetInputMode(pMainWindow->GetWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	pMainWindow->AttachCamera(pMyCamera);
+
+	//Compile Shaders;
 	DefaultPhong = new Shader("VertexShader.vert", "LightedObjShader.glsl","DefaultPhong");
 	Unlit = new Shader("VertexShader.vert", "LightShader.glsl", "Unlit");
+	TestforFramebuffer = new Shader("FrameBuffer_VertexShader.vert", "FrameBuffer_FragShader.glsl", "FrameBuffer");
 	StoneTexture = LoadTexture("stone.jpg");
 	GrassTexture = LoadTexture("grass.png");
 	WindowTexture = LoadTexture("blending_transparent_window.png");
@@ -58,14 +62,27 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	BoxVAO = BuildNewBox(nullptr);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
+	//glEnable(GL_CULL_FACE);
 	//glDepthMask(GL_FALSE);
+	
 	while(!glfwWindowShouldClose(pMainWindow->GetWindow()))
 	{
 		ProcessInput(pMainWindow->GetWindow());
 		ObjectAutomove();
+		glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 		glClearColor(0, 0, 0, 1);
 		glClear(GL_COLOR_BUFFER_BIT);
+		glEnable(GL_DEPTH_TEST);
 		TryRender();
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glDisable(GL_DEPTH_TEST);
+		glBindVertexArray(SurfaceVAO);
+		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		TestforFramebuffer->Use();
+		TestforFramebuffer->SetInt("Tex0", 0);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texColorBuffer);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 		glfwSwapBuffers(pMainWindow->GetWindow());
 		glfwPollEvents();
 	}
@@ -234,6 +251,48 @@ void BuildScene()
 	ModelTransform[5].Scale = glm::vec3(5, 5, 5);
 	ModelTransform[6].Location = glm::vec3(-2, 1.f, 13);
 	ModelTransform[6].Scale = glm::vec3(5, 5, 5);
+	/*glGenFramebuffers(1, &FBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+	GLuint tmptexture;
+	glGenTextures(1, &tmptexture);
+	glBindTexture(GL_TEXTURE_2D, tmptexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1024, 768, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tmptexture, 0);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, 1024, 768, 0, GL_DEPTH_STENCIL,GL_UNSIGNED_INT_24_8, nullptr);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, tmptexture, 0);
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE)
+	{
+	}
+	GLuint RBO;
+	glGenRenderbuffers(1, &RBO);
+	glBindRenderbuffer(GL_RENDERBUFFER, RBO);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 1024, 768);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, RBO);*/
+
+	glGenFramebuffers(1, &FBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+	glGenTextures(1, &texColorBuffer);
+	glBindTexture(GL_TEXTURE_2D, texColorBuffer);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1024, 768, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	//glBindTexture(GL_TEXTURE_2D, NULL);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texColorBuffer, 0);
+	GLuint RBO;
+	glGenRenderbuffers(1, &RBO);
+	glBindRenderbuffer(GL_RENDERBUFFER, RBO);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 1024, 768);
+	//glBindRenderbuffer(GL_RENDERBUFFER, NULL);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, RBO);
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+	{
+		printf("FrameBuffer Initalization Failed.\n");
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void ObjectAutomove()

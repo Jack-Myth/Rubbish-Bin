@@ -46,6 +46,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	pMainWindow->AttachCamera(pMyCamera);
 	DefaultPhong = new Shader("VertexShader.vert", "LightedObjShader.glsl","DefaultPhong");
 	BuildScene();
+	glEnable(GL_CULL_FACE);
 	BoxVAO = BuildNewBox(nullptr);
 	glEnable(GL_DEPTH_TEST);
 	while(!glfwWindowShouldClose(pMainWindow->GetWindow()))
