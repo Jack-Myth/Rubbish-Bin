@@ -192,3 +192,30 @@ GLuint LoadTexture(std::string ImagePath)
 	stbi_image_free(imageData);
 	return tmpTextureID;
 }
+
+GLuint LoadCubeMap(std::vector<std::string> CubeMapFaces, std::vector<bool> FlipMask)
+{
+	GLuint CubeMap;
+	glGenTextures(1, &CubeMap);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, CubeMap);
+	unsigned char *data;
+	for (unsigned int i = 0; i < CubeMapFaces.size(); i++)
+	{
+		int width, height, nrChannels;
+		stbi_set_flip_vertically_on_load(FlipMask[i]);
+		data = stbi_load(CubeMapFaces[i].c_str(), &width, &height, &nrChannels, 0);
+		if (data)
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+		else
+			printf("Failed To Load CubeMap Face:%s\n", CubeMapFaces[i].c_str());
+		stbi_image_free(data);
+	}
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, NULL);
+	return CubeMap;
+}
+

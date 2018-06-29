@@ -10,6 +10,7 @@
 #include <Model.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <map>
+#include <../Hello OpenGL/stb_image.h>
 #pragma comment(lib,"glfw3.lib")
 #pragma comment(lib,"opengl32.lib")
 #pragma comment(lib,"assimp-vc140-mt.lib")
@@ -25,14 +26,14 @@ void ProcessInput(GLFWwindow* pWindow);
 float moveSpeed = 1.f;
 GLFWMainWindow* pMainWindow = nullptr;
 Camera* pMyCamera = nullptr;
-Shader* DefaultPhong = nullptr,*Unlit=nullptr,*TestforFramebuffer=nullptr;
+Shader* DefaultPhong = nullptr,*Unlit=nullptr,*TestforFramebuffer=nullptr, *SkyBoxShader=nullptr;
 Model* targetModel=nullptr;
 FPointLight Pointlight;
 FDirectionalLight DirLight;
 FSpotlight Flashlight;
 GLuint BoxVAO,SurfaceVAO;
 FTransform ModelTransform[7];
-GLuint StoneTexture,GrassTexture,WindowTexture, texColorBuffer;
+GLuint StoneTexture,GrassTexture,WindowTexture, texColorBuffer,CubeMap;
 GLuint FBO;
 int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nShowCmd)
 {
@@ -55,6 +56,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	DefaultPhong = new Shader("VertexShader.vert", "LightedObjShader.glsl","DefaultPhong");
 	Unlit = new Shader("VertexShader.vert", "LightShader.glsl", "Unlit");
 	TestforFramebuffer = new Shader("FrameBuffer_VertexShader.vert", "FrameBuffer_FragShader.glsl", "FrameBuffer");
+	SkyBoxShader = new Shader("CubeMap.vert", "CubeMap.glsl","CubeMap");
 	StoneTexture = LoadTexture("stone.jpg");
 	GrassTexture = LoadTexture("grass.png");
 	WindowTexture = LoadTexture("blending_transparent_window.png");
@@ -293,6 +295,16 @@ void BuildScene()
 		printf("FrameBuffer Initalization Failed.\n");
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	std::vector<std::string> textures_faces =
+	{
+		"CubeMap/cottoncandy_rt.tga",
+		"CubeMap/cottoncandy_lf.tga",
+		"CubeMap/cottoncandy_up.tga",
+		"CubeMap/cottoncandy_dn.tga",
+		"CubeMap/cottoncandy_bk.tga",
+		"CubeMap/cottoncandy_ft.tga"
+	};
+	CubeMap = LoadCubeMap(textures_faces);
 }
 
 void ObjectAutomove()
@@ -302,10 +314,18 @@ void ObjectAutomove()
 
 void TryRender()
 {
-	glDepthMask(GL_TRUE);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glm::mat4x4 ViewMatrix = pMyCamera->GetViewMatrix();
 	glm::mat4x4 ProjectionMatrix = pMyCamera->GetProjectionMatrix();
+	//SkyBox
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glDepthMask(GL_FALSE);
+	SkyBoxShader->Use();
+	SkyBoxShader->SetMatrix4x4("ViewMatrix", ViewMatrix);
+	SkyBoxShader->SetMatrix4x4("ProjectionMatrix", ProjectionMatrix);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, CubeMap);
+	glBindVertexArray(BoxVAO);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+	glDepthMask(GL_TRUE);
 	DefaultPhong->Use();
 	DefaultPhong->SetMatrix4x4("ViewMatrix", ViewMatrix);
 	DefaultPhong->SetMatrix4x4("ProjectionMatrix", ProjectionMatrix);
@@ -347,4 +367,5 @@ void TryRender()
 		DefaultPhong->SetMatrix4x4("ModelMatrix", it->second->GenModelMatrix());
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 	}
+	glDepthMask(GL_TRUE);
 }

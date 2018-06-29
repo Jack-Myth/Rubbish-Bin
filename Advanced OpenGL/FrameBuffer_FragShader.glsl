@@ -16,7 +16,7 @@ out vec4 fragColor;
 
 void main()
 {
-	vec4 tmpfragColorX=vec4(0.f);
+	/*vec4 tmpfragColorX=vec4(0.f);
 	vec4 tmpfragColorY=vec4(0.f);
 	for(float x=-1;x<=1;x++)
 		for(float y=-1;y<=1;y++)
@@ -26,5 +26,6 @@ void main()
 			tmpfragColorX+=(texture(Tex0,aTextureCoord+xy)*KernelX[i]);
 			tmpfragColorY+=(texture(Tex0,aTextureCoord+xy)*KernelY[i]);
 		}
-	fragColor=vec4(sqrt(tmpfragColorX*tmpfragColorX+tmpfragColorY*tmpfragColorY).xyz,1);
+	fragColor=vec4(sqrt(tmpfragColorX*tmpfragColorX+tmpfragColorY*tmpfragColorY).xyz,1);*/
+	fragColor=texture(Tex0,aTextureCoord);
 }

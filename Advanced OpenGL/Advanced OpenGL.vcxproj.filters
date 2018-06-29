@@ -82,5 +82,11 @@
     <None Include="FrameBuffer_FragShader.glsl">
       <Filter>Source Files\Shaders</Filter>
     </None>
+    <None Include="CubeMap.vert">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="CubeMap.glsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

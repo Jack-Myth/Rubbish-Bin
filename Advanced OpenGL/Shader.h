@@ -54,3 +54,4 @@ public:
 };
 
 GLuint LoadTexture(std::string ImagePath);
+GLuint LoadCubeMap(std::vector<std::string> CubeMapFaces,std::vector<bool> FlipMask = {0,0,1,1,0,0});

@@ -141,6 +141,10 @@
     <ClInclude Include="stb_image.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="CubeMap.glsl" />
+    <None Include="CubeMap.vert">
+      <FileType>Document</FileType>
+    </None>
     <None Include="FrameBuffer_FragShader.glsl" />
     <None Include="FrameBuffer_VertexShader.vert" />
     <None Include="LightedObjShader.glsl" />
