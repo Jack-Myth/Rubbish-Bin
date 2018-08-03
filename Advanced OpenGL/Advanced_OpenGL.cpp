@@ -214,7 +214,17 @@ GLuint BuildSurface()
 
 void BuildScene()
 {
-	/*char FileP[1024] = {0};
+	std::vector<std::string> textures_faces =
+	{
+		"CubeMap/cottoncandy_rt.tga",
+		"CubeMap/cottoncandy_lf.tga",
+		"CubeMap/cottoncandy_up.tga",
+		"CubeMap/cottoncandy_dn.tga",
+		"CubeMap/cottoncandy_bk.tga",
+		"CubeMap/cottoncandy_ft.tga"
+	};
+	CubeMap = LoadCubeMap(textures_faces);
+	char FileP[1024] = {0};
 	OPENFILENAMEA OpenFN = {NULL};
 	OpenFN.lStructSize = sizeof(OPENFILENAMEA);
 	OpenFN.Flags = OFN_FILEMUSTEXIST;
@@ -231,7 +241,7 @@ void BuildScene()
 			targetModel->Transform.Scale = glm::vec3(0.1f, 0.1f, 0.1f);
 			//targetModel->Transform.Rotation.z = 180.f;
 		}
-	}*/
+	}
 	Pointlight.diffuse = glm::vec3(5, 5, 5);
 	Pointlight.linear = 0.022f;
 	Pointlight.quadratic = 0.0019f;
@@ -295,16 +305,6 @@ void BuildScene()
 		printf("FrameBuffer Initalization Failed.\n");
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	std::vector<std::string> textures_faces =
-	{
-		"CubeMap/cottoncandy_rt.tga",
-		"CubeMap/cottoncandy_lf.tga",
-		"CubeMap/cottoncandy_up.tga",
-		"CubeMap/cottoncandy_dn.tga",
-		"CubeMap/cottoncandy_bk.tga",
-		"CubeMap/cottoncandy_ft.tga"
-	};
-	CubeMap = LoadCubeMap(textures_faces);
 }
 
 void ObjectAutomove()
@@ -318,7 +318,7 @@ void TryRender()
 	glm::mat4x4 ProjectionMatrix = pMyCamera->GetProjectionMatrix();
 	//SkyBox
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glDepthMask(GL_FALSE);
+	glDepthFunc(GL_LEQUAL);
 	SkyBoxShader->Use();
 	SkyBoxShader->SetMatrix4x4("ViewMatrix", ViewMatrix);
 	SkyBoxShader->SetMatrix4x4("ProjectionMatrix", ProjectionMatrix);
@@ -339,8 +339,13 @@ void TryRender()
 	DirLight.ApplyToShader(DefaultPhong, "DirectionalLight");
 	Flashlight.ApplyToShader(DefaultPhong, "FlashLight");
 	DefaultPhong->SetInt("UseDiffuseMap", GL_TRUE);
+	DefaultPhong->SetInt("DiffuseMap", 0);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, StoneTexture);
+	DefaultPhong->SetInt("UseSkyboxReflection", GL_TRUE);
+	DefaultPhong->SetInt("Skybox", 2);
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, CubeMap);
 	glBindVertexArray(BoxVAO);
 	DefaultPhong->SetMatrix4x4("ModelMatrix", glm::mat4x4(1.f));
 	DefaultPhong->SetInt("UseDepthVisualization", GL_FALSE);
@@ -350,10 +355,26 @@ void TryRender()
 		DefaultPhong->SetMatrix4x4("ModelMatrix", ModelTransform[i].GenModelMatrix());
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 	}
+
+	//Render Target Modle
+	if (targetModel)
+	{
+		//Test Skybox Reflection
+		DefaultPhong->SetInt("UseSkyboxReflectionAsDiffuseMap", GL_FALSE);
+		DefaultPhong->SetInt("UseSkyboxRefractionAsDiffuseMap", GL_TRUE);
+		targetModel->Draw(DefaultPhong,false);
+	}
+	DefaultPhong->SetInt("UseSkyboxReflectionAsDiffuseMap", GL_FALSE);
+	DefaultPhong->SetInt("UseSkyboxRefractionAsDiffuseMap", GL_FALSE);
+
+	//Draw Grass
 	glBindVertexArray(SurfaceVAO);
 	DefaultPhong->SetMatrix4x4("ModelMatrix", ModelTransform[3].GenModelMatrix());
+	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, GrassTexture);
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+
+	//Draw Window
 	glBindTexture(GL_TEXTURE_2D, WindowTexture);
 	glDepthMask(GL_FALSE);
 	std::map<float, FTransform*> sorted;

@@ -28,6 +28,6 @@ class Model
 public:
 	FTransform Transform;
 	static Model* LoadMesh(std::string MeshPath);
-	void Draw(Shader* UsedShader);
+	void Draw(Shader* UsedShader, bool ProcessTexture = true);
 	virtual ~Model();
 };

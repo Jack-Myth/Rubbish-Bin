@@ -112,7 +112,7 @@ Model* Model::LoadMesh(std::string MeshPath)
 	return tmpModel;
 }
 
-void Model::Draw(Shader* UsedShader)
+void Model::Draw(Shader* UsedShader, bool ProcessTexture)
 {
 	glm::mat4x4 ModelMatrix(1.f);
 	ModelMatrix = glm::rotate(ModelMatrix, glm::radians(Transform.Rotation.z), glm::vec3(0, 1, 0));
@@ -123,7 +123,7 @@ void Model::Draw(Shader* UsedShader)
 	ModelMatrix = glm::scale(ModelMatrix, Transform.Scale);
 	UsedShader->SetMatrix4x4("ModelMatrix", ModelMatrix);
 	for (Mesh*& mesh : meshes)
-		mesh->Draw(UsedShader);
+		mesh->Draw(UsedShader, ProcessTexture);
 }
 
 Model::~Model()

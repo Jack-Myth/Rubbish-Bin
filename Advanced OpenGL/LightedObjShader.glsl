@@ -7,6 +7,7 @@ in vec3 PixelPos;
 in mat4x4 aViewMatrix;
 uniform sampler2D DiffuseMap;
 uniform sampler2D SpecularMap;
+uniform samplerCube Skybox;
 uniform mat3x3 NormalMatrix;
 uniform mat3x3 VectorMatrix;
 uniform vec3 ambientColor;
@@ -53,8 +54,11 @@ uniform SpotlightInfo FlashLight;
 uniform bool UseDiffuseMap;
 uniform bool UseSpecluarMap;
 uniform bool UseDepthVisualization;
+uniform bool UseSkyboxReflection;
+uniform bool UseSkyboxReflectionAsDiffuseMap;
+uniform bool UseSkyboxRefractionAsDiffuseMap;
 
-vec3 Normal,ViewDir;
+vec3 Normal,ViewDir,ReflectDir,RefractDir;
 vec4 FragColorx;
 vec4 DiffuseMapPixelColor;
 vec4 SpecularMapPixelColor;
@@ -67,23 +71,47 @@ void main()
 		FragColor = vec4(vec3(linearDepth/50.f), 1.0);
 		return;
 	}
+	//Object Normal
 	Normal=normalize(NormalMatrix*aNormal);
 	ViewDir = normalize(vec3(0,0,0) - PixelPos);
 	FragColor = vec4(ambientColor*0.1,1);
+	ReflectDir=reflect(-ViewDir,Normal);
+	RefractDir=refract(-ViewDir,Normal,1.0f/1.33f);
 	if(UseDiffuseMap)
-		DiffuseMapPixelColor=texture(DiffuseMap,pTextureCoordinate);
+	{
+		if(UseSkyboxRefractionAsDiffuseMap&&UseSkyboxReflectionAsDiffuseMap)
+		{
+			DiffuseMapPixelColor=texture(Skybox,RefractDir)+texture(Skybox,ReflectDir)*0.5;
+		}
+		else if(UseSkyboxReflectionAsDiffuseMap)
+			DiffuseMapPixelColor=texture(Skybox,ReflectDir);
+		else if(UseSkyboxRefractionAsDiffuseMap)
+			DiffuseMapPixelColor=texture(Skybox,RefractDir);
+		else
+			DiffuseMapPixelColor=texture(DiffuseMap,pTextureCoordinate);
+	}
 	else
 		DiffuseMapPixelColor=vec4(0.5,0.5,0.5,1);
 	if(UseSpecluarMap)
 		SpecularMapPixelColor=texture(SpecularMap,pTextureCoordinate);
+	else if(UseSkyboxReflection)
+		SpecularMapPixelColor=texture(Skybox,ReflectDir)*0.5;
 	else
 		SpecularMapPixelColor=vec4(0.5,0.5,0.5,1);
-	FragColor=FragColor + max(CaculateDirectionalLight(DirectionalLight),0);
-	for(int i=0;i<3;i++)
+	if(!UseSkyboxRefractionAsDiffuseMap)
 	{
-		FragColor=FragColor + max(CaculatePointLight(PointLight[i]),0);
+		FragColor=FragColor + max(CaculateDirectionalLight(DirectionalLight),0);
+		for(int i=0;i<3;i++)
+		{
+			FragColor=FragColor + max(CaculatePointLight(PointLight[i]),0);
+		}
+		FragColor=FragColor+max(CaculateSpotlight(FlashLight),0);
 	}
-	FragColor=FragColor+max(CaculateSpotlight(FlashLight),0);
+	else
+	{
+		FragColor=DiffuseMapPixelColor;
+		FragColor=FragColor+max(CaculateSpotlight(FlashLight)*0.2,0);
+	}
 	FragColor.a=DiffuseMapPixelColor.a;
 }
 

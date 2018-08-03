@@ -35,6 +35,6 @@ public:
 	std::vector<Texture> textures;
 	void FillData(std::vector<Vertex> newVertices, std::vector<GLuint> newIndices, std::vector<Texture> newTextures);
 	void RefreshBuffer();
-	void Draw(Shader* UsedShader);
+	void Draw(Shader* UsedShader, bool ProcessShader = true);
 	virtual ~Mesh();
 };

@@ -34,30 +34,35 @@ void Mesh::RefreshBuffer()
 	glBindVertexArray(NULL);
 }
 
-void Mesh::Draw(Shader* UsedShader)
+void Mesh::Draw(Shader* UsedShader,bool ProcessShader)
 {
-	int MaxTextureSize = textures.size() > 15 ? 15 : textures.size();
-	UsedShader->SetInt("DiffuseMap", 0);
-	UsedShader->SetInt("SpecularMap", 1);
-	UsedShader->SetInt("UseDiffuseMap", GL_FALSE);
-	UsedShader->SetInt("UseSpecluarMap", GL_FALSE);
-	for (int i=0;i<MaxTextureSize;i++)
+	if (ProcessShader)
 	{
-		switch (textures[i].type)
+		int MaxTextureSize = textures.size() > 15 ? 15 : textures.size();
+		UsedShader->SetInt("DiffuseMap", 0);
+		UsedShader->SetInt("SpecularMap", 1);
+		UsedShader->SetInt("UseDiffuseMap", GL_FALSE);
+		UsedShader->SetInt("UseSpecluarMap", GL_FALSE);
+		for (int i = 0; i < MaxTextureSize; i++)
 		{
-			case TextureType::DiffuseMap:
-				glActiveTexture(GL_TEXTURE0); //DiffuseMap
-				UsedShader->SetInt("UseDiffuseMap", GL_TRUE);
-				break;
-			case TextureType::SepcularMap:
-				glActiveTexture(GL_TEXTURE1);
-				UsedShader->SetInt("UseSpecluarMap", GL_TRUE);
-				break;
-			case TextureType::NormalMap:
-				glActiveTexture(GL_TEXTURE2);
+			switch (textures[i].type)
+			{
+				case TextureType::DiffuseMap:
+					glActiveTexture(GL_TEXTURE0); //DiffuseMap
+					UsedShader->SetInt("UseDiffuseMap", GL_TRUE);
+					break;
+				case TextureType::SepcularMap:
+					glActiveTexture(GL_TEXTURE1);
+					UsedShader->SetInt("UseSpecluarMap", GL_TRUE);
+					break;
+					//Normal Map maybe 3 instaded of 2
+					//case TextureType::NormalMap:
+						//glActiveTexture(GL_TEXTURE2);
+			}
+			glBindTexture(GL_TEXTURE_2D, textures[i].id);
 		}
-		glBindTexture(GL_TEXTURE_2D, textures[i].id);
 	}
+	UsedShader->Use();
 	glActiveTexture(GL_TEXTURE0);
 	glBindVertexArray(VAO);
 	glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, nullptr);
