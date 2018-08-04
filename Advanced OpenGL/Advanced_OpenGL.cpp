@@ -26,12 +26,12 @@ void ProcessInput(GLFWwindow* pWindow);
 float moveSpeed = 1.f;
 GLFWMainWindow* pMainWindow = nullptr;
 Camera* pMyCamera = nullptr;
-Shader* DefaultPhong = nullptr,*Unlit=nullptr,*TestforFramebuffer=nullptr, *SkyBoxShader=nullptr;
+Shader* DefaultPhong = nullptr,*Unlit=nullptr,*TestforFramebuffer=nullptr, *SkyBoxShader=nullptr,*GeoShader=nullptr;
 Model* targetModel=nullptr;
 FPointLight Pointlight;
 FDirectionalLight DirLight;
 FSpotlight Flashlight;
-GLuint BoxVAO,SurfaceVAO;
+GLuint BoxVAO,SurfaceVAO,TestGeoVAO;
 FTransform ModelTransform[7];
 GLuint StoneTexture,GrassTexture,WindowTexture, texColorBuffer,CubeMap;
 GLuint FBO;
@@ -57,6 +57,13 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	Unlit = new Shader("VertexShader.vert", "LightShader.glsl", "Unlit");
 	TestforFramebuffer = new Shader("FrameBuffer_VertexShader.vert", "FrameBuffer_FragShader.glsl", "FrameBuffer");
 	SkyBoxShader = new Shader("CubeMap.vert", "CubeMap.glsl","CubeMap");
+	GeoShader = new Shader();
+	GeoShader->AttachShader(GL_VERTEX_SHADER, "GeoShader.vert");
+	GeoShader->AttachShader(GL_GEOMETRY_SHADER, "GeoShader.geom");
+	GeoShader->AttachShader(GL_FRAGMENT_SHADER, "GeoShader.glsl");
+	GeoShader->Link();
+
+	//Load Texture
 	StoneTexture = LoadTexture("stone.jpg");
 	GrassTexture = LoadTexture("grass.png");
 	WindowTexture = LoadTexture("blending_transparent_window.png");
@@ -305,6 +312,25 @@ void BuildScene()
 		printf("FrameBuffer Initalization Failed.\n");
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	// Build TestGeoVAO
+	{
+		glGenVertexArrays(1, &TestGeoVAO);
+		GLuint BufferID;
+		glGenBuffers(1, &BufferID);
+		glBindVertexArray(TestGeoVAO);
+		float points[] = {
+			-0.5f,  0.5f, // 左上
+			0.5f,  0.5f, // 右上
+			0.5f, -0.5f, // 右下
+			-0.5f, -0.5f  // 左下
+		};
+		glBindBuffer(GL_ARRAY_BUFFER, BufferID);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(points), points, GL_STATIC_DRAW);
+		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0);
+		glEnableVertexAttribArray(0);
+		glBindVertexArray(NULL);
+	}
 }
 
 void ObjectAutomove()
@@ -316,15 +342,16 @@ void TryRender()
 {
 	glm::mat4x4 ViewMatrix = pMyCamera->GetViewMatrix();
 	glm::mat4x4 ProjectionMatrix = pMyCamera->GetProjectionMatrix();
-	//SkyBox
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glDepthFunc(GL_LEQUAL);
+	//SkyBox
+	/*glDepthFunc(GL_LEQUAL);
 	SkyBoxShader->Use();
 	SkyBoxShader->SetMatrix4x4("ViewMatrix", ViewMatrix);
 	SkyBoxShader->SetMatrix4x4("ProjectionMatrix", ProjectionMatrix);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, CubeMap);
 	glBindVertexArray(BoxVAO);
-	glDrawArrays(GL_TRIANGLES, 0, 36);
+	glDrawArrays(GL_TRIANGLES, 0, 36);*/
+
 	glDepthMask(GL_TRUE);
 	DefaultPhong->Use();
 	DefaultPhong->SetMatrix4x4("ViewMatrix", ViewMatrix);
@@ -367,6 +394,11 @@ void TryRender()
 	DefaultPhong->SetInt("UseSkyboxReflectionAsDiffuseMap", GL_FALSE);
 	DefaultPhong->SetInt("UseSkyboxRefractionAsDiffuseMap", GL_FALSE);
 
+	//Draw GeoShader's House
+	glBindVertexArray(TestGeoVAO);
+	GeoShader->Use();
+	glDrawArrays(GL_POINTS, 0, 4);
+
 	//Draw Grass
 	glBindVertexArray(SurfaceVAO);
 	DefaultPhong->SetMatrix4x4("ModelMatrix", ModelTransform[3].GenModelMatrix());
@@ -375,6 +407,7 @@ void TryRender()
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 
 	//Draw Window
+	DefaultPhong->Use();
 	glBindTexture(GL_TEXTURE_2D, WindowTexture);
 	glDepthMask(GL_FALSE);
 	std::map<float, FTransform*> sorted;
@@ -388,5 +421,6 @@ void TryRender()
 		DefaultPhong->SetMatrix4x4("ModelMatrix", it->second->GenModelMatrix());
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 	}
+
 	glDepthMask(GL_TRUE);
 }

@@ -147,6 +147,9 @@
     </None>
     <None Include="FrameBuffer_FragShader.glsl" />
     <None Include="FrameBuffer_VertexShader.vert" />
+    <None Include="GeoShader.geom" />
+    <None Include="GeoShader.glsl" />
+    <None Include="GeoShader.vert" />
     <None Include="LightedObjShader.glsl" />
     <None Include="LightShader.glsl" />
     <None Include="VertexShader.vert" />

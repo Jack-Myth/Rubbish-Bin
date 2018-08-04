@@ -88,5 +88,14 @@
     <None Include="CubeMap.glsl">
       <Filter>Source Files\Shaders</Filter>
     </None>
+    <None Include="GeoShader.geom">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="GeoShader.vert">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="GeoShader.glsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

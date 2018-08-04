@@ -86,7 +86,7 @@ bool Shader::Link()
 		return false;
 	}
 	bisLinked = true;
-	for (auto it= ShaderObjectList.begin();it<ShaderObjectList.end();++it)
+	for (auto it= ShaderObjectList.begin();it<ShaderObjectList.end();)
 	{
 		glDeleteShader(*it);
 		it = ShaderObjectList.erase(it);
