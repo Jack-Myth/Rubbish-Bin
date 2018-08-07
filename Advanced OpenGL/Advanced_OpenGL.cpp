@@ -26,7 +26,7 @@ void ProcessInput(GLFWwindow* pWindow);
 float moveSpeed = 1.f;
 GLFWMainWindow* pMainWindow = nullptr;
 Camera* pMyCamera = nullptr;
-Shader* DefaultPhong = nullptr,*Unlit=nullptr,*TestforFramebuffer=nullptr, *SkyBoxShader=nullptr,*GeoShader=nullptr;
+Shader* DefaultPhong = nullptr,*Unlit=nullptr,*TestforFramebuffer=nullptr, *SkyBoxShader=nullptr,*GeoShader=nullptr,*ExplodeShader=nullptr;
 Model* targetModel=nullptr;
 FPointLight Pointlight;
 FDirectionalLight DirLight;
@@ -62,6 +62,14 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	GeoShader->AttachShader(GL_GEOMETRY_SHADER, "GeoShader.geom");
 	GeoShader->AttachShader(GL_FRAGMENT_SHADER, "GeoShader.glsl");
 	GeoShader->Link();
+	ExplodeShader = new Shader();
+	ExplodeShader->AttachShader(GL_VERTEX_SHADER, "VertexShader.vert");
+	if (!ExplodeShader->AttachShader(GL_GEOMETRY_SHADER, "Explode.geom"))
+	{
+		printf("Error While Compiling Exploded.geom\nErrorMsg:%s", ExplodeShader->GetLastError().c_str());
+	}
+	ExplodeShader->AttachShader(GL_FRAGMENT_SHADER, "LightedObjShader.glsl");
+	ExplodeShader->Link();
 
 	//Load Texture
 	StoneTexture = LoadTexture("stone.jpg");
@@ -346,13 +354,13 @@ void TryRender()
 	glm::mat4x4 ProjectionMatrix = pMyCamera->GetProjectionMatrix();
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	//SkyBox
-	/*glDepthFunc(GL_LEQUAL);
+	glDepthFunc(GL_LEQUAL);
 	SkyBoxShader->Use();
 	SkyBoxShader->SetMatrix4x4("ViewMatrix", ViewMatrix);
 	SkyBoxShader->SetMatrix4x4("ProjectionMatrix", ProjectionMatrix);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, CubeMap);
 	glBindVertexArray(BoxVAO);
-	glDrawArrays(GL_TRIANGLES, 0, 36);*/
+	glDrawArrays(GL_TRIANGLES, 0, 36);
 
 	glDepthMask(GL_TRUE);
 	DefaultPhong->Use();
@@ -388,28 +396,49 @@ void TryRender()
 	//Render Target Modle
 	if (targetModel)
 	{
+		ExplodeShader->Use();
+		ExplodeShader->SetMatrix4x4("ViewMatrix", ViewMatrix);
+		ExplodeShader->SetMatrix4x4("ProjectionMatrix", ProjectionMatrix);
+		ExplodeShader->SetFloat("shininess", 32);
+		ExplodeShader->SetMatrix3x3("VectorMatrix", glm::transpose(glm::inverse(ViewMatrix)));
+		ExplodeShader->SetMatrix4x4("ModelMatrix", glm::mat4x4(1.f));
+		ExplodeShader->SetMatrix3x3("NormalMatrix", glm::transpose(glm::inverse(ViewMatrix)));
+		ExplodeShader->SetVec3("ambientColor", glm::vec3(1, 1, 1));
+		Pointlight.pos = ViewMatrix * glm::vec4(Pointlight.pos, 1.f);
+		Pointlight.ApplyToShader(ExplodeShader, "PointLight[0]");
+		DirLight.ApplyToShader(ExplodeShader, "DirectionalLight");
+		Flashlight.ApplyToShader(ExplodeShader, "FlashLight");
+		ExplodeShader->SetInt("UseDiffuseMap", GL_TRUE);
+		ExplodeShader->SetInt("DiffuseMap", 0);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, StoneTexture);
+		ExplodeShader->SetInt("UseSkyboxReflection", GL_TRUE);
+		ExplodeShader->SetInt("Skybox", 2);
+		ExplodeShader->SetFloat("time", glfwGetTime());
 		//Test Skybox Reflection
-		DefaultPhong->SetInt("UseSkyboxReflectionAsDiffuseMap", GL_FALSE);
-		DefaultPhong->SetInt("UseSkyboxRefractionAsDiffuseMap", GL_TRUE);
-		targetModel->Draw(DefaultPhong,false);
+		ExplodeShader->SetInt("UseSkyboxReflectionAsDiffuseMap", GL_FALSE);
+		ExplodeShader->SetInt("UseSkyboxRefractionAsDiffuseMap", GL_TRUE);
+		targetModel->Draw(ExplodeShader,false);
 	}
 	DefaultPhong->SetInt("UseSkyboxReflectionAsDiffuseMap", GL_FALSE);
 	DefaultPhong->SetInt("UseSkyboxRefractionAsDiffuseMap", GL_FALSE);
 
 	//Draw GeoShader's House
-	glBindVertexArray(TestGeoVAO);
+	/*glBindVertexArray(TestGeoVAO);
 	GeoShader->Use();
-	glDrawArrays(GL_POINTS, 0, 4);
+	glDrawArrays(GL_POINTS, 0, 4);*/
+
+
+	DefaultPhong->Use();
+	glBindVertexArray(SurfaceVAO);
 
 	//Draw Grass
-	glBindVertexArray(SurfaceVAO);
 	DefaultPhong->SetMatrix4x4("ModelMatrix", ModelTransform[3].GenModelMatrix());
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, GrassTexture);
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 
 	//Draw Window
-	DefaultPhong->Use();
 	glBindTexture(GL_TEXTURE_2D, WindowTexture);
 	glDepthMask(GL_FALSE);
 	std::map<float, FTransform*> sorted;

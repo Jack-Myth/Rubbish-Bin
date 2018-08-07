@@ -145,6 +145,7 @@
     <None Include="CubeMap.vert">
       <FileType>Document</FileType>
     </None>
+    <None Include="Explode.geom" />
     <None Include="FrameBuffer_FragShader.glsl" />
     <None Include="FrameBuffer_VertexShader.vert" />
     <None Include="GeoShader.geom" />
