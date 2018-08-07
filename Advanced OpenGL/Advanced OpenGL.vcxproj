@@ -153,6 +153,7 @@
     <None Include="GeoShader.vert" />
     <None Include="LightedObjShader.glsl" />
     <None Include="LightShader.glsl" />
+    <None Include="RocksShader.vert" />
     <None Include="VertexShader.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

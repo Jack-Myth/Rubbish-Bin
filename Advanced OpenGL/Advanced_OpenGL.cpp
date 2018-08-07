@@ -23,18 +23,24 @@ GLuint BuildSurface();
 
 void ProcessInput(GLFWwindow* pWindow);
 
+#define ROCKS_COUNT 81920
+#define ROCKS_RANGE 50
+#define ROCKS_WIDTH 30
+
 float moveSpeed = 1.f;
 GLFWMainWindow* pMainWindow = nullptr;
 Camera* pMyCamera = nullptr;
-Shader* DefaultPhong = nullptr,*Unlit=nullptr,*TestforFramebuffer=nullptr, *SkyBoxShader=nullptr,*GeoShader=nullptr,*ExplodeShader=nullptr;
-Model* targetModel=nullptr;
+Shader* DefaultPhong = nullptr,*Unlit=nullptr,*TestforFramebuffer=nullptr, *SkyBoxShader=nullptr,*GeoShader=nullptr,*ExplodeShader=nullptr,*PlanetShader=nullptr;
+Model* targetModel=nullptr,*Planet=nullptr,*Rock=nullptr;
+glm::mat4x4 RocksTranformMatrix[ROCKS_COUNT];
 FPointLight Pointlight;
 FDirectionalLight DirLight;
 FSpotlight Flashlight;
 GLuint BoxVAO,SurfaceVAO,TestGeoVAO;
 FTransform ModelTransform[7];
-GLuint StoneTexture,GrassTexture,WindowTexture, texColorBuffer,CubeMap;
+GLuint StoneTexture,GrassTexture,WindowTexture, texColorBuffer,CubeMap,PlanetTexture,RockTexture;
 GLuint FBO;
+glm::mat4x4 RocksRotM(1),RocksOffsetM(1);
 int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nShowCmd)
 {
 #ifdef _DEBUG
@@ -70,6 +76,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	}
 	ExplodeShader->AttachShader(GL_FRAGMENT_SHADER, "LightedObjShader.glsl");
 	ExplodeShader->Link();
+	PlanetShader=new Shader("RocksShader.vert", "LightedObjShader.glsl");
 
 	//Load Texture
 	StoneTexture = LoadTexture("stone.jpg");
@@ -229,6 +236,7 @@ GLuint BuildSurface()
 
 void BuildScene()
 {
+	//Load Cube map
 	std::vector<std::string> textures_faces =
 	{
 		"CubeMap/cottoncandy_rt.tga",
@@ -239,6 +247,49 @@ void BuildScene()
 		"CubeMap/cottoncandy_ft.tga"
 	};
 	CubeMap = LoadCubeMap(textures_faces);
+
+	//Load Planet and Rocket
+	{
+		Planet = Model::LoadMesh("Models/planet.obj");
+		Rock = Model::LoadMesh("Models/rock.obj");
+		Planet->Transform.Location = glm::vec3(50,50, 50);
+		Planet->Transform.Rotation = glm::vec3(0, 0, 0);
+		glm::vec3 RocksOffset = Planet->Transform.Location+glm::vec3(-15.f, -10.f, -120.f);
+		//build rocks transform
+		for (int i = 0; i < ROCKS_COUNT; i++)
+		{
+			FTransform tmpTransform;
+			float TargetRadius = rand() % 360;
+			tmpTransform.Location.x = glm::cos(TargetRadius)*ROCKS_RANGE +rand() % ROCKS_WIDTH;
+			tmpTransform.Location.z = glm::sin(TargetRadius)*ROCKS_RANGE +rand() % ROCKS_WIDTH;
+			tmpTransform.Location.y = rand() % ROCKS_WIDTH;
+			tmpTransform.Scale = glm::vec3(0.1, 0.1, 0.1);
+			RocksTranformMatrix[i]=tmpTransform.GenModelMatrix();
+		}
+		RocksOffsetM=glm::translate(RocksOffsetM, RocksOffset);
+		GLuint ModelViewBuffer;
+		glGenBuffers(1, &ModelViewBuffer);
+		glBindBuffer(GL_ARRAY_BUFFER,ModelViewBuffer);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(RocksTranformMatrix), RocksTranformMatrix, GL_STATIC_DRAW);
+		for (int i=0;i<Rock->GetMeshes().size();i++)
+		{
+			glBindVertexArray(Rock->GetMeshes()[i]->GetVAO());
+			glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(glm::vec4), 0);
+			glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(glm::vec4), (void*)sizeof(glm::vec4));
+			glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(glm::vec4), (void*)(2 * sizeof(glm::vec4)));
+			glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(glm::vec4), (void*)(3 * sizeof(glm::vec4)));
+			glEnableVertexAttribArray(3);
+			glEnableVertexAttribArray(4);
+			glEnableVertexAttribArray(5);
+			glEnableVertexAttribArray(6);
+			glVertexAttribDivisor(3, 1);
+			glVertexAttribDivisor(4, 1);
+			glVertexAttribDivisor(5, 1);
+			glVertexAttribDivisor(6, 1);
+			glBindVertexArray(NULL);
+		}
+	}
+
 	char FileP[1024] = {0};
 	OPENFILENAMEA OpenFN = {NULL};
 	OpenFN.lStructSize = sizeof(OPENFILENAMEA);
@@ -396,28 +447,10 @@ void TryRender()
 	//Render Target Modle
 	if (targetModel)
 	{
-		ExplodeShader->Use();
-		ExplodeShader->SetMatrix4x4("ViewMatrix", ViewMatrix);
-		ExplodeShader->SetMatrix4x4("ProjectionMatrix", ProjectionMatrix);
-		ExplodeShader->SetFloat("shininess", 32);
-		ExplodeShader->SetMatrix3x3("VectorMatrix", glm::transpose(glm::inverse(ViewMatrix)));
-		ExplodeShader->SetMatrix4x4("ModelMatrix", glm::mat4x4(1.f));
-		ExplodeShader->SetMatrix3x3("NormalMatrix", glm::transpose(glm::inverse(ViewMatrix)));
-		ExplodeShader->SetVec3("ambientColor", glm::vec3(1, 1, 1));
-		Pointlight.pos = ViewMatrix * glm::vec4(Pointlight.pos, 1.f);
-		Pointlight.ApplyToShader(ExplodeShader, "PointLight[0]");
-		DirLight.ApplyToShader(ExplodeShader, "DirectionalLight");
-		Flashlight.ApplyToShader(ExplodeShader, "FlashLight");
-		ExplodeShader->SetInt("UseDiffuseMap", GL_TRUE);
-		ExplodeShader->SetInt("DiffuseMap", 0);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, StoneTexture);
-		ExplodeShader->SetInt("UseSkyboxReflection", GL_TRUE);
-		ExplodeShader->SetInt("Skybox", 2);
-		ExplodeShader->SetFloat("time", glfwGetTime());
 		//Test Skybox Reflection
-		ExplodeShader->SetInt("UseSkyboxReflectionAsDiffuseMap", GL_FALSE);
-		ExplodeShader->SetInt("UseSkyboxRefractionAsDiffuseMap", GL_TRUE);
+		DefaultPhong->Use();
+		DefaultPhong->SetInt("UseSkyboxReflectionAsDiffuseMap", GL_FALSE);
+		DefaultPhong->SetInt("UseSkyboxRefractionAsDiffuseMap", GL_TRUE);
 		targetModel->Draw(ExplodeShader,false);
 	}
 	DefaultPhong->SetInt("UseSkyboxReflectionAsDiffuseMap", GL_FALSE);
@@ -428,6 +461,36 @@ void TryRender()
 	GeoShader->Use();
 	glDrawArrays(GL_POINTS, 0, 4);*/
 
+	//Draw Planet and rocks
+	{
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, RockTexture);
+		Planet->Draw(DefaultPhong,false);
+
+		PlanetShader->Use();
+		PlanetShader->SetMatrix4x4("ViewMatrix", ViewMatrix);
+		PlanetShader->SetMatrix4x4("ProjectionMatrix", ProjectionMatrix);
+		PlanetShader->SetFloat("shininess", 32);
+		PlanetShader->SetMatrix3x3("VectorMatrix", glm::transpose(glm::inverse(ViewMatrix)));
+		//PlanetShader->SetMatrix4x4("ModelMatrix", glm::mat4x4(1.f));
+		PlanetShader->SetMatrix3x3("NormalMatrix", glm::transpose(glm::inverse(ViewMatrix)));
+		PlanetShader->SetVec3("ambientColor", glm::vec3(1, 1, 1));
+		Pointlight.ApplyToShader(PlanetShader, "PointLight[0]");
+		DirLight.ApplyToShader(PlanetShader, "DirectionalLight");
+		Flashlight.ApplyToShader(PlanetShader, "FlashLight");
+		PlanetShader->SetInt("UseDiffuseMap", GL_FALSE);
+		PlanetShader->SetInt("DiffuseMap", 0);
+		RocksRotM = glm::rotate(RocksRotM, glm::radians(1.f), glm::vec3(0, 1, 0));
+		PlanetShader->SetMatrix4x4("RotMatrix", RocksRotM);
+		PlanetShader->SetMatrix4x4("OffsetMatrix", RocksOffsetM);
+		//PlanetShader->SetInt("UseDepthVisualization", GL_FALSE);
+		for (int i=0;i<Rock->GetMeshes().size();i++)
+		{
+			glBindVertexArray(Rock->GetMeshes()[i]->GetVAO());
+			glDrawElementsInstanced(GL_TRIANGLES, Rock->GetMeshes()[i]->indices.size(), GL_UNSIGNED_INT, nullptr, ROCKS_COUNT);
+			glBindVertexArray(NULL);
+		}
+	}
 
 	DefaultPhong->Use();
 	glBindVertexArray(SurfaceVAO);
@@ -436,7 +499,8 @@ void TryRender()
 	DefaultPhong->SetMatrix4x4("ModelMatrix", ModelTransform[3].GenModelMatrix());
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, GrassTexture);
-	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+	glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, 100);  //Draw Elements Instanced.
+	//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 
 	//Draw Window
 	glBindTexture(GL_TEXTURE_2D, WindowTexture);

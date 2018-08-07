@@ -11,9 +11,11 @@ out mat4x4 aViewMatrix;
 
 void main()
 {
-	gl_Position= ProjectionMatrix*ViewMatrix*ModelMatrix*vec4(aPos,1.f);
+	vec3 TargetPos=aPos;
+	TargetPos=TargetPos+vec3(gl_InstanceID/10,0,gl_InstanceID%10*0.5);
+	gl_Position= ProjectionMatrix*ViewMatrix*ModelMatrix*vec4(TargetPos,1.f);
 	pTextureCoordinate=vTextureCoordinate;
 	aNormal=vNormal;
-	PixelPos=(ViewMatrix*ModelMatrix*vec4(aPos,1.f)).xyz;
+	PixelPos=(ViewMatrix*ModelMatrix*vec4(TargetPos,1.f)).xyz;
 	aViewMatrix=ViewMatrix;
 }

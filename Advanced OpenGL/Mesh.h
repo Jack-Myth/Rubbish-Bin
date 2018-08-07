@@ -36,5 +36,9 @@ public:
 	void FillData(std::vector<Vertex> newVertices, std::vector<GLuint> newIndices, std::vector<Texture> newTextures);
 	void RefreshBuffer();
 	void Draw(Shader* UsedShader, bool ProcessShader = true);
+	inline GLuint GetVAO()
+	{
+		return VAO;
+	}
 	virtual ~Mesh();
 };
