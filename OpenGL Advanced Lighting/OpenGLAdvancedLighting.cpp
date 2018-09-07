@@ -165,14 +165,18 @@ void BuildScene()
 {
 	BoxVAO = BuildBox();
 	DirLight.dir = glm::vec3(0.5, -0.5, 0.5);
-	WoodTexture = LoadTexture("wood.jpg");
+	WoodTexture = LoadTexture("wood01.jpg");
 	FTransform tmpTransform;
 	//Make floor
 	tmpTransform.Location = glm::vec3(0, -50, 0); 
-	tmpTransform.Scale = glm::vec3(8,0.1,8);
+	tmpTransform.Scale = glm::vec3(10,0.1,10);
 	BoxTransform.push_back(tmpTransform);
 	//Make Box (On Surface)
 	tmpTransform.Location = glm::vec3(-100, 0, -100);
+	tmpTransform.Scale = glm::vec3(1, 1, 1);
+	BoxTransform.push_back(tmpTransform);
+	//Make Box (Float with out rot)
+	tmpTransform.Location = glm::vec3(-100, 100, 200);
 	tmpTransform.Scale = glm::vec3(1, 1, 1);
 	BoxTransform.push_back(tmpTransform);
 	//Make Box (Float)
