@@ -72,8 +72,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>D:\Visual Studio 2017\ThirdPartyLib\GLFW;$(ProjectDir);D:\Visual Studio 2017\ThirdPartyLib\assimp\include;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\Visual Studio 2017\ThirdPartyLib\GLFW;$(ProjectDir);D:\Visual Studio 2017\ThirdPartyLib\assimp\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>D:\ThridPartyLib\LibLink\Include;$(ProjectDir);$(IncludePath)</IncludePath>
+    <LibraryPath>D:\ThridPartyLib\LibLink\Lib;$(ProjectDir);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
