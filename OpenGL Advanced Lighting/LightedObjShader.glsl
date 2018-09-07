@@ -5,9 +5,11 @@ in vec3 aNormal;
 in vec2 pTextureCoordinate;
 in vec3 PixelPos;
 in mat4x4 aViewMatrix;
+in vec4 PixelPosLightSpace;
 uniform sampler2D DiffuseMap;
 uniform sampler2D SpecularMap;
 uniform samplerCube Skybox;
+uniform sampler2D ShadowMap;
 uniform mat3x3 NormalMatrix;
 uniform mat3x3 VectorMatrix;
 uniform vec3 ambientColor;
@@ -47,6 +49,7 @@ struct SpotlightInfo
 vec4 CaculateDirectionalLight(DirectionalLightInfo DirLight);
 vec4 CaculatePointLight(PointLightInfo pLight);
 vec4 CaculateSpotlight(SpotlightInfo Spotlight);
+float CaculateShadow(vec4 pixelPosLightSpace);
 
 uniform DirectionalLightInfo DirectionalLight;
 uniform PointLightInfo PointLight[3];
@@ -62,6 +65,8 @@ vec3 Normal,ViewDir,ReflectDir,RefractDir,HalfwayDir;
 vec4 FragColorx;
 vec4 DiffuseMapPixelColor;
 vec4 SpecularMapPixelColor;
+vec4 PixelDiffuseColor;
+vec4 PixelSpecularColor;
 void main()
 {
 	if(UseDepthVisualization)
@@ -102,7 +107,8 @@ void main()
 		SpecularMapPixelColor=vec4(0.5,0.5,0.5,1);
 	if(!UseSkyboxRefractionAsDiffuseMap)
 	{
-		FragColor=FragColor + max(CaculateDirectionalLight(DirectionalLight),0);
+		PixelDiffuseColor=max(CaculateDirectionalLight(DirectionalLight),0);
+		//FragColor=FragColor + max(CaculateDirectionalLight(DirectionalLight),0);
 		for(int i=0;i<3;i++)
 		{
 			FragColor=FragColor + max(CaculatePointLight(PointLight[i]),0);
@@ -113,6 +119,7 @@ void main()
 	{
 		FragColor=FragColor+max(CaculateSpotlight(FlashLight)*0.2,0);
 	}
+	FragColor+=vec4((1-CaculateShadow(PixelPosLightSpace))*PixelDiffuseColor);
 	FragColor.a=DiffuseMapPixelColor.a;
 }
 
@@ -151,4 +158,16 @@ vec4 CaculateSpotlight(SpotlightInfo Spotlight)
     float SpecularStrength=pow(max(dot(HalfDir,Normal),0),shininess)*DiffStrength;
     vec3 Specular=SpecularStrength*Spotlight.specularColor*SpecularMapPixelColor.xyz;
     return vec4(diffuse*Spotlight.diffuseColor+Specular,1.f);
+}
+
+float CaculateShadow(vec4 pixelPosLightSpace)
+{
+	//vec3 projCoords = pixelPosLightSpace.xyz / pixelPosLightSpace.w;
+	vec3 projCoords = pixelPosLightSpace.xyz;
+	projCoords = projCoords * 0.5 + 0.5;
+	//float closestDepth=0;
+	float closestDepth = texture(ShadowMap, projCoords.xy).r;
+	float currentDepth = projCoords.z;
+	//return 1;
+	return currentDepth>closestDepth?1.f:0.f;
 }

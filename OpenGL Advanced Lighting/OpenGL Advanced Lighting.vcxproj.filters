@@ -76,5 +76,17 @@
     <None Include="VertexShader.vert">
       <Filter>Source Files\Shaders</Filter>
     </None>
+    <None Include="simpleDepthShader.vert">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="emptyShader.glsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="simpleRenderTexture.glsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="simpleRenderTexture.vert">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

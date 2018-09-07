@@ -161,7 +161,11 @@
     <ClInclude Include="stb_image.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="emptyShader.glsl" />
     <None Include="LightedObjShader.glsl" />
+    <None Include="simpleDepthShader.vert" />
+    <None Include="simpleRenderTexture.glsl" />
+    <None Include="simpleRenderTexture.vert" />
     <None Include="VertexShader.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

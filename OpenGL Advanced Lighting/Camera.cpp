@@ -9,7 +9,7 @@ Camera::Camera(float initAspect, float initFOV/*=90.f*/, glm::vec3 initPos/*=glm
 	CameraRotation = glm::vec3(0, 0, 0);
 	fov = initFOV;
 	Aspect = initAspect;
-	ProjectionMatrix = glm::perspective(glm::radians(fov), Aspect, 0.1f, 10000.f);
+	ProjectionMatrix = glm::perspective(glm::radians(fov), Aspect, 1.f, 10000.f);
 }
 
 void Camera::SetCameraLocation(glm::vec3 newPos)
