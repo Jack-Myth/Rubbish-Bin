@@ -27,6 +27,7 @@ void LoadShaders();
 void GenFrameBuffers(); 
 GLuint BuildBox(GLuint* pVBO = nullptr);
 void ProcessInput(GLFWwindow* pWindow);
+GLuint BuildSurface();
 
 void RenderQuad();
 
@@ -34,7 +35,7 @@ GLFWMainWindow* pMainWindow;
 Camera* pMyCamera;
 float moveSpeed = 10.f;
 GLuint ShadowbufferFBO;
-GLuint BoxVAO,WoodTexture;
+GLuint BoxVAO,WoodTexture,SurfaceVAO;
 GLuint ShadowMap;
 FDirectionalLight DirLight;
 Shader* DefaultPhong = nullptr,*simpleDepthShader =nullptr,*simpleRenderTexture=nullptr;
@@ -73,7 +74,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 		glClear(GL_COLOR_BUFFER_BIT);
 		PreRender();
 		TryRender();
-		//DrawDebugDepth();
+		DrawDebugDepth();
 		glfwSwapBuffers(pMainWindow->GetWindow());
 		glfwPollEvents();
 	}
@@ -186,7 +187,7 @@ GLuint BuildBox(GLuint* pVBO/*=nullptr*/)
 void BuildScene()
 {
 	BoxVAO = BuildBox();
-	
+	SurfaceVAO = BuildSurface();
 	DirLight.dir = glm::vec3(0.5, -0.5, 0.5);
 	WoodTexture = LoadTexture("wood01.jpg");
 	FTransform tmpTransform;
@@ -200,6 +201,10 @@ void BuildScene()
 	BoxTransform.push_back(tmpTransform);
 	//Make Box (Float with out rot)
 	tmpTransform.Location = glm::vec3(-100, 100, 200);
+	tmpTransform.Scale = glm::vec3(1, 1, 1);
+	BoxTransform.push_back(tmpTransform);
+	//Make Box (0,0,0)
+	tmpTransform.Location = glm::vec3(0, 0, 0);
 	tmpTransform.Scale = glm::vec3(1, 1, 1);
 	BoxTransform.push_back(tmpTransform);
 	//Make Box (Float)
@@ -232,11 +237,13 @@ void ProcessSceneMovement()
 
 void PreRender()
 {
+	glEnable(GL_DEPTH_TEST);
 	glViewport(0, 0, SHADOWMAP_WIDTH, SHADOWMAP_HEIGHT);
-	glBindFramebuffer(GL_FRAMEBUFFER, ShadowMap);
+	glBindFramebuffer(GL_FRAMEBUFFER, ShadowbufferFBO);
 	glClear(GL_DEPTH_BUFFER_BIT);
 	ConfigShaderAndLightTransform();
 	//Render Only Box
+	glBindVertexArray(BoxVAO);
 	for (FTransform BoxT : BoxTransform)
 	{
 		simpleDepthShader->SetMatrix4x4("model", BoxT.GenModelMatrix());
@@ -244,13 +251,16 @@ void PreRender()
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glm::vec2 CurWindowSize = pMainWindow->GetWindowSize();
-	glViewport(0, 0, CurWindowSize.r, CurWindowSize.g);
+	glViewport(0, 0, (int)CurWindowSize.r, (int)CurWindowSize.g);
 }
 
 void ConfigShaderAndLightTransform()
 {
-	glm::mat4 LightProjection = glm::ortho(-100.f, 100.f, -100.f, 100.f, 1.f, 7500.f);
-	glm::mat4 LightView = glm::lookAt(glm::vec3(-2,4,-1), glm::vec3(0, 0, 0), glm::vec3(1.0));
+	glm::mat4 LightProjection = glm::ortho(-500.f, 500.f, -500.f, 500.f, 1.f, 750.f);
+	glm::mat4 LightView = glm::lookAt(-(DirLight.dir*500.f), glm::vec3(0, 0, 0), glm::vec3(0,1.0,0));
+	glm::mat4x4 ViewMatrix = pMyCamera->GetViewMatrix();
+	glm::mat4x4 ProjectionMatrix = pMyCamera->GetProjectionMatrix();
+	//LightSpaceTransformMat = ProjectionMatrix * ViewMatrix;
 	LightSpaceTransformMat = LightProjection * LightView;
 	simpleDepthShader->Use();
 	simpleDepthShader->SetMatrix4x4("lightSpaceMatrix", LightSpaceTransformMat);
@@ -258,6 +268,7 @@ void ConfigShaderAndLightTransform()
 
 void TryRender()
 {
+	glEnable(GL_DEPTH_TEST);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glm::mat4x4 ViewMatrix = pMyCamera->GetViewMatrix();
 	glm::mat4x4 ProjectionMatrix = pMyCamera->GetProjectionMatrix();
@@ -278,6 +289,7 @@ void TryRender()
 	DefaultPhong->SetVec3("ambientColor", glm::vec3(1, 1, 1));
 	DirLight.ApplyToShader(DefaultPhong, "DirectionalLight");
 	DefaultPhong->SetInt("DiffuseMap", 0);
+	DefaultPhong->SetInt("ShadowMap", 3);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, WoodTexture);
 	//Bind Shadow Map
@@ -296,39 +308,46 @@ void TryRender()
 void DrawDebugDepth()
 {
 	simpleRenderTexture->Use();
+	simpleRenderTexture->SetInt("depthMap", 0);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, ShadowMap);
 	RenderQuad();
 }
 
-
-// RenderQuad() Renders a 1x1 quad in NDC, best used for framebuffer color targets
-// and post-processing effects.
-GLuint quadVAO = 0;
-GLuint quadVBO;
 void RenderQuad()
 {
-	if (quadVAO == 0)
-	{
-		GLfloat quadVertices[] = {
-			// Positions        // Texture Coords
-			-1.0f,  1.0f, 0.0f,  0.0f, 1.0f,
-			-1.0f, -1.0f, 0.0f,  0.0f, 0.0f,
-			 1.0f,  1.0f, 0.0f,  1.0f, 1.0f,
-			 1.0f, -1.0f, 0.0f,  1.0f, 0.0f,
-		};
-		// Setup plane VAO
-		glGenVertexArrays(1, &quadVAO);
-		glGenBuffers(1, &quadVBO);
-		glBindVertexArray(quadVAO);
-		glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
-		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)0);
-		glEnableVertexAttribArray(1);
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
-	}
-	glBindVertexArray(quadVAO);
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+	glDisable(GL_DEPTH_TEST);
+	glBindVertexArray(SurfaceVAO);
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, NULL);
 	glBindVertexArray(0);
+}
+
+GLuint BuildSurface()
+{
+	float vertices[] =
+	{
+		0,0,0,0,0,
+		1,0,0,1,0,
+		1,1,0,1,1,
+		0,1,0,0,1
+	};
+	unsigned int indices[] =
+	{
+		0,1,2,0,2,3
+	};
+	GLuint VAO, VBO, EBO;
+	glGenVertexArrays(1, &VAO);
+	glGenBuffers(1, &VBO);
+	glGenBuffers(1, &EBO);
+	glBindVertexArray(VAO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+	glBindVertexArray(NULL);
+	return VAO;
 }

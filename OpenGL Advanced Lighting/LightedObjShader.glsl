@@ -162,8 +162,8 @@ vec4 CaculateSpotlight(SpotlightInfo Spotlight)
 
 float CaculateShadow(vec4 pixelPosLightSpace)
 {
-	//vec3 projCoords = pixelPosLightSpace.xyz / pixelPosLightSpace.w;
-	vec3 projCoords = pixelPosLightSpace.xyz;
+	vec3 projCoords = pixelPosLightSpace.xyz / pixelPosLightSpace.w;
+	//vec3 projCoords = pixelPosLightSpace.xyz;
 	projCoords = projCoords * 0.5 + 0.5;
 	//float closestDepth=0;
 	float closestDepth = texture(ShadowMap, projCoords.xy).r;
