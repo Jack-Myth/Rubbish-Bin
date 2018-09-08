@@ -76,7 +76,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 		glClear(GL_COLOR_BUFFER_BIT);
 		PreRender();
 		TryRender();
-		DrawDebugDepth();
+		//DrawDebugDepth();
 		glfwSwapBuffers(pMainWindow->GetWindow());
 		glfwPollEvents();
 	}
@@ -195,7 +195,7 @@ void BuildScene()
 	FTransform tmpTransform;
 	//Make floor
 	tmpTransform.Location = glm::vec3(0, -50, 0); 
-	tmpTransform.Scale = glm::vec3(10,0.1,10);
+	tmpTransform.Scale = glm::vec3(100,0.1,100);
 	BoxTransform.push_back(tmpTransform);
 	//Make Box (On Surface)
 	tmpTransform.Location = glm::vec3(-100, 0, -100);
@@ -223,8 +223,10 @@ void GenFrameBuffers()
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOWMAP_WIDTH, SHADOWMAP_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	float borderColor[] = { 1.0, 1.0, 1.0, 1.0 };
+	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR,borderColor);
 	glBindFramebuffer(GL_FRAMEBUFFER, ShadowbufferFBO);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, ShadowMap, 0);
 	glDrawBuffer(GL_NONE);
@@ -242,8 +244,6 @@ void PreRender()
 	glEnable(GL_DEPTH_TEST);
 	glViewport(0, 0, SHADOWMAP_WIDTH, SHADOWMAP_HEIGHT);
 	glBindFramebuffer(GL_FRAMEBUFFER, ShadowbufferFBO);
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_FRONT_FACE);
 	glClear(GL_DEPTH_BUFFER_BIT);
 	ConfigShaderAndLightTransform();
 	//Render Only Box
@@ -254,14 +254,13 @@ void PreRender()
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glDisable(GL_CULL_FACE);
 	glm::vec2 CurWindowSize = pMainWindow->GetWindowSize();
 	glViewport(0, 0, (int)CurWindowSize.r, (int)CurWindowSize.g);
 }
 
 void ConfigShaderAndLightTransform()
 {
-	glm::mat4 LightProjection = glm::ortho(-500.f, 500.f, -500.f, 500.f, 1.f, 20000.f);
+	glm::mat4 LightProjection = glm::ortho(-500.f, 500.f, -500.f, 500.f, 1.f, 30000.f);
 	glm::mat4 LightView = glm::lookAt(-(DirLight.dir*700.f), glm::vec3(0, 0, 0), glm::vec3(0,1.0,0));
 	glm::mat4x4 ViewMatrix = pMyCamera->GetViewMatrix();
 	glm::mat4x4 ProjectionMatrix = pMyCamera->GetProjectionMatrix();
