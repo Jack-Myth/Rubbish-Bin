@@ -9,7 +9,7 @@ Camera::Camera(float initAspect, float initFOV/*=90.f*/, glm::vec3 initPos/*=glm
 	CameraRotation = glm::vec3(0, 0, 0);
 	fov = initFOV;
 	Aspect = initAspect;
-	ProjectionMatrix = glm::perspective(glm::radians(fov), Aspect, 1.f, 10000.f);
+	ProjectionMatrix = glm::perspective(glm::radians(fov), Aspect, NearPanel,FarPanel);
 }
 
 void Camera::SetCameraLocation(glm::vec3 newPos)
@@ -68,7 +68,7 @@ const glm::mat4x4& Camera::GetProjectionMatrix()
 void Camera::SetAspect(float newAspect)
 {
 	Aspect = newAspect;
-	ProjectionMatrix = glm::perspective(glm::radians(fov), Aspect, 0.001f, 10000.f);
+	ProjectionMatrix = glm::perspective(glm::radians(fov), Aspect, NearPanel, FarPanel);
 }
 
 float Camera::GetFOV()
@@ -79,7 +79,19 @@ float Camera::GetFOV()
 void Camera::SetFOV(float newFOV)
 {
 	fov = newFOV;
-	ProjectionMatrix = glm::perspective(glm::radians(fov), Aspect, 0.001f, 10000.f);
+	ProjectionMatrix = glm::perspective(glm::radians(fov), Aspect, NearPanel, FarPanel);
+}
+
+void Camera::SetNearPanel(float newNear)
+{
+	NearPanel = newNear;
+	ProjectionMatrix = glm::perspective(glm::radians(fov), Aspect, NearPanel,FarPanel);
+}
+
+void Camera::SetFarPanel(float newFar)
+{
+	FarPanel = newFar;
+	ProjectionMatrix = glm::perspective(glm::radians(fov), Aspect, NearPanel, FarPanel);
 }
 
 glm::vec3 Camera::GetForwardVector()

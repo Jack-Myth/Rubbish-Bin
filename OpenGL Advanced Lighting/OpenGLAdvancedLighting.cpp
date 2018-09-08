@@ -58,6 +58,8 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	glfwWindowHint(GLFW_SAMPLES, 4);
 	pMainWindow = new GLFWMainWindow(1024, 768);
 	pMyCamera = new Camera(4.f / 3.f);
+	pMyCamera->SetNearPanel(1.f);
+	pMyCamera->SetFarPanel(10000.f);
 	glfwSetInputMode(pMainWindow->GetWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	pMainWindow->AttachCamera(pMyCamera);
 	glEnable(GL_DEPTH_TEST);
@@ -70,11 +72,11 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	{
 		ProcessInput(pMainWindow->GetWindow());
 		ProcessSceneMovement();
-		glClearColor(0, 0, 0, 1);
+		glClearColor(1, 1, 1, 1);
 		glClear(GL_COLOR_BUFFER_BIT);
 		PreRender();
 		TryRender();
-		DrawDebugDepth();
+		//DrawDebugDepth();
 		glfwSwapBuffers(pMainWindow->GetWindow());
 		glfwPollEvents();
 	}
@@ -256,7 +258,7 @@ void PreRender()
 
 void ConfigShaderAndLightTransform()
 {
-	glm::mat4 LightProjection = glm::ortho(-500.f, 500.f, -500.f, 500.f, 1.f, 1000.f);
+	glm::mat4 LightProjection = glm::ortho(-500.f, 500.f, -500.f, 500.f, 1.f, 20000.f);
 	glm::mat4 LightView = glm::lookAt(-(DirLight.dir*700.f), glm::vec3(0, 0, 0), glm::vec3(0,1.0,0));
 	glm::mat4x4 ViewMatrix = pMyCamera->GetViewMatrix();
 	glm::mat4x4 ProjectionMatrix = pMyCamera->GetProjectionMatrix();

@@ -7,6 +7,7 @@ class Camera
 {
 	glm::vec3 CameraPos;
 	glm::vec3 CameraRotation;
+	float NearPanel=1.f, FarPanel=10000.f;
 	float fov, Aspect;
 	glm::mat4x4 ProjectionMatrix;
 public:
@@ -29,5 +30,7 @@ public:
 	void SetAspect(float newAspect);
 	float GetFOV();
 	void SetFOV(float newFOV);
+	void SetNearPanel(float newNear);
+	void SetFarPanel(float newFar);
 	glm::vec3 GetForwardVector();
 };

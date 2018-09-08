@@ -119,7 +119,7 @@ void main()
 	{
 		FragColor=FragColor+max(CaculateSpotlight(FlashLight)*0.2,0);
 	}
-	FragColor+=vec4((1-CaculateShadow(PixelPosLightSpace))*PixelDiffuseColor);
+	FragColor=(1-CaculateShadow(PixelPosLightSpace))*PixelDiffuseColor+PixelDiffuseColor*vec4(ambientColor,1.f);
 	FragColor.a=DiffuseMapPixelColor.a;
 }
 
@@ -165,9 +165,9 @@ float CaculateShadow(vec4 pixelPosLightSpace)
 	vec3 projCoords = pixelPosLightSpace.xyz / pixelPosLightSpace.w;
 	//vec3 projCoords = pixelPosLightSpace.xyz;
 	projCoords = projCoords * 0.5 + 0.5;
-	//float closestDepth=0;
+	float bias = 0.0001;
 	float closestDepth = texture(ShadowMap, projCoords.xy).r;
 	float currentDepth = projCoords.z;
 	//return 1;
-	return currentDepth>closestDepth?1.f:0.f;
+	return currentDepth-bias>closestDepth?1.f:0.f;
 }
