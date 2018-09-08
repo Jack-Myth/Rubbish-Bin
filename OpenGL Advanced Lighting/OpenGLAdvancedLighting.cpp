@@ -76,7 +76,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 		glClear(GL_COLOR_BUFFER_BIT);
 		PreRender();
 		TryRender();
-		//DrawDebugDepth();
+		DrawDebugDepth();
 		glfwSwapBuffers(pMainWindow->GetWindow());
 		glfwPollEvents();
 	}
@@ -242,6 +242,8 @@ void PreRender()
 	glEnable(GL_DEPTH_TEST);
 	glViewport(0, 0, SHADOWMAP_WIDTH, SHADOWMAP_HEIGHT);
 	glBindFramebuffer(GL_FRAMEBUFFER, ShadowbufferFBO);
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_FRONT_FACE);
 	glClear(GL_DEPTH_BUFFER_BIT);
 	ConfigShaderAndLightTransform();
 	//Render Only Box
@@ -252,6 +254,7 @@ void PreRender()
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glDisable(GL_CULL_FACE);
 	glm::vec2 CurWindowSize = pMainWindow->GetWindowSize();
 	glViewport(0, 0, (int)CurWindowSize.r, (int)CurWindowSize.g);
 }
