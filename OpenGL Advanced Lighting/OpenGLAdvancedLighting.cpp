@@ -236,7 +236,9 @@ void GenFrameBuffers()
 
 void ProcessSceneMovement()
 {
-
+	glm::mat4 DirLightRotMat = glm::mat3(1.f);
+	DirLightRotMat = glm::rotate(DirLightRotMat, glm::radians(0.5f), glm::vec3(0, 1, 0));
+	DirLight.dir = glm::mat3(DirLightRotMat) * DirLight.dir;
 }
 
 void PreRender()
