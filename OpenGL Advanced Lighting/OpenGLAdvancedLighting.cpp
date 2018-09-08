@@ -100,6 +100,22 @@ void ProcessInput(GLFWwindow* pWindow)
 		pMyCamera->Move(glm::vec3(-0.2f, 0, 0)*moveSpeed);
 	if (glfwGetKey(pWindow, GLFW_KEY_D) == GLFW_PRESS)
 		pMyCamera->Move(glm::vec3(0.2f, 0, 0)*moveSpeed);
+
+	glm::vec3 CubeMovement=glm::vec3(0);
+	int BoxSpeed = 2;
+	if (glfwGetKey(pWindow, GLFW_KEY_UP) == GLFW_PRESS)
+		CubeMovement.r+= BoxSpeed;
+	if (glfwGetKey(pWindow, GLFW_KEY_DOWN) == GLFW_PRESS)
+		CubeMovement.r-= BoxSpeed;
+	if (glfwGetKey(pWindow, GLFW_KEY_LEFT) == GLFW_PRESS)
+		CubeMovement.b-= BoxSpeed;
+	if (glfwGetKey(pWindow, GLFW_KEY_RIGHT) == GLFW_PRESS)
+		CubeMovement.b+= BoxSpeed;
+	if (glfwGetKey(pWindow, GLFW_KEY_I) == GLFW_PRESS)
+		CubeMovement.g+= BoxSpeed;
+	if (glfwGetKey(pWindow, GLFW_KEY_K) == GLFW_PRESS)
+		CubeMovement.g-= BoxSpeed;
+	BoxTransform[1].Location += CubeMovement;
 }
 
 void LoadShaders()
