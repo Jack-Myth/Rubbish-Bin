@@ -256,8 +256,8 @@ void PreRender()
 
 void ConfigShaderAndLightTransform()
 {
-	glm::mat4 LightProjection = glm::ortho(-500.f, 500.f, -500.f, 500.f, 1.f, 750.f);
-	glm::mat4 LightView = glm::lookAt(-(DirLight.dir*500.f), glm::vec3(0, 0, 0), glm::vec3(0,1.0,0));
+	glm::mat4 LightProjection = glm::ortho(-500.f, 500.f, -500.f, 500.f, 1.f, 1000.f);
+	glm::mat4 LightView = glm::lookAt(-(DirLight.dir*700.f), glm::vec3(0, 0, 0), glm::vec3(0,1.0,0));
 	glm::mat4x4 ViewMatrix = pMyCamera->GetViewMatrix();
 	glm::mat4x4 ProjectionMatrix = pMyCamera->GetProjectionMatrix();
 	//LightSpaceTransformMat = ProjectionMatrix * ViewMatrix;

@@ -26,5 +26,5 @@ void main()
 	aNormal=vNormal;
 	PixelPos=(ViewMatrix*ModelMatrix*vec4(TargetPos,1.f)).xyz;
 	aViewMatrix=ViewMatrix;
-	PixelPosLightSpace= lightSpaceMatrix*vec4(aPos,1.f);
+	PixelPosLightSpace= lightSpaceMatrix*ModelMatrix*vec4(aPos,1.f);
 }
