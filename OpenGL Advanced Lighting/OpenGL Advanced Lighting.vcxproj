@@ -163,6 +163,7 @@
   <ItemGroup>
     <None Include="emptyShader.glsl" />
     <None Include="LightedObjShader.glsl" />
+    <None Include="simpleDepthShader.geom" />
     <None Include="simpleDepthShader.vert" />
     <None Include="simpleRenderTexture.glsl" />
     <None Include="simpleRenderTexture.vert" />

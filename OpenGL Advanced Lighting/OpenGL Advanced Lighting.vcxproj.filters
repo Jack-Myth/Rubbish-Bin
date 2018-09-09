@@ -88,5 +88,8 @@
     <None Include="simpleRenderTexture.vert">
       <Filter>Source Files\Shaders</Filter>
     </None>
+    <None Include="simpleDepthShader.geom">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

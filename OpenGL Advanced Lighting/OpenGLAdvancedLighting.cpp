@@ -132,7 +132,11 @@ void LoadShaders()
 	glBindBuffer(GL_UNIFORM_BUFFER, NULL);
 
 	//Light Shader
-	simpleDepthShader = new Shader("simpleDepthShader.vert", "emptyShader.glsl");
+	simpleDepthShader = new Shader();
+	simpleDepthShader->AttachShader(GL_VERTEX_SHADER, "simpleDepthShader.vert");
+	simpleDepthShader->AttachShader(GL_GEOMETRY_SHADER, "simpleDepthShader.geom");
+	simpleDepthShader->AttachShader(GL_FRAGMENT_SHADER, "emptyShader.glsl");
+	simpleDepthShader->Link();
 
 	//Debug Shader
 	simpleRenderTexture = new Shader("simpleRenderTexture.vert", "simpleRenderTexture.glsl");
@@ -238,14 +242,15 @@ void GenFrameBuffers()
 {
 	glGenFramebuffers(1, &ShadowbufferFBO);
 	glGenTextures(1, &ShadowMap);
-	glBindTexture(GL_TEXTURE_2D, ShadowMap);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOWMAP_WIDTH, SHADOWMAP_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, ShadowMap);
+	for (int i = 0; i < 6; i++)
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X+i, 0, GL_DEPTH_COMPONENT, SHADOWMAP_WIDTH, SHADOWMAP_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 	float borderColor[] = { 1.0, 1.0, 1.0, 1.0 };
-	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR,borderColor);
+	glTexParameterfv(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_BORDER_COLOR,borderColor);
 	glBindFramebuffer(GL_FRAMEBUFFER, ShadowbufferFBO);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, ShadowMap, 0);
 	glDrawBuffer(GL_NONE);
@@ -278,14 +283,27 @@ void PreRender()
 
 void ConfigShaderAndLightTransform()
 {
-	glm::mat4 LightProjection = glm::ortho(-500.f, 500.f, -500.f, 500.f, 1.f, 30000.f);
-	glm::mat4 LightView = glm::lookAt(pointLight.pos, glm::vec3(0, 0, 0), glm::vec3(0,1.0,0));
-	glm::mat4x4 ViewMatrix = pMyCamera->GetViewMatrix();
-	glm::mat4x4 ProjectionMatrix = pMyCamera->GetProjectionMatrix();
-	//LightSpaceTransformMat = ProjectionMatrix * ViewMatrix;
-	LightSpaceTransformMat = LightProjection * LightView;
+	glm::mat4 LightProjection = glm::perspective(glm::radians(90.f), (float)SHADOWMAP_WIDTH/(float)SHADOWMAP_HEIGHT, 1.f, 30000.f);
+	std::vector<glm::mat4> shadowTransforms;
+	shadowTransforms.push_back(LightProjection *
+		glm::lookAt(pointLight.pos, pointLight.pos + glm::vec3(1.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0)));
+	shadowTransforms.push_back(LightProjection *
+		glm::lookAt(pointLight.pos, pointLight.pos + glm::vec3(-1.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0)));
+	shadowTransforms.push_back(LightProjection *
+		glm::lookAt(pointLight.pos, pointLight.pos + glm::vec3(0.0, 1.0, 0.0), glm::vec3(0.0, 0.0, 1.0)));
+	shadowTransforms.push_back(LightProjection *
+		glm::lookAt(pointLight.pos, pointLight.pos + glm::vec3(0.0, -1.0, 0.0), glm::vec3(0.0, 0.0, -1.0)));
+	shadowTransforms.push_back(LightProjection *
+		glm::lookAt(pointLight.pos, pointLight.pos + glm::vec3(0.0, 0.0, 1.0), glm::vec3(0.0, -1.0, 0.0)));
+	shadowTransforms.push_back(LightProjection *
+		glm::lookAt(pointLight.pos, pointLight.pos + glm::vec3(0.0, 0.0, -1.0), glm::vec3(0.0, -1.0, 0.0)));
 	simpleDepthShader->Use();
-	simpleDepthShader->SetMatrix4x4("lightSpaceMatrix", LightSpaceTransformMat);
+	simpleDepthShader->SetVec3("lightPos", pointLight.pos);
+	simpleDepthShader->SetFloat("far_plane", 30000.f);
+	for (int i = 0; i < 6; i++)
+	{
+		simpleDepthShader->SetMatrix4x4(std::string("shadowMatrices[") + (char)('0' + i) + "]", shadowTransforms[i]);
+	}
 }
 
 void TryRender()
@@ -307,7 +325,6 @@ void TryRender()
 	DefaultPhong->SetFloat("shininess", 32);
 	DefaultPhong->SetMatrix3x3("VectorMatrix", glm::transpose(glm::inverse(ViewMatrix)));
 	DefaultPhong->SetMatrix3x3("NormalMatrix", glm::transpose(glm::inverse(ViewMatrix)));
-	DefaultPhong->SetMatrix4x4("lightSpaceMatrix", LightSpaceTransformMat);
 	DefaultPhong->SetVec3("ambientColor", glm::vec3(1, 1, 1));
 	DefaultPhong->SetInt("UseShadow", GL_FALSE);
 	pointLight.ViewMatrix = ViewMatrix;
@@ -318,7 +335,7 @@ void TryRender()
 	glBindTexture(GL_TEXTURE_2D, WoodTexture);
 	//Bind Shadow Map
 	glActiveTexture(GL_TEXTURE3);
-	glBindTexture(GL_TEXTURE_2D, ShadowMap);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, ShadowMap);
 	glBindVertexArray(BoxVAO);
 	for (FTransform BoxT:BoxTransform)
 	{

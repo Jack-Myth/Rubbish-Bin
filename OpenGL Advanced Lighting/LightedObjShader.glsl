@@ -5,16 +5,16 @@ in vec3 aNormal;
 in vec2 pTextureCoordinate;
 in vec3 PixelPos;
 in mat4x4 aViewMatrix;
-in vec4 PixelPosLightSpace;
 uniform sampler2D DiffuseMap;
 uniform sampler2D SpecularMap;
 uniform samplerCube Skybox;
-uniform sampler2D ShadowMap;
+uniform samplerCube ShadowMap;
 uniform mat3x3 NormalMatrix;
 uniform mat3x3 VectorMatrix;
 uniform vec3 ambientColor;
 uniform float shininess;
 uniform bool UseShadow;
+uniform float far_plane;
 
 //Directional Light
 struct DirectionalLightInfo
@@ -50,7 +50,7 @@ struct SpotlightInfo
 vec4 CaculateDirectionalLight(DirectionalLightInfo DirLight);
 vec4 CaculatePointLight(PointLightInfo pLight);
 vec4 CaculateSpotlight(SpotlightInfo Spotlight);
-float CaculateShadow(vec4 pixelPosLightSpace);
+float CaculateShadow(PointLightInfo pointLight);
 
 uniform DirectionalLightInfo DirectionalLight;
 uniform PointLightInfo PointLight[3];
@@ -121,7 +121,7 @@ void main()
 	{
 		FragColor=FragColor+max(CaculateSpotlight(FlashLight)*0.2,0);
 	}
-	FragColor=(1-CaculateShadow(PixelPosLightSpace))*tmpFragColor+PixelDiffuseColor*vec4(ambientColor,1.f);
+	FragColor=(1-CaculateShadow(PointLight[0]))*tmpFragColor+PixelDiffuseColor*vec4(ambientColor,1.f);
 	FragColor.a=tmpFragColor.a;
 }
 
@@ -161,16 +161,16 @@ vec4 CaculateSpotlight(SpotlightInfo Spotlight)
     return vec4(diffuse*Spotlight.diffuseColor+Specular,1.f);
 }
 
-float CaculateShadow(vec4 pixelPosLightSpace)
+float CaculateShadow(PointLightInfo pointLight)
 {
 	if(UseShadow==false)
 		return 0;
-	vec3 projCoords = pixelPosLightSpace.xyz / pixelPosLightSpace.w;
-	projCoords = projCoords * 0.5 + 0.5;
+	vec3 pixelToLight=PixelPos-pointLight.LightPos;
 	float bias = 0.0001;
-	float closestDepth = texture(ShadowMap, projCoords.xy).r;
-	float currentDepth = projCoords.z;
-	float shadow = 0.0;
+	float closestDepth = texture(ShadowMap, pixelToLight).r*far_plane;
+	float currentDepth = length(pixelToLight);
+	return currentDepth-bias>closestDepth?1:0;
+	/*float shadow = 0.0;
 	vec2 texelSize = 1.0 / textureSize(ShadowMap, 0);
 	for(int x = -1; x <= 1; ++x)
 	{
@@ -181,5 +181,5 @@ float CaculateShadow(vec4 pixelPosLightSpace)
 		}    
 	}
 	shadow /= 9.0;
-	return shadow;
+	return shadow;*/
 }

@@ -15,7 +15,6 @@ out vec3 PixelPos;
 uniform mat4 ModelMatrix;
 uniform mat4 lightSpaceMatrix;
 out mat4x4 aViewMatrix;
-out vec4 PixelPosLightSpace;
 
 void main()
 {
@@ -26,5 +25,4 @@ void main()
 	aNormal=vNormal;
 	PixelPos=(ViewMatrix*ModelMatrix*vec4(TargetPos,1.f)).xyz;
 	aViewMatrix=ViewMatrix;
-	PixelPosLightSpace= lightSpaceMatrix*ModelMatrix*vec4(aPos,1.f);
 }
