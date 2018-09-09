@@ -17,6 +17,7 @@ struct FDirectionalLight :FLight
 
 struct FPointLight :FLight
 {
+	glm::mat4 ViewMatrix;
 	glm::vec3 pos= glm::vec3(0, 0, 0);
 	float linear = 0.045f;
 	float quadratic = 0.0075f;
@@ -25,6 +26,7 @@ struct FPointLight :FLight
 
 struct FSpotlight :FLight
 {
+	glm::mat4 ViewMatrix;
 	glm::vec3 pos= glm::vec3(0, 0, 0);
 	glm::vec3 dir=glm::vec3(0,0,-1.f);
 	float linear= 0.045f;

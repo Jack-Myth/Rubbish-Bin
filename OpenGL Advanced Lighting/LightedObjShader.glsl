@@ -14,6 +14,7 @@ uniform mat3x3 NormalMatrix;
 uniform mat3x3 VectorMatrix;
 uniform vec3 ambientColor;
 uniform float shininess;
+uniform bool UseShadow;
 
 //Directional Light
 struct DirectionalLightInfo
@@ -81,6 +82,7 @@ void main()
 	ViewDir = normalize(vec3(0,0,0) - PixelPos);
 	ReflectDir=reflect(-ViewDir,Normal);
 	RefractDir=refract(-ViewDir,Normal,1.0f/1.33f);
+	vec4 tmpFragColor=vec4(0);
 	if(UseDiffuseMap)
 	{
 		if(UseSkyboxRefractionAsDiffuseMap&&UseSkyboxReflectionAsDiffuseMap)
@@ -107,20 +109,20 @@ void main()
 		SpecularMapPixelColor=vec4(0.5,0.5,0.5,1);
 	if(!UseSkyboxRefractionAsDiffuseMap)
 	{
-		PixelDiffuseColor=max(CaculateDirectionalLight(DirectionalLight),0);
+		tmpFragColor+=max(CaculateDirectionalLight(DirectionalLight),0);
 		//FragColor=FragColor + max(CaculateDirectionalLight(DirectionalLight),0);
 		for(int i=0;i<3;i++)
 		{
-			FragColor=FragColor + max(CaculatePointLight(PointLight[i]),0);
+			tmpFragColor+= max(CaculatePointLight(PointLight[i]),0);
 		}
-		FragColor=FragColor+max(CaculateSpotlight(FlashLight),0);
+		tmpFragColor+=max(CaculateSpotlight(FlashLight),0);
 	}
 	else
 	{
 		FragColor=FragColor+max(CaculateSpotlight(FlashLight)*0.2,0);
 	}
-	FragColor=(1-CaculateShadow(PixelPosLightSpace))*PixelDiffuseColor+PixelDiffuseColor*vec4(ambientColor,1.f);
-	FragColor.a=DiffuseMapPixelColor.a;
+	FragColor=(1-CaculateShadow(PixelPosLightSpace))*tmpFragColor+PixelDiffuseColor*vec4(ambientColor,1.f);
+	FragColor.a=tmpFragColor.a;
 }
 
 vec4 CaculateDirectionalLight(DirectionalLightInfo DirLight)
@@ -139,9 +141,8 @@ vec4 CaculatePointLight(PointLightInfo pLight)
 	float Fatt=1.f/(1.f+pLight.linear*Distance+pLight.quadratic*pow(Distance,2));
 	vec3 LightDir=normalize(pLight.LightPos-PixelPos);
 	vec4 diff=clamp(dot(LightDir,Normal),0,1)*vec4(pLight.diffuseColor,1.f)*Fatt*DiffuseMapPixelColor;
-	//vec3 reflectDir=reflect(-LightDir,Normal);
-	vec3 HalfDir=normalize(normalize(LightDir)+normalize(ViewDir));
-	vec4 spec=pow(max(dot(HalfDir,Normal),0),shininess)*vec4(pLight.specularColor,1)*Fatt*SpecularMapPixelColor;
+	vec3 reflectDir=reflect(-LightDir,Normal);
+	vec4 spec=pow(clamp(dot(reflectDir,ViewDir),0,1),shininess)*vec4(pLight.specularColor,1)*Fatt*SpecularMapPixelColor;
 	return diff+spec;
 }
 
@@ -162,6 +163,8 @@ vec4 CaculateSpotlight(SpotlightInfo Spotlight)
 
 float CaculateShadow(vec4 pixelPosLightSpace)
 {
+	if(UseShadow==false)
+		return 0;
 	vec3 projCoords = pixelPosLightSpace.xyz / pixelPosLightSpace.w;
 	projCoords = projCoords * 0.5 + 0.5;
 	float bias = 0.0001;

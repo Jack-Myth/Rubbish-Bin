@@ -1,7 +1,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <windows.h>
 #include "glad/glad.h"
-#include <glfw3.h>
+#include <GLFW/glfw3.h>
 #include "GLFWMainWindow.h"
 #include "stb_image.h"
 #include <vector>

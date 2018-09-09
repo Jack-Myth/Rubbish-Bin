@@ -37,7 +37,7 @@ float moveSpeed = 10.f;
 GLuint ShadowbufferFBO;
 GLuint BoxVAO,WoodTexture,SurfaceVAO;
 GLuint ShadowMap;
-FDirectionalLight DirLight;
+FPointLight pointLight;
 Shader* DefaultPhong = nullptr,*simpleDepthShader =nullptr,*simpleRenderTexture=nullptr;
 std::vector<FTransform> BoxTransform;  //Include the boxes' Transform
 GLuint MatricesUniformBuffer;
@@ -72,9 +72,9 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	{
 		ProcessInput(pMainWindow->GetWindow());
 		ProcessSceneMovement();
-		glClearColor(1, 1, 1, 1);
+		glClearColor(0, 0, 0, 1);
 		glClear(GL_COLOR_BUFFER_BIT);
-		PreRender();
+		//PreRender();
 		TryRender();
 		//DrawDebugDepth();
 		glfwSwapBuffers(pMainWindow->GetWindow());
@@ -101,21 +101,21 @@ void ProcessInput(GLFWwindow* pWindow)
 	if (glfwGetKey(pWindow, GLFW_KEY_D) == GLFW_PRESS)
 		pMyCamera->Move(glm::vec3(0.2f, 0, 0)*moveSpeed);
 
-	glm::vec3 CubeMovement=glm::vec3(0);
-	int BoxSpeed = 2;
+	glm::vec3 LightMovement=glm::vec3(0);
+	int MoveSpeed = 2;
 	if (glfwGetKey(pWindow, GLFW_KEY_UP) == GLFW_PRESS)
-		CubeMovement.r+= BoxSpeed;
+		LightMovement.r+= MoveSpeed;
 	if (glfwGetKey(pWindow, GLFW_KEY_DOWN) == GLFW_PRESS)
-		CubeMovement.r-= BoxSpeed;
+		LightMovement.r-= MoveSpeed;
 	if (glfwGetKey(pWindow, GLFW_KEY_LEFT) == GLFW_PRESS)
-		CubeMovement.b-= BoxSpeed;
+		LightMovement.b-= MoveSpeed;
 	if (glfwGetKey(pWindow, GLFW_KEY_RIGHT) == GLFW_PRESS)
-		CubeMovement.b+= BoxSpeed;
+		LightMovement.b+= MoveSpeed;
 	if (glfwGetKey(pWindow, GLFW_KEY_I) == GLFW_PRESS)
-		CubeMovement.g+= BoxSpeed;
+		LightMovement.g+= MoveSpeed;
 	if (glfwGetKey(pWindow, GLFW_KEY_K) == GLFW_PRESS)
-		CubeMovement.g-= BoxSpeed;
-	BoxTransform[1].Location += CubeMovement;
+		LightMovement.g-= MoveSpeed;
+	pointLight.pos += LightMovement;
 }
 
 void LoadShaders()
@@ -192,7 +192,7 @@ GLuint BuildBox(GLuint* pVBO/*=nullptr*/)
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), 0); //Vertices Position;
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float))); //Surface Normal Vector
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float))); //Texture Coodination
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float))); //Texture Coordination
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
 	glEnableVertexAttribArray(2);
@@ -206,7 +206,10 @@ void BuildScene()
 {
 	BoxVAO = BuildBox();
 	SurfaceVAO = BuildSurface();
-	DirLight.dir = glm::vec3(0.5, -0.5, 0.5);
+	pointLight.pos = glm::vec3(50, 200, 75);
+	pointLight.linear = 0.003f;
+	pointLight.quadratic = 0.00003f;
+	pointLight.diffuse = glm::vec3(20, 20, 20);
 	WoodTexture = LoadTexture("wood01.jpg");
 	FTransform tmpTransform;
 	//Make floor
@@ -252,9 +255,6 @@ void GenFrameBuffers()
 
 void ProcessSceneMovement()
 {
-	glm::mat4 DirLightRotMat = glm::mat3(1.f);
-	DirLightRotMat = glm::rotate(DirLightRotMat, glm::radians(0.5f), glm::vec3(0, 1, 0));
-	DirLight.dir = glm::mat3(DirLightRotMat) * DirLight.dir;
 }
 
 void PreRender()
@@ -279,7 +279,7 @@ void PreRender()
 void ConfigShaderAndLightTransform()
 {
 	glm::mat4 LightProjection = glm::ortho(-500.f, 500.f, -500.f, 500.f, 1.f, 30000.f);
-	glm::mat4 LightView = glm::lookAt(-(DirLight.dir*700.f), glm::vec3(0, 0, 0), glm::vec3(0,1.0,0));
+	glm::mat4 LightView = glm::lookAt(pointLight.pos, glm::vec3(0, 0, 0), glm::vec3(0,1.0,0));
 	glm::mat4x4 ViewMatrix = pMyCamera->GetViewMatrix();
 	glm::mat4x4 ProjectionMatrix = pMyCamera->GetProjectionMatrix();
 	//LightSpaceTransformMat = ProjectionMatrix * ViewMatrix;
@@ -309,7 +309,9 @@ void TryRender()
 	DefaultPhong->SetMatrix3x3("NormalMatrix", glm::transpose(glm::inverse(ViewMatrix)));
 	DefaultPhong->SetMatrix4x4("lightSpaceMatrix", LightSpaceTransformMat);
 	DefaultPhong->SetVec3("ambientColor", glm::vec3(1, 1, 1));
-	DirLight.ApplyToShader(DefaultPhong, "DirectionalLight");
+	DefaultPhong->SetInt("UseShadow", GL_FALSE);
+	pointLight.ViewMatrix = ViewMatrix;
+	pointLight.ApplyToShader(DefaultPhong, "PointLight[0]");
 	DefaultPhong->SetInt("DiffuseMap", 0);
 	DefaultPhong->SetInt("ShadowMap", 3);
 	glActiveTexture(GL_TEXTURE0);
