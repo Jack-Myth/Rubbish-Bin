@@ -121,7 +121,7 @@ void main()
 	{
 		FragColor=FragColor+max(CaculateSpotlight(FlashLight)*0.2,0);
 	}
-	FragColor=(1-CaculateShadow(PointLight[0]))*tmpFragColor+PixelDiffuseColor*vec4(ambientColor,1.f);
+	FragColor=(1-CaculateShadow(PointLight[0]))*tmpFragColor+DiffuseMapPixelColor*vec4(ambientColor,1.f);
 	FragColor.a=tmpFragColor.a;
 }
 
@@ -169,6 +169,7 @@ float CaculateShadow(PointLightInfo pointLight)
 	float bias = 0.0001;
 	float closestDepth = texture(ShadowMap, pixelToLight).r*far_plane;
 	float currentDepth = length(pixelToLight);
+	//return closestDepth;
 	return currentDepth-bias>closestDepth?1:0;
 	/*float shadow = 0.0;
 	vec2 texelSize = 1.0 / textureSize(ShadowMap, 0);

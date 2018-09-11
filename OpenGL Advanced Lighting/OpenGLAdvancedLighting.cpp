@@ -250,11 +250,11 @@ void GenFrameBuffers()
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, NULL);
 	glBindFramebuffer(GL_FRAMEBUFFER, ShadowbufferFBO);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_CUBE_MAP, ShadowMap, 0);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, ShadowMap, 0);
 	glDrawBuffer(GL_NONE);
 	glReadBuffer(GL_NONE);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, NULL);
 	glBindFramebuffer(GL_FRAMEBUFFER, NULL);
 }
 
@@ -277,13 +277,14 @@ void PreRender()
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, NULL);
 	glm::vec2 CurWindowSize = pMainWindow->GetWindowSize();
 	glViewport(0, 0, (int)CurWindowSize.r, (int)CurWindowSize.g);
 }
 
 void ConfigShaderAndLightTransform()
 {
-	glm::mat4 LightProjection = glm::perspective(glm::radians(90.f), (float)SHADOWMAP_WIDTH/(float)SHADOWMAP_HEIGHT, 1.f, 30000.f);
+	glm::mat4 LightProjection = glm::perspective(glm::radians(90.f), (float)SHADOWMAP_WIDTH/(float)SHADOWMAP_HEIGHT, 1.f, 3000.f);
 	std::vector<glm::mat4> shadowTransforms;
 	shadowTransforms.push_back(LightProjection *
 		glm::lookAt(pointLight.pos, pointLight.pos + glm::vec3(1.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0)));
@@ -299,7 +300,7 @@ void ConfigShaderAndLightTransform()
 		glm::lookAt(pointLight.pos, pointLight.pos + glm::vec3(0.0, 0.0, -1.0), glm::vec3(0.0, -1.0, 0.0)));
 	simpleDepthShader->Use();
 	simpleDepthShader->SetVec3("lightPos", pointLight.pos);
-	simpleDepthShader->SetFloat("far_plane", 30000.f);
+	simpleDepthShader->SetFloat("far_plane", 3000.f);
 	for (int i = 0; i < 6; i++)
 	{
 		simpleDepthShader->SetMatrix4x4(std::string("shadowMatrices[") + (char)('0' + i) + "]", shadowTransforms[i]);
@@ -325,8 +326,8 @@ void TryRender()
 	DefaultPhong->SetFloat("shininess", 32);
 	DefaultPhong->SetMatrix3x3("VectorMatrix", glm::transpose(glm::inverse(ViewMatrix)));
 	DefaultPhong->SetMatrix3x3("NormalMatrix", glm::transpose(glm::inverse(ViewMatrix)));
-	DefaultPhong->SetVec3("ambientColor", glm::vec3(1, 1, 1));
-	DefaultPhong->SetInt("UseShadow", GL_FALSE);
+	DefaultPhong->SetVec3("ambientColor", glm::vec3(0.5, 0.5, 0.5));
+	DefaultPhong->SetInt("UseShadow", GL_TRUE);
 	pointLight.ViewMatrix = ViewMatrix;
 	pointLight.ApplyToShader(DefaultPhong, "PointLight[0]");
 	DefaultPhong->SetInt("DiffuseMap", 0);
