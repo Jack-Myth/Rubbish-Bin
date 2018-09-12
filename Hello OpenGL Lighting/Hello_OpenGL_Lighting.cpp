@@ -61,7 +61,11 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	pMainWindow->AttachCamera(pMyCamera);
 	DefaultShader = new Shader("VertexShader.vert", "FragmentShader.glsl");
 	LightShader = new Shader("VertexShader.vert", "LightShader.glsl");
-	LightedShader = new Shader("VertexShader.vert", "LightedObjShader.glsl");
+	LightedShader = new Shader();
+	LightedShader->AttachShader(GL_VERTEX_SHADER, "VertexShader.vert");
+	LightedShader->AttachShader(GL_GEOMETRY_SHADER, "LightedObjShader.geom");
+	LightedShader->AttachShader(GL_FRAGMENT_SHADER, "LightedObjShader.glsl");
+	LightedShader->Link();
 	BuildScene();
 	TextureBack = LoadTexture("MyTextureBack.jpg");
 	TextureFront = LoadTexture("MyTextureFront.jpg");

@@ -140,6 +140,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="FragmentShader.glsl" />
+    <None Include="LightedObjShader.geom" />
     <None Include="LightedObjShader.glsl" />
     <None Include="LightShader.glsl" />
     <None Include="VertexShader.vert" />

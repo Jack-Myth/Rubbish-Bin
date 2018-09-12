@@ -67,5 +67,8 @@
     <None Include="LightShader.glsl">
       <Filter>Source Files\Shaders</Filter>
     </None>
+    <None Include="LightedObjShader.geom">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

@@ -4,7 +4,6 @@ out vec4 FragColor;
 in vec3 aNormal;
 in vec2 pTextureCoordinate;
 in vec3 PixelPos;
-in mat4x4 aViewMatrix;
 uniform vec3 objectColor;
 uniform sampler2D TextureBack;
 uniform sampler2D TextureFront;
@@ -13,6 +12,7 @@ uniform mat3x3 NormalMatrix;
 uniform mat3x3 VectorMatrix;
 uniform vec3 ambientColor;
 uniform float shininess;
+uniform mat4x4 ViewMatrix;
 
 //Directional Light
 struct DirectionalLightInfo
