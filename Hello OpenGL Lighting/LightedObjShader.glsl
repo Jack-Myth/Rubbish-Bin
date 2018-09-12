@@ -68,7 +68,7 @@ void main()
 	if(abs(xtmpC.x)>0.4||abs(xtmpC.y)>0.4)
 		FragColorx=texture(TextureBack,pTextureCoordinate);
 	//~~
-	Normal=normalize(/*NormalMatrix**/TBN*texture(NormMap,pTextureCoordinate).xyz);
+	Normal=normalize(/*NormalMatrix**/TBN*(texture(NormMap,pTextureCoordinate).xyz*2.f-1.f));
 	ViewDir = normalize(vec3(0,0,0) - PixelPos);
 	FragColor = vec4(ambientColor*0.1,1);
 	FragColor=FragColor+CaculateDirectionalLight(DirectionalLight);
