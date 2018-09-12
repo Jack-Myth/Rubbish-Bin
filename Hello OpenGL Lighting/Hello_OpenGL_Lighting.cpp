@@ -35,7 +35,7 @@ GLFWMainWindow* pMainWindow=nullptr;
 Camera* pMyCamera=nullptr;
 std::vector<GLuint> VAOCollection;
 std::vector<glm::mat4x4> ModelMatrixs;
-GLuint TextureBack = 0, TextureFront = 0, Container2 = 0, Container2Spec = 0;
+GLuint TextureBack = 0, TextureFront = 0, Container2 = 0, Container2Spec = 0,NormMap=0;
 Shader* DefaultShader=nullptr,*LightShader=nullptr, *LightedShader = nullptr;
 GLuint BoxVBO,BoxEBO;
 GLuint LightSourceVAO;
@@ -70,6 +70,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	TextureBack = LoadTexture("MyTextureBack.jpg");
 	TextureFront = LoadTexture("MyTextureFront.jpg");
 	Container2 = LoadTexture("Container2.png");
+	NormMap = LoadTexture("container2_NORM.png");
 	Container2Spec = LoadTexture("Container2_specular.png");
 	glEnable(GL_DEPTH_TEST);
 	//Render Loop
@@ -325,12 +326,15 @@ void TryRender()
 	LightedShader->SetInt("TextureBack", 0);
 	LightedShader->SetInt("TextureFront", 1);
 	LightedShader->SetInt("SpecMap", 2);
+	LightedShader->SetInt("NormMap", 3);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, Container2);
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, TextureFront);
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_2D, Container2Spec);
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, NormMap);
 	LightedShader->SetVec3("objectColor", glm::vec3(1.0f, 1, 1.f));
 	LightedShader->SetMatrix4x4("ViewMatrix", ViewMatrix);
 	LightedShader->SetMatrix4x4("ProjectionMatrix", ProjectionMatrix);

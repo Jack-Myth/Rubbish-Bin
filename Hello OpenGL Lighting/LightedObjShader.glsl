@@ -4,10 +4,12 @@ out vec4 FragColor;
 in vec3 aNormal;
 in vec2 pTextureCoordinate;
 in vec3 PixelPos;
+in mat3 TBN;
 uniform vec3 objectColor;
 uniform sampler2D TextureBack;
 uniform sampler2D TextureFront;
 uniform sampler2D SpecMap;
+uniform sampler2D NormMap;
 uniform mat3x3 NormalMatrix;
 uniform mat3x3 VectorMatrix;
 uniform vec3 ambientColor;
@@ -66,7 +68,7 @@ void main()
 	if(abs(xtmpC.x)>0.4||abs(xtmpC.y)>0.4)
 		FragColorx=texture(TextureBack,pTextureCoordinate);
 	//~~
-	Normal=normalize(NormalMatrix*aNormal);
+	Normal=normalize(/*NormalMatrix**/TBN*texture(NormMap,pTextureCoordinate).xyz);
 	ViewDir = normalize(vec3(0,0,0) - PixelPos);
 	FragColor = vec4(ambientColor*0.1,1);
 	FragColor=FragColor+CaculateDirectionalLight(DirectionalLight);
