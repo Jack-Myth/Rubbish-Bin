@@ -70,8 +70,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>D:\Visual Studio 2017\ThirdPartyLib\GLFW;$(IncludePath);D:\Visual Studio 2017\ThirdPartyLib\assimp\include;$(ProjectDir)</IncludePath>
-    <LibraryPath>D:\Visual Studio 2017\ThirdPartyLib\assimp\lib;D:\Visual Studio 2017\ThirdPartyLib\GLFW;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(IncludePath);D:\ThridPartyLib\LibLink\Include;$(ProjectDir)</IncludePath>
+    <LibraryPath>D:\ThridPartyLib\LibLink\Lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IncludePath>D:\Visual Studio 2017\ThirdPartyLib\GLFW;$(IncludePath);$(ProjectDir)</IncludePath>
