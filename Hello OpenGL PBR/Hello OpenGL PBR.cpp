@@ -5,6 +5,7 @@
 #include "Shader.h"
 #include <windows.h>
 #include <commdlg.h>
+#include "glm/gtc/type_ptr.hpp"
 #pragma comment(lib,"glfw3.lib")
 #pragma comment(lib,"opengl32.lib")
 #pragma comment(lib,"assimp-vc140-mt.lib")
@@ -13,7 +14,7 @@ void BuildScene();
 void LoadShader();
 void RenderScene();
 GLuint BuildNewBox(GLuint* pVBO = nullptr);
-
+GLuint MatricesUniformBuffer;
 GLFWMainWindow* pMainWindow = nullptr;
 Camera* pCamera = nullptr;
 Shader* HDRShader = nullptr, *PBRShader = nullptr;
@@ -72,6 +73,13 @@ void LoadShader()
 {
 	HDRShader = new Shader("HDRShader.vert", "HDRShader.glsl");
 	PBRShader = new Shader("PBRShader.vert", "PBRShader.glsl");
+	HDRShader->BindUniformBlockToIndex("Matrices", 0);
+	PBRShader->BindUniformBlockToIndex("Matrices", 0);
+	glGenBuffers(1, &MatricesUniformBuffer);
+	glBindBuffer(GL_UNIFORM_BUFFER, MatricesUniformBuffer);
+	glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), nullptr, GL_STATIC_DRAW);
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+	glBindBufferBase(GL_UNIFORM_BUFFER, 0, MatricesUniformBuffer);
 	std::vector<std::string> textures_faces =
 	{
 		"CubeMap/velcor_rt.tga",
@@ -112,16 +120,24 @@ void RenderScene()
 {
 	glm::mat4 ViewMatrix = pCamera->GetViewMatrix();
 	glm::mat4 ProjectionMatrix = pCamera->GetProjectionMatrix();
+	//Fill Uniform Buffer
+	glBindBuffer(GL_UNIFORM_BUFFER, MatricesUniformBuffer);
+	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(ProjectionMatrix));
+	glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(ViewMatrix));
 	glDisable(GL_DEPTH_TEST);
 	HDRShader->Use();
-	HDRShader->SetMatrix4x4("ViewMatrix", ViewMatrix);
-	HDRShader->SetMatrix4x4("ProjectionMatrix", ProjectionMatrix);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_CUBE_MAP,HDRImage);
 	glBindVertexArray(BoxVAO);
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, NULL);
 	glEnable(GL_DEPTH_TEST);
+	if (TargetModel)
+	{
+		PBRShader->Use();
+		//TODO:Fill Property
+		TargetModel->Draw(PBRShader, false);
+	}
 }
 
 GLuint BuildNewBox(GLuint* pVBO/*=nullptr*/)
