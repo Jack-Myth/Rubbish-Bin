@@ -114,14 +114,14 @@ Model* Model::LoadMesh(std::string MeshPath)
 
 void Model::Draw(Shader* UsedShader, bool ProcessTexture)
 {
-	glm::mat4x4 ModelMatrix(1.f);
+	/*glm::mat4x4 ModelMatrix(1.f);
 	ModelMatrix = glm::rotate(ModelMatrix, glm::radians(Transform.Rotation.z), glm::vec3(0, 1, 0));
 	ModelMatrix = glm::rotate(ModelMatrix, glm::radians(Transform.Rotation.y - 90.f), glm::vec3(1, 0, 0));
 	ModelMatrix = glm::rotate(ModelMatrix, glm::radians(Transform.Rotation.x), glm::vec3(0, 0, 1));
 	ModelMatrix = glm::translate(ModelMatrix, Transform.Location);
 	//ModelMatrix = glm::rotate(ModelMatrix, glm::radians(-90.f), glm::vec3(1, 0, 0));
-	ModelMatrix = glm::scale(ModelMatrix, Transform.Scale);
-	UsedShader->SetMatrix4x4("ModelMatrix", ModelMatrix);
+	ModelMatrix = glm::scale(ModelMatrix, Transform.Scale);*/
+	UsedShader->SetMatrix4x4("ModelMatrix", Transform.GenModelMatrix());
 	for (Mesh*& mesh : meshes)
 		mesh->Draw(UsedShader, ProcessTexture);
 }

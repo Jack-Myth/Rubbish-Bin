@@ -13,6 +13,7 @@
 void BuildScene();
 void LoadShader();
 void RenderScene();
+void ProcessInput(GLFWwindow* p);
 GLuint BuildNewBox(GLuint* pVBO = nullptr);
 GLuint MatricesUniformBuffer;
 GLFWMainWindow* pMainWindow = nullptr;
@@ -35,7 +36,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	void ControlView(GLFWwindow* p, double xpos, double ypos);
-	pMainWindow = new GLFWMainWindow(800,600,"Hello OpenGL PBR",nullptr,nullptr,&ControlView);
+	pMainWindow = new GLFWMainWindow(800,600,"Hello OpenGL PBR",nullptr,nullptr/*,&ControlView*/);
 	pCamera = new Camera(800, 600, 75,glm::vec3(0,0,-100.f));
 	pMainWindow->AttachCamera(pCamera);
 	glfwSetInputMode(pMainWindow->GetWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
@@ -46,6 +47,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	{
 		glClearColor(0, 0, 0, 1);
 		glClear(GL_COLOR_BUFFER_BIT);
+		ProcessInput(pMainWindow->GetWindow());
 		RenderScene();
 		glfwSwapBuffers(pMainWindow->GetWindow());
 		glfwPollEvents();
@@ -56,30 +58,39 @@ void ControlView(GLFWwindow* p, double xpos, double ypos)
 {
 	if (glfwGetMouseButton(p,GLFW_MOUSE_BUTTON_LEFT)==GLFW_PRESS&&TargetModel)
 	{
-		TargetModel->Transform.Rotation.g += xpos - GLFWMainWindow::MouseLastPos.x;
-		TargetModel->Transform.Rotation.r += ypos - GLFWMainWindow::MouseLastPos.y;
+		TargetModel->Transform.Rotation.g += (float)xpos - GLFWMainWindow::MouseLastPos.x;
+		TargetModel->Transform.Rotation.r += (float)ypos - GLFWMainWindow::MouseLastPos.y;
 	}
 	if (glfwGetMouseButton(p,GLFW_MOUSE_BUTTON_RIGHT)==GLFW_PRESS)
 	{
 		glm::vec3 CameraLocation = pCamera->GetCameraLocation();
-		CameraLocation.z += ypos - GLFWMainWindow::MouseLastPos.y;
+		CameraLocation.z += (float)ypos - GLFWMainWindow::MouseLastPos.y;
 		pCamera->SetCameraLocation(CameraLocation);
 	}
-	GLFWMainWindow::MouseLastPos.x = xpos;
-	GLFWMainWindow::MouseLastPos.y = ypos;
+	GLFWMainWindow::MouseLastPos.x = (float)xpos;
+	GLFWMainWindow::MouseLastPos.y = (float)ypos;
+}
+
+void ProcessInput(GLFWwindow* p)
+{
+	if (glfwGetKey(p, GLFW_KEY_ESCAPE))
+		glfwSetWindowShouldClose(p, GLFW_TRUE);
 }
 
 void LoadShader()
 {
 	HDRShader = new Shader("HDRShader.vert", "HDRShader.glsl");
 	PBRShader = new Shader("PBRShader.vert", "PBRShader.glsl");
-	HDRShader->BindUniformBlockToIndex("Matrices", 0);
-	PBRShader->BindUniformBlockToIndex("Matrices", 0);
+	//HDRShader->BindUniformBlockToIndex("Matrices", 2);
+	PBRShader->BindUniformBlockToIndex("Matrices", 2);
 	glGenBuffers(1, &MatricesUniformBuffer);
 	glBindBuffer(GL_UNIFORM_BUFFER, MatricesUniformBuffer);
 	glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), nullptr, GL_STATIC_DRAW);
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
-	glBindBufferBase(GL_UNIFORM_BUFFER, 0, MatricesUniformBuffer);
+	glBindBufferBase(GL_UNIFORM_BUFFER, 2, MatricesUniformBuffer);
+	glBindBuffer(GL_UNIFORM_BUFFER, MatricesUniformBuffer);
+	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(pCamera->GetProjectionMatrix()));
+	glBindBuffer(GL_UNIFORM_BUFFER, NULL);
 	std::vector<std::string> textures_faces =
 	{
 		"CubeMap/velcor_rt.tga",
@@ -135,6 +146,7 @@ void RenderScene()
 	if (TargetModel)
 	{
 		PBRShader->Use();
+		PBRShader->SetVec3("CameraPos", pCamera->GetCameraLocation());
 		//TODO:Fill Property
 		TargetModel->Draw(PBRShader, false);
 	}

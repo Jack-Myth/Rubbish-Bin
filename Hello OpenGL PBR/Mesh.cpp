@@ -63,7 +63,7 @@ void Mesh::Draw(Shader* UsedShader,bool ProcessShader)
 		}
 	}
 	UsedShader->Use();
-	glActiveTexture(GL_TEXTURE0);
+	//glActiveTexture(GL_TEXTURE0);
 	glBindVertexArray(VAO);
 	glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, nullptr);
 	glBindVertexArray(NULL);

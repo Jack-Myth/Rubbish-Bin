@@ -1,5 +1,9 @@
 #version 330 core
 
+in vec3 aPos;
+in vec2 aTextureCoord;
+in vec3 aNormal;
+
 layout(std140) uniform Matrices
 {
 	mat4 ProjectionMatrix;
@@ -37,10 +41,6 @@ struct SpotlightInfo
 };
 
 const float PI =3.1415926535;
-
-in vec3 aPos;
-in vec2 aTextureCoord;
-in vec3 aNormal;
 
 out vec4 PixelColor;
 
