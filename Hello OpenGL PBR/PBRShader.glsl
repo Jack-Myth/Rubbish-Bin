@@ -49,9 +49,11 @@ uniform float Metallic;
 uniform float Roughness;
 uniform float AO;
 
-uniform DirectionalLightInfo DirLight[];
+const int lightMaxCount = 32;
+
+uniform DirectionalLightInfo DirLight[lightMaxCount];
 uniform int DirLightCount;
-uniform PointLightInfo PointLight[];
+uniform PointLightInfo PointLight[lightMaxCount];
 uniform int PointLightCount;
 
 uniform vec3 CameraPos;

@@ -36,7 +36,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	void ControlView(GLFWwindow* p, double xpos, double ypos);
-	pMainWindow = new GLFWMainWindow(800,600,"Hello OpenGL PBR",nullptr,nullptr/*,&ControlView*/);
+	pMainWindow = new GLFWMainWindow(800,600,"Hello OpenGL PBR",nullptr,nullptr,&ControlView);
 	pCamera = new Camera(800, 600, 75,glm::vec3(0,0,-100.f));
 	pMainWindow->AttachCamera(pCamera);
 	glfwSetInputMode(pMainWindow->GetWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
@@ -81,13 +81,13 @@ void LoadShader()
 {
 	HDRShader = new Shader("HDRShader.vert", "HDRShader.glsl");
 	PBRShader = new Shader("PBRShader.vert", "PBRShader.glsl");
-	//HDRShader->BindUniformBlockToIndex("Matrices", 2);
-	PBRShader->BindUniformBlockToIndex("Matrices", 2);
+	HDRShader->BindUniformBlockToIndex("Matrices", 0);
+	PBRShader->BindUniformBlockToIndex("Matrices", 0);
 	glGenBuffers(1, &MatricesUniformBuffer);
 	glBindBuffer(GL_UNIFORM_BUFFER, MatricesUniformBuffer);
 	glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), nullptr, GL_STATIC_DRAW);
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
-	glBindBufferBase(GL_UNIFORM_BUFFER, 2, MatricesUniformBuffer);
+	glBindBufferBase(GL_UNIFORM_BUFFER, 0, MatricesUniformBuffer);
 	glBindBuffer(GL_UNIFORM_BUFFER, MatricesUniformBuffer);
 	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(pCamera->GetProjectionMatrix()));
 	glBindBuffer(GL_UNIFORM_BUFFER, NULL);
