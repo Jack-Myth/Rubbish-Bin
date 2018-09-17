@@ -25,11 +25,11 @@ void Mesh::RefreshBuffer()
 	//Vertex Position
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Position));
 	glEnableVertexAttribArray(0);
-	//VertexNormal
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Normal));
-	glEnableVertexAttribArray(1);
 	//Texture Coordinate;
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, TexCoords));
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, TexCoords));
+	glEnableVertexAttribArray(1);
+	//VertexNormal
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Normal));
 	glEnableVertexAttribArray(2);
 	glBindVertexArray(NULL);
 }

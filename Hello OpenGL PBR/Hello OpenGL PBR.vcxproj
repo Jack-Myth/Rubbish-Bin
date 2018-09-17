@@ -140,6 +140,7 @@
   <ItemGroup>
     <None Include="HDRShader.glsl" />
     <None Include="HDRShader.vert" />
+    <None Include="LightShader.glsl" />
     <None Include="PBRShader.glsl" />
     <None Include="PBRShader.vert" />
   </ItemGroup>
