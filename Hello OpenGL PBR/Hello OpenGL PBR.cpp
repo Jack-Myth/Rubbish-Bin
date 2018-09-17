@@ -6,6 +6,7 @@
 #include <windows.h>
 #include <commdlg.h>
 #include "glm/gtc/type_ptr.hpp"
+#include "Light.h"
 #pragma comment(lib,"glfw3.lib")
 #pragma comment(lib,"opengl32.lib")
 #pragma comment(lib,"assimp-vc140-mt.lib")
@@ -14,11 +15,13 @@ void BuildScene();
 void LoadShader();
 void RenderScene();
 void ProcessInput(GLFWwindow* p);
+void SceneMovement();
 GLuint BuildNewBox(GLuint* pVBO = nullptr);
 GLuint MatricesUniformBuffer;
 GLFWMainWindow* pMainWindow = nullptr;
 Camera* pCamera = nullptr;
-Shader* HDRShader = nullptr, *PBRShader = nullptr;
+Shader* HDRShader = nullptr, *PBRShader = nullptr,*LightShader=nullptr;
+FPointLight PointLight;
 GLuint HDRImage;
 GLuint BoxVAO;
 Model* TargetModel;
@@ -37,7 +40,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	void ControlView(GLFWwindow* p, double xpos, double ypos);
 	pMainWindow = new GLFWMainWindow(800,600,"Hello OpenGL PBR",nullptr,nullptr,&ControlView);
-	pCamera = new Camera(800, 600, 75,glm::vec3(0,0,-100.f));
+	pCamera = new Camera(800, 600, 75,glm::vec3(0,0,50.f));
 	pMainWindow->AttachCamera(pCamera);
 	glfwSetInputMode(pMainWindow->GetWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 	glEnable(GL_DEPTH_TEST);
@@ -47,6 +50,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	{
 		glClearColor(0, 0, 0, 1);
 		glClear(GL_COLOR_BUFFER_BIT);
+		SceneMovement();
 		ProcessInput(pMainWindow->GetWindow());
 		RenderScene();
 		glfwSwapBuffers(pMainWindow->GetWindow());
@@ -58,8 +62,8 @@ void ControlView(GLFWwindow* p, double xpos, double ypos)
 {
 	if (glfwGetMouseButton(p,GLFW_MOUSE_BUTTON_LEFT)==GLFW_PRESS&&TargetModel)
 	{
-		TargetModel->Transform.Rotation.g += (float)xpos - GLFWMainWindow::MouseLastPos.x;
-		TargetModel->Transform.Rotation.r += (float)ypos - GLFWMainWindow::MouseLastPos.y;
+		TargetModel->Transform.Rotation.b += (float)xpos - GLFWMainWindow::MouseLastPos.x;
+		TargetModel->Transform.Rotation.g += (float)ypos - GLFWMainWindow::MouseLastPos.y;
 	}
 	if (glfwGetMouseButton(p,GLFW_MOUSE_BUTTON_RIGHT)==GLFW_PRESS)
 	{
@@ -75,14 +79,20 @@ void ProcessInput(GLFWwindow* p)
 {
 	if (glfwGetKey(p, GLFW_KEY_ESCAPE))
 		glfwSetWindowShouldClose(p, GLFW_TRUE);
+	if (glfwGetKey(p,GLFW_KEY_SPACE)==GLFW_PRESS)
+	{
+		PointLight.pos.b++;
+	}
 }
 
 void LoadShader()
 {
 	HDRShader = new Shader("HDRShader.vert", "HDRShader.glsl");
 	PBRShader = new Shader("PBRShader.vert", "PBRShader.glsl");
+	LightShader = new Shader("PBRShader.vert", "LightShader.glsl");
 	HDRShader->BindUniformBlockToIndex("Matrices", 0);
 	PBRShader->BindUniformBlockToIndex("Matrices", 0);
+	LightShader->BindUniformBlockToIndex("Matrices", 0);
 	glGenBuffers(1, &MatricesUniformBuffer);
 	glBindBuffer(GL_UNIFORM_BUFFER, MatricesUniformBuffer);
 	glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), nullptr, GL_STATIC_DRAW);
@@ -125,10 +135,18 @@ void BuildScene()
 		}
 	}
 	BoxVAO = BuildNewBox();
+	PointLight.pos = glm::vec3(0, 0, 0);
+	PointLight.LightColor = glm::vec3(10000.f);
+}
+
+void SceneMovement()
+{
+	//DirLight.dir = glm::vec3(sin(glfwGetTime()), cos(glfwGetTime()), 0.5);
 }
 
 void RenderScene()
 {
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glm::mat4 ViewMatrix = pCamera->GetViewMatrix();
 	glm::mat4 ProjectionMatrix = pCamera->GetProjectionMatrix();
 	//Fill Uniform Buffer
@@ -143,11 +161,20 @@ void RenderScene()
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, NULL);
 	glEnable(GL_DEPTH_TEST);
+	LightShader->Use();
+	FTransform LightVisualTransform;
+	LightVisualTransform.Location = PointLight.pos;
+	LightShader->SetMatrix4x4("ModelMatrix", LightVisualTransform.GenModelMatrix());
+	glDrawArrays(GL_TRIANGLES, 0, 36);
 	if (TargetModel)
 	{
 		PBRShader->Use();
 		PBRShader->SetVec3("CameraPos", pCamera->GetCameraLocation());
-		//TODO:Fill Property
+		PBRShader->SetVec3("BaseColor", glm::vec3(0.f, 1.f, 1.f));
+		PBRShader->SetFloat("Metallic", 0.f);
+		PBRShader->SetFloat("Roughness", 1.f);
+		PointLight.ApplyToShader(PBRShader, "PointLight[0]");
+		PBRShader->SetInt("PointLightCount", 1);
 		TargetModel->Draw(PBRShader, false);
 	}
 }
