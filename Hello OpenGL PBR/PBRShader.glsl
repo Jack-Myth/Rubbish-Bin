@@ -82,15 +82,17 @@ void main()
 	else
 		TargetBaseColor = BaseColor;
 	if (MetallicUseTexture)
-		TargetMetallic = length(texture(MetallicTexture, aTextureCoord).xyz);
+		//TargetMetallic = min(length(texture(MetallicTexture, aTextureCoord).xyz),1.f);
+		TargetMetallic = texture(MetallicTexture, aTextureCoord).x;
 	else
 		TargetMetallic = Metallic;
 	if (RoughnessUseTexture)
-		TargetRoughness = length(texture(RoughnessTexture, aTextureCoord).xyz);
+		//TargetRoughness = min(length(texture(RoughnessTexture, aTextureCoord).xyz),1.f);
+		TargetRoughness = texture(RoughnessTexture, aTextureCoord).x;
 	else
 		TargetRoughness = Roughness;
 	if (AOUseTexture)
-		TargetAO = length(texture(AOTexture, aTextureCoord).xyz);
+		TargetAO = min(length(texture(AOTexture, aTextureCoord).xyz),1.f);
 	else
 		TargetAO = AO;
 	N=normalize(aNormal); //For Normal;
@@ -120,12 +122,12 @@ vec3 CaculateLight(vec3 LightColor,vec3 pL/*Pixel To Light Direction*/,vec3 Ligh
 	vec3 radiance=LightColor*attenuation;
 	vec3 F0=vec3(0.04f); //For non-metallic Material
 	F0=mix(F0, TargetBaseColor,TargetMetallic); //Lerp for non-metallic to metallic material;
-	vec3 F=fresnelSchlick(max(dot(H, V), 0.0),F0);
+	vec3 F=fresnelSchlick(clamp(dot(H, V), 0.f,1.f),F0);
 	float D=DistributionGGX(N,H,TargetRoughness);
 	float G=GeometrySmith(N,V,L, TargetRoughness);
 	vec3 nominator    = D * F * G;
-	float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.001; 
-	vec3 specular     = nominator / denominator;  
+	float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0); 
+	vec3 specular     = nominator / max(denominator,0.001f);  
 	vec3 kS = F;
 	vec3 kD = vec3(1.0) - kS; //energy conservation
 	kD *= 1.0 - TargetMetallic; //Lerp Metallic

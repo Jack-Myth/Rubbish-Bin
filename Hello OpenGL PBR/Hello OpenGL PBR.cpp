@@ -113,10 +113,6 @@ void LoadShader()
 	};
 	HDRImage = LoadCubeMap(textures_faces,{0,0,0,0,0,0});
 	HDRShader->SetInt("HDRImage", 0);
-	PBRShader->SetInt("BaseColorTexture", 0);
-	PBRShader->SetInt("MetallicTexture", 1);
-	PBRShader->SetInt("RoughnessTexture", 2);
-	PBRShader->SetInt("AOTexture", 3);
 	BaseColorTexture = LoadTexture("Textures/rustediron2_basecolor.jpg");
 	MetallicTextue = LoadTexture("Textures/rustediron2_metallic.jpg");
 	RoughnessTexture = LoadTexture("Textures/rustediron2_roughness.jpg");
@@ -183,6 +179,10 @@ void RenderScene()
 		PBRShader->SetVec3("BaseColor", glm::vec3(0.f, 1.f, 1.f));
 		PBRShader->SetFloat("Metallic", 0.5f);
 		PBRShader->SetFloat("Roughness", 0.2f);
+		PBRShader->SetInt("BaseColorTexture", 0);
+		PBRShader->SetInt("MetallicTexture", 1);
+		PBRShader->SetInt("RoughnessTexture", 2);
+		PBRShader->SetInt("AOTexture", 3);
 		if (BaseColorTexture != (GLuint)-1)
 		{
 			PBRShader->SetInt("BaseColorUseTexture", GL_TRUE);
