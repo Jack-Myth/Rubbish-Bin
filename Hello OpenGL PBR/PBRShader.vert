@@ -21,5 +21,5 @@ void main()
 	gl_Position=ProjectionMatrix*ViewMatrix*ModelMatrix*vec4(Pos,1.f);
 	aPos=(ModelMatrix*vec4(Pos,1.f)).xyz;
 	aTextureCoord=UV;
-	aNormal=Normal;
+	aNormal=mat3(ModelMatrix)*Normal;
 }

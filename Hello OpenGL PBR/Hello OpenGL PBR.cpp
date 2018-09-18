@@ -136,12 +136,14 @@ void BuildScene()
 	}
 	BoxVAO = BuildNewBox();
 	PointLight.pos = glm::vec3(0, 0, 0);
-	PointLight.LightColor = glm::vec3(1000.f);
+	PointLight.LightColor = glm::vec3(10000.f);
 }
 
 void SceneMovement()
 {
-	//DirLight.dir = glm::vec3(sin(glfwGetTime()), cos(glfwGetTime()), 0.5);
+	PointLight.pos = glm::vec3(sin(glfwGetTime()/2.f), sin(glfwGetTime()/1.5f), sin(glfwGetTime()));
+	PointLight.pos *= 20;
+	PointLight.pos.z += 40;
 }
 
 void RenderScene()
@@ -171,8 +173,8 @@ void RenderScene()
 		PBRShader->Use();
 		PBRShader->SetVec3("CameraPos", pCamera->GetCameraLocation());
 		PBRShader->SetVec3("BaseColor", glm::vec3(0.f, 1.f, 1.f));
-		PBRShader->SetFloat("Metallic", 0.f);
-		PBRShader->SetFloat("Roughness", 1.f);
+		PBRShader->SetFloat("Metallic", 0.5f);
+		PBRShader->SetFloat("Roughness", 0.2f);
 		PointLight.ApplyToShader(PBRShader, "PointLight[0]");
 		PBRShader->SetInt("PointLightCount", 1);
 		TargetModel->Draw(PBRShader, false);

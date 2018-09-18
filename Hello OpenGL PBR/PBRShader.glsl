@@ -44,10 +44,18 @@ const float PI =3.1415926535;
 
 out vec4 PixelColor;
 
+uniform bool BaseColorUseTexture;
 uniform vec3 BaseColor;
+uniform sampler2D BaseColorTexture;
+uniform bool MetallicUseTexture;
 uniform float Metallic;
+uniform sampler2D MetallicTexture;
+uniform bool RoughnessUseTexture;
 uniform float Roughness;
+uniform sampler2D RoughnessTexture;
+uniform bool AOUseTexture;
 uniform float AO;
+uniform sampler2D AOTexture;
 
 const int lightMaxCount = 32;
 
@@ -61,10 +69,11 @@ uniform vec3 CameraPos;
 vec3 CaculateLight(vec3 LightColor,vec3 pL/*Pixel To Light Direction*/,vec3 LightPos/*For DirectionalLight,set it equal to aPos*/);
 
 vec3 N,V;
+
 void main()
 {
 	N=normalize(aNormal); //For Normal;
-	V=normalize(aPos-CameraPos); //For Camera To Pixel Direction
+	V=normalize(CameraPos-aPos); //For Pixel to Camera Direction
 	vec3 Lo=vec3(0);
 	for(int i=0;i<DirLightCount;i++)
 		Lo+=CaculateLight(DirLight[i].LightColor,-DirLight[i].LightDir,aPos);
@@ -121,7 +130,7 @@ float DistributionGGX(vec3 N, vec3 H, float roughness)
     float denom = (NdotH2 * (a2 - 1.0) + 1.0);
     denom = PI * denom * denom;
 
-    return nom / denom;
+    return nom / max(denom, 0.001);
 }
 
 float GeometrySchlickGGX(float NdotV, float roughness)
