@@ -102,7 +102,7 @@ void main()
 		Lo+=CaculateLight(DirLight[i].LightColor,-DirLight[i].LightDir,aPos);
 	for(int i=0;i<PointLightCount;i++)
 		Lo+=CaculateLight(PointLight[i].LightColor,PointLight[i].LightPos-aPos,PointLight[i].LightPos);
-	vec3 ambient = vec3(0.03) * TargetBaseColor * TargetAO;
+	vec3 ambient = vec3(0.03f) * TargetBaseColor * TargetAO;
 	vec3 color = ambient + Lo;  
 	color = color / (color + vec3(1.0));
 	color = pow(color, vec3(1.0/2.2)); 

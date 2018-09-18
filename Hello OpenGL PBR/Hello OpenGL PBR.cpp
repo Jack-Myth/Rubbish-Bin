@@ -201,6 +201,7 @@ void RenderScene()
 			glActiveTexture(GL_TEXTURE2);
 			glBindTexture(GL_TEXTURE_2D, RoughnessTexture);
 		}
+		PBRShader->SetFloat("AO", 1.f);
 		PointLight.ApplyToShader(PBRShader, "PointLight[0]");
 		PBRShader->SetInt("PointLightCount", 1);
 		TargetModel->Draw(PBRShader, false);
