@@ -21,6 +21,7 @@ GLuint MatricesUniformBuffer;
 GLFWMainWindow* pMainWindow = nullptr;
 Camera* pCamera = nullptr;
 Shader* HDRShader = nullptr, *PBRShader = nullptr,*LightShader=nullptr;
+GLuint BaseColorTexture=-1, MetallicTextue=-1, RoughnessTexture=-1;
 FPointLight PointLight;
 GLuint HDRImage;
 GLuint BoxVAO;
@@ -112,6 +113,13 @@ void LoadShader()
 	};
 	HDRImage = LoadCubeMap(textures_faces,{0,0,0,0,0,0});
 	HDRShader->SetInt("HDRImage", 0);
+	PBRShader->SetInt("BaseColorTexture", 0);
+	PBRShader->SetInt("MetallicTexture", 1);
+	PBRShader->SetInt("RoughnessTexture", 2);
+	PBRShader->SetInt("AOTexture", 3);
+	BaseColorTexture = LoadTexture("Textures/rustediron2_basecolor.jpg");
+	MetallicTextue = LoadTexture("Textures/rustediron2_metallic.jpg");
+	RoughnessTexture = LoadTexture("Textures/rustediron2_roughness.jpg");
 }
 
 void BuildScene()
@@ -175,6 +183,24 @@ void RenderScene()
 		PBRShader->SetVec3("BaseColor", glm::vec3(0.f, 1.f, 1.f));
 		PBRShader->SetFloat("Metallic", 0.5f);
 		PBRShader->SetFloat("Roughness", 0.2f);
+		if (BaseColorTexture != (GLuint)-1)
+		{
+			PBRShader->SetInt("BaseColorUseTexture", GL_TRUE);
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, BaseColorTexture);
+		}
+		if (MetallicTextue != (GLuint)-1)
+		{
+			PBRShader->SetInt("MetallicUseTexture", GL_TRUE);
+			glActiveTexture(GL_TEXTURE1);
+			glBindTexture(GL_TEXTURE_2D, MetallicTextue);
+		}
+		if (RoughnessTexture != (GLuint)-1)
+		{
+			PBRShader->SetInt("RoughnessUseTexture", GL_TRUE);
+			glActiveTexture(GL_TEXTURE2);
+			glBindTexture(GL_TEXTURE_2D, RoughnessTexture);
+		}
 		PointLight.ApplyToShader(PBRShader, "PointLight[0]");
 		PBRShader->SetInt("PointLightCount", 1);
 		TargetModel->Draw(PBRShader, false);

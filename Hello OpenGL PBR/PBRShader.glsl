@@ -70,8 +70,29 @@ vec3 CaculateLight(vec3 LightColor,vec3 pL/*Pixel To Light Direction*/,vec3 Ligh
 
 vec3 N,V;
 
+vec3 TargetBaseColor;
+float TargetMetallic;
+float TargetRoughness;
+float TargetAO;
 void main()
 {
+	//Process Texture;
+	if (BaseColorUseTexture)
+		TargetBaseColor = texture(BaseColorTexture, aTextureCoord).xyz;
+	else
+		TargetBaseColor = BaseColor;
+	if (MetallicUseTexture)
+		TargetMetallic = length(texture(MetallicTexture, aTextureCoord).xyz);
+	else
+		TargetMetallic = Metallic;
+	if (RoughnessUseTexture)
+		TargetRoughness = length(texture(RoughnessTexture, aTextureCoord).xyz);
+	else
+		TargetRoughness = Roughness;
+	if (AOUseTexture)
+		TargetAO = length(texture(AOTexture, aTextureCoord).xyz);
+	else
+		TargetAO = AO;
 	N=normalize(aNormal); //For Normal;
 	V=normalize(CameraPos-aPos); //For Pixel to Camera Direction
 	vec3 Lo=vec3(0);
@@ -79,7 +100,7 @@ void main()
 		Lo+=CaculateLight(DirLight[i].LightColor,-DirLight[i].LightDir,aPos);
 	for(int i=0;i<PointLightCount;i++)
 		Lo+=CaculateLight(PointLight[i].LightColor,PointLight[i].LightPos-aPos,PointLight[i].LightPos);
-	vec3 ambient = vec3(0.03) * BaseColor * AO;
+	vec3 ambient = vec3(0.03) * TargetBaseColor * TargetAO;
 	vec3 color = ambient + Lo;  
 	color = color / (color + vec3(1.0));
 	color = pow(color, vec3(1.0/2.2)); 
@@ -98,17 +119,17 @@ vec3 CaculateLight(vec3 LightColor,vec3 pL/*Pixel To Light Direction*/,vec3 Ligh
 	float attenuation=1.f/(distance==0?1.f:pow(distance,2));
 	vec3 radiance=LightColor*attenuation;
 	vec3 F0=vec3(0.04f); //For non-metallic Material
-	F0=mix(F0,BaseColor,Metallic); //Lerp for non-metallic to metallic material;
+	F0=mix(F0, TargetBaseColor,TargetMetallic); //Lerp for non-metallic to metallic material;
 	vec3 F=fresnelSchlick(max(dot(H, V), 0.0),F0);
-	float D=DistributionGGX(N,H,Roughness);
-	float G=GeometrySmith(N,V,L,Roughness);
+	float D=DistributionGGX(N,H,TargetRoughness);
+	float G=GeometrySmith(N,V,L, TargetRoughness);
 	vec3 nominator    = D * F * G;
 	float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.001; 
 	vec3 specular     = nominator / denominator;  
 	vec3 kS = F;
 	vec3 kD = vec3(1.0) - kS; //energy conservation
-	kD *= 1.0 - Metallic; //Lerp Metallic
-	vec3 lambert=BaseColor/PI;
+	kD *= 1.0 - TargetMetallic; //Lerp Metallic
+	vec3 lambert=TargetBaseColor/PI;
 	vec3 fr=kD*lambert+specular;
 	vec3 Lo=max(dot(N,V),0.f)*fr*radiance;
 	return Lo;
