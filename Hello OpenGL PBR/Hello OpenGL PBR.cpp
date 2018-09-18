@@ -140,7 +140,7 @@ void BuildScene()
 	}
 	BoxVAO = BuildNewBox();
 	PointLight.pos = glm::vec3(0, 0, 0);
-	PointLight.LightColor = glm::vec3(10000.f);
+	PointLight.LightColor = glm::vec3(5000.f);
 }
 
 void SceneMovement()

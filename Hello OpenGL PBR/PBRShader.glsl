@@ -119,7 +119,7 @@ vec3 CaculateLight(vec3 LightColor,vec3 pL/*Pixel To Light Direction*/,vec3 Ligh
 	vec3 H = normalize(V + L); //Half vector between L and V
 	float distance=length(LightPos-aPos);
 	float attenuation=1.f/(distance==0?1.f:pow(distance,2));
-	vec3 radiance=LightColor*attenuation;
+	vec3 radiance=LightColor*attenuation*max(dot(L,N),0);
 	vec3 F0=vec3(0.04f); //For non-metallic Material
 	F0=mix(F0, TargetBaseColor,TargetMetallic); //Lerp for non-metallic to metallic material;
 	vec3 F=fresnelSchlick(clamp(dot(H, V), 0.f,1.f),F0);
