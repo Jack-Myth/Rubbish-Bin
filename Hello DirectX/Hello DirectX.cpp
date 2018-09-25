@@ -132,8 +132,8 @@ bool InitD3D(HINSTANCE hInstance)
 
 void LoadShader()
 {
-	DefVertShader = FShader::LoadVertexShader("VertShader.hlsl", "VS");
-	DefPixelShader = FShader::LoadPixelShader("Effects.fx", "PS");
+	DefVertShader = FShader::LoadVertexShader("DefShader.hlsl", "VS");
+	DefPixelShader = FShader::LoadPixelShader("DefShader.hlsl", "PS");
 }
 
 void BuildScene()
