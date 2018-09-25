@@ -6,12 +6,17 @@
 #include <time.h>
 #include <DirectXMath.h>
 #include "DxInfo.h"
+#include <commdlg.h>
+#include "Model.h"
+#include "Shader.h"
 #pragma comment(lib,"d3d11.lib")
+#pragma comment(lib,"assimp-vc140-mt.lib")
 
 
 LRESULT CALLBACK MainWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 bool InitD3D(HINSTANCE hInstance);
 void ReleaseObjects();
+void LoadShader();
 void BuildScene();
 void UpdateScene();
 void RenderScene();
@@ -21,6 +26,8 @@ SDL_Window* pMainWindow=nullptr;
 HWND MainWindowHwnd=NULL;
 DirectX::XMFLOAT4 ScreenColor;
 RECT WindowRect = {0,0,1280,720};
+FModel* targetModel;
+FShader* DefVertShader, *DefPixelShader;
 int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nShowCmd)
 {
 #if _DEBUG
@@ -54,6 +61,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 		MessageBox(MainWindowHwnd, TEXT("DirectX Init Failed,Exit!"), TEXT("Error"), MB_OK);
 		return-1;
 	}
+	LoadShader();
 	BuildScene();
 	MSG msg = { NULL };
 	while (msg.message!=WM_QUIT)
@@ -122,24 +130,51 @@ bool InitD3D(HINSTANCE hInstance)
 	return true;
 }
 
+void LoadShader()
+{
+	DefVertShader = FShader::LoadVertexShader("Effects.fx", "VS");
+	DefPixelShader = FShader::LoadPixelShader("Effects.fx", "PS");
+}
+
 void BuildScene()
 {
 	ScreenColor.x = 0.f;
 	ScreenColor.y = 0.f;
 	ScreenColor.z = 0.f;
 	ScreenColor.w = 0.f;
+	char FileP[1024] = { 0 };
+	OPENFILENAMEA OpenFN = { NULL };
+	OpenFN.lStructSize = sizeof(OPENFILENAMEA);
+	OpenFN.Flags = OFN_FILEMUSTEXIST;
+	OpenFN.lpstrFilter = "模型文件\0*.obj;*.fbx;*.3ds\0\0";
+	OpenFN.nMaxFile = MAX_PATH;
+	OpenFN.lpstrFile = FileP;
+	OpenFN.hInstance = GetModuleHandle(NULL);
+	OpenFN.lpstrTitle = "选择模型文件";
+	if (GetOpenFileNameA(&OpenFN))
+	{
+		targetModel = FModel::LoadModel(FileP);
+		if (targetModel)
+		{
+			FTransform mTransform = targetModel->GetTransform();
+			mTransform.Scale = DirectX::XMFLOAT3(0.1f, 0.1f, 0.1f);
+			targetModel->SetTransform(mTransform);
+		}
+	}
 }
 
 void UpdateScene()
 {
-	ScreenColor.x = sin((double)clock() / CLOCKS_PER_SEC)*0.5 + 0.5;
-	ScreenColor.y = sin((double)clock() / CLOCKS_PER_SEC)*0.5 + 0.5;
-	ScreenColor.z = sin((double)clock() / CLOCKS_PER_SEC)*0.5 + 0.5;
+	ScreenColor.x = (float)sin((double)clock() / CLOCKS_PER_SEC)*0.5f + 0.5f;
+	ScreenColor.y = (float)sin((double)clock() / CLOCKS_PER_SEC)*0.5f + 0.5f;
+	ScreenColor.z = (float)sin((double)clock() / CLOCKS_PER_SEC)*0.5f + 0.5f;
 }
 
 void RenderScene()
 {
 	D3D11Info.D3D11DeviceContext->ClearRenderTargetView(D3D11Info.RenderTargetView, (float*)&ScreenColor);
+	if (targetModel)
+		targetModel->Render(DefVertShader, DefPixelShader);
 	D3D11Info.DXGISwapChain->Present(0, NULL);
 }
 

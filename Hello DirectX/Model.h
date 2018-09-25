@@ -16,19 +16,18 @@ class FMesh
 	std::vector<unsigned int> Indices;
 public:
 	void FillData(std::vector<FVertex> VertexBuffer,std::vector<unsigned int> Indices);
-	void Render(class ID3D11VertexShader* VertexShader,class ID3D11PixelShader* PixelShader,bool ProcessTexture=false);
+	void Render(class FShader* VertexShader, class FShader* PixelShader,bool ProcessTexture=false);
 };
 
 class FModel
 {
 	FTransform ModelTransform;
 	std::vector<FMesh*> MeshCollection;
-	FModel();
-	void processNode(class aiNode* node, const class aiScene* scene);
-	FMesh* processMesh(class aiMesh* ai_mesh, const class aiScene* scene);
+	void processNode(struct aiNode* node, const struct aiScene* scene);
+	FMesh* processMesh(struct aiMesh* ai_mesh, const struct aiScene* scene);
 public:
 	static FModel* LoadModel(std::string FilePath);
-	void Render(class ID3D11VertexShader* VertexShader, class ID3D11PixelShader* PixelShader);
+	void Render(class FShader* VertexShader, class FShader* PixelShader);
 	inline void SetTransform(FTransform newTransform)
 	{
 		ModelTransform = newTransform;
