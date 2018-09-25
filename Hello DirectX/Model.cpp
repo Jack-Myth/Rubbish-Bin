@@ -11,7 +11,7 @@ void FMesh::FillData(std::vector<FVertex> VertexBuffer, std::vector<unsigned int
 	this->Indices = Indices;
 }
 
-void FMesh::Render(FShader* VertexShader, struct FShader* PixelShader, bool ProcessTexture/*=false*/)
+void FMesh::RenderInit(FShader* VertexShader, struct FShader* PixelShader, bool ProcessTexture/*=false*/)
 {
 	D3D11Info.D3D11DeviceContext->VSSetShader(VertexShader->VertexShader, nullptr, 0);
 	D3D11Info.D3D11DeviceContext->PSSetShader(PixelShader->PixelShader, nullptr, 0);
@@ -34,7 +34,6 @@ void FMesh::Render(FShader* VertexShader, struct FShader* PixelShader, bool Proc
 	targetInputElement[2].Format = DXGI_FORMAT_R32G32_FLOAT;
 	targetInputElement[2].InputSlot = 0;
 	targetInputElement[2].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
-	ID3D11InputLayout* Inputlayout;
 	D3D11Info.D3D11Device->CreateInputLayout(targetInputElement, 3,
 		VertexShader->ShaderBuffer->GetBufferPointer(),
 		VertexShader->ShaderBuffer->GetBufferSize(), &Inputlayout);
@@ -54,7 +53,6 @@ void FMesh::Render(FShader* VertexShader, struct FShader* PixelShader, bool Proc
 	IndicesBufferDesc.StructureByteStride = NULL;
 	D3D11_SUBRESOURCE_DATA IndicesSubresourceData = { NULL };
 	IndicesSubresourceData.pSysMem = Indices.data();
-	ID3D11Buffer* D3DVertexBuffer,*D3DIndicesBuffer;
 	D3D11Info.D3D11Device->CreateBuffer(&BufferDesc, &SubresourceData, &D3DVertexBuffer);
 	D3D11Info.D3D11Device->CreateBuffer(&IndicesBufferDesc, &IndicesSubresourceData, &D3DIndicesBuffer);
 	UINT stride = sizeof(FVertex);
@@ -63,7 +61,16 @@ void FMesh::Render(FShader* VertexShader, struct FShader* PixelShader, bool Proc
 	D3D11Info.D3D11DeviceContext->IASetInputLayout(Inputlayout);
 	D3D11Info.D3D11DeviceContext->IASetIndexBuffer(D3DIndicesBuffer, DXGI_FORMAT_R32_UINT, 0);
 	D3D11Info.D3D11DeviceContext->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	D3D11Info.D3D11DeviceContext->Draw(VertexBuffer.size(), 0);
+}
+
+void FMesh::Draw()
+{
+	UINT stride = sizeof(FVertex);
+	UINT offset = 0;
+	D3D11Info.D3D11DeviceContext->IASetInputLayout(Inputlayout);
+	D3D11Info.D3D11DeviceContext->IASetVertexBuffers(0, 1, &D3DVertexBuffer, &stride, &offset);
+	D3D11Info.D3D11DeviceContext->IASetIndexBuffer(D3DIndicesBuffer, DXGI_FORMAT_R32_UINT, 0);
+	D3D11Info.D3D11DeviceContext->DrawIndexed(Indices.size(), 0, 0);
 }
 
 void FModel::processNode(aiNode* node, const aiScene* scene)
@@ -126,10 +133,18 @@ FModel* FModel::LoadModel(std::string FilePath)
 	return tmpModel;
 }
 
-void FModel::Render(FShader* VertexShader, FShader* PixelShader)
+void FModel::RenderInit(FShader* VertexShader, FShader* PixelShader)
 {
 	for (FMesh*& MeshElement : MeshCollection)
 	{
-		MeshElement->Render(VertexShader,PixelShader);
+		MeshElement->RenderInit(VertexShader,PixelShader);
+	}
+}
+
+void FModel::Draw()
+{
+	for (FMesh*& MeshElement : MeshCollection)
+	{
+		MeshElement->Draw();
 	}
 }

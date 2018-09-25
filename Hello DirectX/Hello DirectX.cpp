@@ -132,7 +132,7 @@ bool InitD3D(HINSTANCE hInstance)
 
 void LoadShader()
 {
-	DefVertShader = FShader::LoadVertexShader("Effects.fx", "VS");
+	DefVertShader = FShader::LoadVertexShader("VertShader.hlsl", "VS");
 	DefPixelShader = FShader::LoadPixelShader("Effects.fx", "PS");
 }
 
@@ -174,7 +174,7 @@ void RenderScene()
 {
 	D3D11Info.D3D11DeviceContext->ClearRenderTargetView(D3D11Info.RenderTargetView, (float*)&ScreenColor);
 	if (targetModel)
-		targetModel->Render(DefVertShader, DefPixelShader);
+		targetModel->RenderInit(DefVertShader, DefPixelShader);
 	D3D11Info.DXGISwapChain->Present(0, NULL);
 }
 

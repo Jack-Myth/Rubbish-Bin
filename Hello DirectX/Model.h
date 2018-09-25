@@ -14,9 +14,12 @@ class FMesh
 {
 	std::vector<FVertex> VertexBuffer;
 	std::vector<unsigned int> Indices;
+	struct ID3D11InputLayout* Inputlayout;
+	struct ID3D11Buffer* D3DVertexBuffer, *D3DIndicesBuffer;
 public:
 	void FillData(std::vector<FVertex> VertexBuffer,std::vector<unsigned int> Indices);
-	void Render(class FShader* VertexShader, class FShader* PixelShader,bool ProcessTexture=false);
+	void RenderInit(class FShader* VertexShader, class FShader* PixelShader,bool ProcessTexture=false);
+	void Draw();
 };
 
 class FModel
@@ -27,7 +30,8 @@ class FModel
 	FMesh* processMesh(struct aiMesh* ai_mesh, const struct aiScene* scene);
 public:
 	static FModel* LoadModel(std::string FilePath);
-	void Render(class FShader* VertexShader, class FShader* PixelShader);
+	void RenderInit(class FShader* VertexShader, class FShader* PixelShader);
+	void Draw();
 	inline void SetTransform(FTransform newTransform)
 	{
 		ModelTransform = newTransform;
