@@ -171,6 +171,7 @@ void BuildScene()
 		{
 			FTransform mTransform = targetModel->GetTransform();
 			mTransform.Scale = DirectX::XMFLOAT3(0.1f, 0.1f, 0.1f);
+			mTransform.Location = DirectX::XMFLOAT3(0, 0, 50);
 			targetModel->SetTransform(mTransform);
 		}
 	}

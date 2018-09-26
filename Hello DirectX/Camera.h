@@ -6,7 +6,7 @@ class Camera
 {
 	FTransform CameraTransform;
 	float FOV;
-	float FarClipPlane,NearClipPlane;
+	float FarClipPlane=5,NearClipPlane=100000;
 	DirectX::XMFLOAT2 ViewportSize;
 public:
 	inline void SetCameraTransform(const FTransform& newCameraTransform)

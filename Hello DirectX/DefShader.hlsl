@@ -10,7 +10,7 @@ float4 VS(float3 inPos : POSITION) : SV_POSITION
 	return mul(mul(mul(float4(inPos,1.f),ModelMatrix),ViewMatrix),ProjectionMatrix);
 }
 
-float4 PS(float4 WorldPosition : POSITION) : COLOR
+float4 PS(float4 WorldPosition : SV_POSITION) : SV_TARGET
 {
 	return float4(0,0,1,1);
 }

@@ -13,13 +13,13 @@ bool FShader::CompileShader(const std::string& ShaderPath,LPCSTR pEntryFunction,
 	if (FAILED(hr))
 	{
 		printf("In Shader:%s:\n", ShaderPath.c_str());
-		HR(hr);
-		if (ErrorMsg->GetBufferPointer())
+		if (ErrorMsg)
+		{
 			printf("%s\n", (char*)ErrorMsg->GetBufferPointer());
-		ErrorMsg->Release();
+			ErrorMsg->Release();
+		}
 		return false;
 	}
-	ErrorMsg->Release();
 	return true;
 }
 
