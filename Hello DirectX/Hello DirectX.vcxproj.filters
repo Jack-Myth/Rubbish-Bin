@@ -52,8 +52,8 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="DefShader.hlsl">
+    <None Include="DefShader.hlsl">
       <Filter>源文件\Shaders</Filter>
-    </FxCompile>
+    </None>
   </ItemGroup>
 </Project>

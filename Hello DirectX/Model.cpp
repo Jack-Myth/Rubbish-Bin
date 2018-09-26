@@ -11,7 +11,7 @@ void FMesh::FillData(std::vector<FVertex> VertexBuffer, std::vector<unsigned int
 	this->Indices = Indices;
 }
 
-void FMesh::RenderInit(FShader* VertexShader, struct FShader* PixelShader, bool ProcessTexture/*=false*/)
+void FMesh::RenderInit(FShader* VertexShader, FShader* PixelShader, bool ProcessTexture/*=false*/)
 {
 	D3D11Info.D3D11DeviceContext->VSSetShader(VertexShader->VertexShader, nullptr, 0);
 	D3D11Info.D3D11DeviceContext->PSSetShader(PixelShader->PixelShader, nullptr, 0);
@@ -143,6 +143,9 @@ void FModel::RenderInit(FShader* VertexShader, FShader* PixelShader)
 
 void FModel::Draw()
 {
+	MVPBuffer.ModelMatrix = ModelTransform.GenTransformMatrix();
+	D3D11Info.D3D11DeviceContext->UpdateSubresource(D3D11Info.D3DMVPBuffer, 0, nullptr, &MVPBuffer, 0, 0);
+	D3D11Info.D3D11DeviceContext->VSSetConstantBuffers(0, 1, &D3D11Info.D3DMVPBuffer);
 	for (FMesh*& MeshElement : MeshCollection)
 	{
 		MeshElement->Draw();

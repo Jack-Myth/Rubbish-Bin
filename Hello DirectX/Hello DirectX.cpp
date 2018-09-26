@@ -9,6 +9,7 @@
 #include <commdlg.h>
 #include "Model.h"
 #include "Shader.h"
+#include "Camera.h"
 #pragma comment(lib,"d3d11.lib")
 #pragma comment(lib,"assimp-vc140-mt.lib")
 
@@ -22,12 +23,14 @@ void UpdateScene();
 void RenderScene();
 
 FD3D11Info D3D11Info;
+FMVPBuffer MVPBuffer;
 SDL_Window* pMainWindow=nullptr;
 HWND MainWindowHwnd=NULL;
 DirectX::XMFLOAT4 ScreenColor;
 RECT WindowRect = {0,0,1280,720};
 FModel* targetModel;
 FShader* DefVertShader, *DefPixelShader;
+Camera* pMyCamera=nullptr;
 int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nShowCmd)
 {
 #if _DEBUG
@@ -59,8 +62,11 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	if (!InitD3D(hInstance))
 	{
 		MessageBox(MainWindowHwnd, TEXT("DirectX Init Failed,Exit!"), TEXT("Error"), MB_OK);
-		return-1;
+		return -1;
 	}
+	pMyCamera = new Camera();
+	pMyCamera->SetFOV(90.f);
+	pMyCamera->SetViewportSize(DirectX::XMFLOAT2(1280, 720));
 	LoadShader();
 	BuildScene();
 	MSG msg = { NULL };
@@ -78,6 +84,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 		}
 	}
 	ReleaseObjects();
+	return 0;
 }
 
 LRESULT CALLBACK MainWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -87,6 +94,12 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPar
 		case WM_CLOSE:
 			PostQuitMessage(0);
 			break;
+		case WM_SIZE:
+			if (wParam!= SIZE_MINIMIZED&&D3D11Info.DXGISwapChain)
+			{
+				D3D11Info.DXGISwapChain->ResizeBuffers(1, LOWORD(lParam), HIWORD(lParam), DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH);
+				pMyCamera->SetViewportSize(DirectX::XMFLOAT2(LOWORD(lParam), HIWORD(lParam)));
+			}
 		default:
 			break;
 	}
@@ -161,6 +174,15 @@ void BuildScene()
 			targetModel->SetTransform(mTransform);
 		}
 	}
+	targetModel->RenderInit(DefVertShader, DefPixelShader);
+	D3D11_BUFFER_DESC MVPBufferDesc = {NULL};
+	MVPBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	MVPBufferDesc.ByteWidth = sizeof(FMVPBuffer);
+	MVPBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	MVPBufferDesc.StructureByteStride = NULL;
+	D3D11_SUBRESOURCE_DATA MVPSubresourceD = { NULL };
+	MVPSubresourceD.pSysMem = &MVPBuffer;
+	D3D11Info.D3D11Device->CreateBuffer(&MVPBufferDesc, &MVPSubresourceD, &D3D11Info.D3DMVPBuffer);
 }
 
 void UpdateScene()
@@ -173,8 +195,10 @@ void UpdateScene()
 void RenderScene()
 {
 	D3D11Info.D3D11DeviceContext->ClearRenderTargetView(D3D11Info.RenderTargetView, (float*)&ScreenColor);
+	MVPBuffer.ViewMatrix = pMyCamera->GenViewMatrix();
+	MVPBuffer.ProjectionMatrix = pMyCamera->GenProjectionMatrix();
 	if (targetModel)
-		targetModel->RenderInit(DefVertShader, DefPixelShader);
+		targetModel->Draw();
 	D3D11Info.DXGISwapChain->Present(0, NULL);
 }
 

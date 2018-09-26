@@ -7,7 +7,7 @@ cbuffer Matrices
 
 float4 VS(float3 inPos : POSITION) : SV_POSITION
 {
-	return float4(inPos,1.f)*ModelMatrix*ViewMatrix*ProjectionMatrix;
+	return mul(mul(mul(float4(inPos,1.f),ModelMatrix),ViewMatrix),ProjectionMatrix);
 }
 
 float4 PS(float4 WorldPosition : POSITION) : COLOR
