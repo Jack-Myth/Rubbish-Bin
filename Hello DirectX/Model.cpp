@@ -47,7 +47,7 @@ void FMesh::RenderInit(FShader* VertexShader, FShader* PixelShader, bool Process
 	SubresourceData.pSysMem = VertexBuffer.data();
 	D3D11_BUFFER_DESC IndicesBufferDesc = { NULL };
 	IndicesBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	IndicesBufferDesc.ByteWidth = Indices.size() * sizeof(FVertex);
+	IndicesBufferDesc.ByteWidth = Indices.size() * sizeof(unsigned int);
 	IndicesBufferDesc.CPUAccessFlags = NULL;
 	IndicesBufferDesc.MiscFlags = NULL;
 	IndicesBufferDesc.StructureByteStride = NULL;
@@ -70,7 +70,7 @@ void FMesh::Draw()
 	D3D11Info.D3D11DeviceContext->IASetInputLayout(Inputlayout);
 	D3D11Info.D3D11DeviceContext->IASetVertexBuffers(0, 1, &D3DVertexBuffer, &stride, &offset);
 	D3D11Info.D3D11DeviceContext->IASetIndexBuffer(D3DIndicesBuffer, DXGI_FORMAT_R32_UINT, 0);
-	D3D11Info.D3D11DeviceContext->DrawIndexed(Indices.size(), 0, 0);
+	D3D11Info.D3D11DeviceContext->DrawIndexed(Indices.size(),0,0);
 }
 
 void FModel::processNode(aiNode* node, const aiScene* scene)
