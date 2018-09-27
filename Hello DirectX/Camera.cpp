@@ -1,5 +1,13 @@
 #include "Camera.h"
 
+void Camera::ProcessMouseInput(int DetailX, int DetailY)
+{
+	CameraTransform.Rotation.z += DetailX/10.f;
+	if (CameraTransform.Rotation.y + DetailY/10.f > 80 || CameraTransform.Rotation.y + DetailY/10.f < -80)
+		return;
+	CameraTransform.Rotation.y += DetailY/10.f;
+}
+
 DirectX::XMMATRIX Camera::GenViewMatrix()
 {
 	DirectX::XMVECTOR Direction = DirectX::XMVectorSet(0, 0, 1, 0);

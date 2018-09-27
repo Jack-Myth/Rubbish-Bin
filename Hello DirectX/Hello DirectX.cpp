@@ -40,6 +40,9 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 		freopen_s(&tmpDebugFile, "CONOUT$", "w", stdout);
 	}
 #endif
+	pMyCamera = new Camera();
+	pMyCamera->SetFOV(90.f);
+	pMyCamera->SetViewportSize(DirectX::XMFLOAT2(1280, 720));
 	WNDCLASSEX wnd = { NULL };
 	wnd.cbSize = sizeof(WNDCLASSEX);
 	wnd.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
@@ -64,11 +67,9 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 		MessageBox(MainWindowHwnd, TEXT("DirectX Init Failed,Exit!"), TEXT("Error"), MB_OK);
 		return -1;
 	}
-	pMyCamera = new Camera();
-	pMyCamera->SetFOV(90.f);
-	pMyCamera->SetViewportSize(DirectX::XMFLOAT2(1280, 720));
 	LoadShader();
 	BuildScene();
+	ShowCursor(FALSE);
 	MSG msg = { NULL };
 	while (msg.message!=WM_QUIT)
 	{
@@ -99,6 +100,29 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPar
 			{
 				D3D11Info.DXGISwapChain->ResizeBuffers(1, LOWORD(lParam), HIWORD(lParam), DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH);
 				pMyCamera->SetViewportSize(DirectX::XMFLOAT2(LOWORD(lParam), HIWORD(lParam)));
+				break;
+			}
+		case WM_MOUSEMOVE:
+			{
+				RECT Clientrc;
+				GetClientRect(hwnd, &Clientrc);
+				POINT ScreenPos;
+				ScreenPos.y = (Clientrc.bottom - Clientrc.top) / 2 + Clientrc.top;
+				ScreenPos.x = (Clientrc.right - Clientrc.left) / 2 + Clientrc.left;
+				POINT CursorDetail;
+				GetCursorPos(&CursorDetail);
+				ClientToScreen(hwnd, &ScreenPos);
+				SetCursorPos(ScreenPos.x, ScreenPos.y);
+				CursorDetail.x -= ScreenPos.x;
+				CursorDetail.y -= ScreenPos.y;
+				pMyCamera->ProcessMouseInput(CursorDetail.x, CursorDetail.y);
+				break;
+			}
+		case WM_KEYDOWN:
+			{
+				if (wParam == VK_ESCAPE)
+					PostQuitMessage(0);
+				break;
 			}
 		default:
 			break;
@@ -136,10 +160,24 @@ bool InitD3D(HINSTANCE hInstance)
 		return false;
 	}
 	ID3D11Texture2D* BackBufferTexture;
+	ID3D11Texture2D* DepthStencilTexture;
 	D3D11Info.DXGISwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&BackBufferTexture);
 	D3D11Info.D3D11Device->CreateRenderTargetView(BackBufferTexture, NULL, &D3D11Info.RenderTargetView);
+	D3D11_TEXTURE2D_DESC DepthStencilDesc = { NULL };
+	DepthStencilDesc.ArraySize = 1;
+	DepthStencilDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+	DepthStencilDesc.CPUAccessFlags = NULL;
+	DepthStencilDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	DepthStencilDesc.Height = 720;
+	DepthStencilDesc.Width = 1280;
+	DepthStencilDesc.MipLevels = 1;
+	DepthStencilDesc.SampleDesc.Quality = 0;
+	DepthStencilDesc.SampleDesc.Count = 1;
+	DepthStencilDesc.Usage = D3D11_USAGE_DEFAULT;
+	D3D11Info.D3D11Device->CreateTexture2D(&DepthStencilDesc, NULL, &DepthStencilTexture);
+	D3D11Info.D3D11Device->CreateDepthStencilView(DepthStencilTexture, NULL, &D3D11Info.DepthStencilRTV);
 	BackBufferTexture->Release();
-	D3D11Info.D3D11DeviceContext->OMSetRenderTargets(1, &D3D11Info.RenderTargetView, nullptr);
+	D3D11Info.D3D11DeviceContext->OMSetRenderTargets(1, &D3D11Info.RenderTargetView,D3D11Info.DepthStencilRTV);
 	return true;
 }
 
@@ -184,6 +222,12 @@ void BuildScene()
 	D3D11_SUBRESOURCE_DATA MVPSubresourceD = { NULL };
 	MVPSubresourceD.pSysMem = &MVPBuffer;
 	D3D11Info.D3D11Device->CreateBuffer(&MVPBufferDesc, &MVPSubresourceD, &D3D11Info.D3DMVPBuffer);
+	D3D11_VIEWPORT Viewport = { NULL };
+	Viewport.Height = 720;
+	Viewport.Width = 1280;
+	Viewport.TopLeftX = 0;
+	Viewport.TopLeftY = 0;
+	D3D11Info.D3D11DeviceContext->RSSetViewports(1, &Viewport);
 }
 
 void UpdateScene()
@@ -191,11 +235,15 @@ void UpdateScene()
 	ScreenColor.x = (float)sin((double)clock() / CLOCKS_PER_SEC)*0.5f + 0.5f;
 	ScreenColor.y = (float)sin((double)clock() / CLOCKS_PER_SEC)*0.5f + 0.5f;
 	ScreenColor.z = (float)sin((double)clock() / CLOCKS_PER_SEC)*0.5f + 0.5f;
+	FTransform lastTransform = targetModel->GetTransform();
+	lastTransform.Location.z = (float)sin((double)clock() / CLOCKS_PER_SEC)*100.f;
+	targetModel->SetTransform(lastTransform);
 }
 
 void RenderScene()
 {
 	D3D11Info.D3D11DeviceContext->ClearRenderTargetView(D3D11Info.RenderTargetView, (float*)&ScreenColor);
+	D3D11Info.D3D11DeviceContext->ClearDepthStencilView(D3D11Info.DepthStencilRTV, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1, 0);
 	MVPBuffer.ViewMatrix = pMyCamera->GenViewMatrix();
 	MVPBuffer.ProjectionMatrix = pMyCamera->GenProjectionMatrix();
 	if (targetModel)

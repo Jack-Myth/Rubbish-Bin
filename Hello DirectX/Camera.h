@@ -6,8 +6,9 @@ class Camera
 {
 	FTransform CameraTransform;
 	float FOV;
-	float FarClipPlane=5,NearClipPlane=100000;
+	float FarClipPlane=100000,NearClipPlane=5;
 	DirectX::XMFLOAT2 ViewportSize;
+	
 public:
 	inline void SetCameraTransform(const FTransform& newCameraTransform)
 	{
@@ -34,6 +35,8 @@ public:
 	{
 		return FOV;
 	}
+
+	void ProcessMouseInput(int DetailX, int DetailY);
 
 	DirectX::XMMATRIX GenViewMatrix();
 	DirectX::XMMATRIX GenProjectionMatrix();

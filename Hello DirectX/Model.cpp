@@ -15,6 +15,8 @@ void FMesh::RenderInit(FShader* VertexShader, FShader* PixelShader, bool Process
 {
 	D3D11Info.D3D11DeviceContext->VSSetShader(VertexShader->VertexShader, nullptr, 0);
 	D3D11Info.D3D11DeviceContext->PSSetShader(PixelShader->PixelShader, nullptr, 0);
+	this->VertexShader = VertexShader;
+	this->PixelShader = PixelShader;
 	D3D11_INPUT_ELEMENT_DESC targetInputElement[3] = {NULL};
 	//Vertex Pos
 	targetInputElement[0].SemanticName = "POSITION";
@@ -60,16 +62,18 @@ void FMesh::RenderInit(FShader* VertexShader, FShader* PixelShader, bool Process
 	D3D11Info.D3D11DeviceContext->IASetVertexBuffers(0, 1, &D3DVertexBuffer, &stride, &offset);
 	D3D11Info.D3D11DeviceContext->IASetInputLayout(Inputlayout);
 	D3D11Info.D3D11DeviceContext->IASetIndexBuffer(D3DIndicesBuffer, DXGI_FORMAT_R32_UINT, 0);
-	D3D11Info.D3D11DeviceContext->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
 void FMesh::Draw()
 {
 	UINT stride = sizeof(FVertex);
 	UINT offset = 0;
+	D3D11Info.D3D11DeviceContext->VSSetShader(VertexShader->VertexShader, nullptr, 0);
+	D3D11Info.D3D11DeviceContext->PSSetShader(PixelShader->PixelShader, nullptr, 0);
 	D3D11Info.D3D11DeviceContext->IASetInputLayout(Inputlayout);
 	D3D11Info.D3D11DeviceContext->IASetVertexBuffers(0, 1, &D3DVertexBuffer, &stride, &offset);
 	D3D11Info.D3D11DeviceContext->IASetIndexBuffer(D3DIndicesBuffer, DXGI_FORMAT_R32_UINT, 0);
+	D3D11Info.D3D11DeviceContext->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	D3D11Info.D3D11DeviceContext->DrawIndexed(Indices.size(),0,0);
 }
 

@@ -38,6 +38,7 @@ struct FD3D11Info
 	ID3D11DeviceContext* D3D11DeviceContext;
 	D3D_FEATURE_LEVEL D3DFeatureLevel;
 	ID3D11RenderTargetView* RenderTargetView;
+	ID3D11DepthStencilView* DepthStencilRTV;
 	ID3D11Buffer* D3DMVPBuffer;
 };
 

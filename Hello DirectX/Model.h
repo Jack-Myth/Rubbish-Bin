@@ -16,6 +16,7 @@ class FMesh
 	std::vector<unsigned int> Indices;
 	struct ID3D11InputLayout* Inputlayout;
 	struct ID3D11Buffer* D3DVertexBuffer, *D3DIndicesBuffer;
+	class FShader* VertexShader, *PixelShader;
 public:
 	void FillData(std::vector<FVertex> VertexBuffer,std::vector<unsigned int> Indices);
 	void RenderInit(class FShader* VertexShader, class FShader* PixelShader,bool ProcessTexture=false);
