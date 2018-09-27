@@ -236,7 +236,7 @@ void UpdateScene()
 	ScreenColor.y = (float)sin((double)clock() / CLOCKS_PER_SEC)*0.5f + 0.5f;
 	ScreenColor.z = (float)sin((double)clock() / CLOCKS_PER_SEC)*0.5f + 0.5f;
 	FTransform lastTransform = targetModel->GetTransform();
-	lastTransform.Location.z = (float)sin((double)clock() / CLOCKS_PER_SEC)*100.f;
+	lastTransform.Location.z = -abs((float)sin((double)clock() / CLOCKS_PER_SEC)*100.f);
 	targetModel->SetTransform(lastTransform);
 }
 
