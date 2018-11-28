@@ -10,7 +10,11 @@
 #include <map>
 #include <io.h>
 #include <algorithm>
+#include <ws2def.h>
+#include <ws2ipdef.h>
 #pragma comment(lib, "ws2_32.lib")
+
+#define USE_IPV6 1
 
 WSADATA wsaData;
 
@@ -21,8 +25,11 @@ struct
 	int Port;
 	std::map<std::string, std::string> MIME;
 } GlobalSettings;
-
+#if USE_IPV6
+void OnRequestArrived(SOCKET ConnectionSocket, SOCKADDR_IN6  ClientAddr, int AddSize);
+#else
 void OnRequestArrived(SOCKET ConnectionSocket, SOCKADDR_IN  ClientAddr, int AddSize);
+#endif
 void LoadProfileFromFile(std::string ProfileName);
 int main(int argv,char* argc[])
 {
@@ -47,12 +54,21 @@ int main(int argv,char* argc[])
 		printf("WSA Startup Failed, Exit...\n");
 		exit(-1);
 	}
-	SOCKET MainSocket = socket(AF_INET, SOCK_STREAM, 0);
+#if USE_IPV6
+	SOCKET MainSocket = socket(PF_INET6, SOCK_STREAM, 0);
+	SOCKADDR_IN6 ServerAddr = { 0 };
+	ServerAddr.sin6_addr = IN6ADDR_ANY_INIT;
+	ServerAddr.sin6_family=PF_INET6;
+	ServerAddr.sin6_port = htons(GlobalSettings.Port);
+	if (bind(MainSocket, (SOCKADDR*)&ServerAddr, sizeof(SOCKADDR_IN6)))
+#else
+	SOCKET MainSocket = socket(AF_INET, SOCK_STREAM, 0)
 	SOCKADDR_IN ServerAddr;
 	ServerAddr.sin_addr.S_un.S_addr = htonl(ADDR_ANY);
 	ServerAddr.sin_family = AF_INET;
 	ServerAddr.sin_port = htons(GlobalSettings.Port);
 	if (bind(MainSocket, (SOCKADDR*)&ServerAddr, sizeof(SOCKADDR)))
+#endif
 	{
 		printf("Socket Bind Failed, Please make sure your 80 port is not in use.\n");
 		exit(-1);
@@ -64,8 +80,13 @@ int main(int argv,char* argc[])
 	}
 	while (1)
 	{
+#if USE_IPV6
+		SOCKADDR_IN6 ClientAddr;
+		int AddrSize = sizeof(SOCKADDR_IN6);
+#else
 		SOCKADDR_IN ClientAddr;
 		int AddrSize = sizeof(SOCKADDR);
+#endif
 		SOCKET CurConnection = accept(MainSocket, (SOCKADDR*)&ClientAddr, &AddrSize);
 		std::thread(&OnRequestArrived, CurConnection, ClientAddr, AddrSize).detach();
 	}
@@ -144,8 +165,11 @@ inline bool CheckMIME(std::string FileExtension,std::string* ReturnMIME = nullpt
 		*ReturnMIME = it->second;
 	return true;
 }
-
+#if USE_IPV6
+void OnRequestArrived(SOCKET ConnectionSocket, SOCKADDR_IN6  ClientAddr, int AddSize)
+#else
 void OnRequestArrived(SOCKET ConnectionSocket, SOCKADDR_IN  ClientAddr, int AddSize)
+#endif
 {
 	struct
 	{
