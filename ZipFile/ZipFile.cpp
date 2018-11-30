@@ -124,7 +124,7 @@ HRESULT CALLBACK MainWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPar
 		if (GetOpenFileName(&OpenFN))
 		{
 			setlocale(LC_ALL, "");
-			char FilePath[256];
+			char* FilePath=new char[512];
 			wcstombs(FilePath, OpenFN.lpstrFile, MAX_PATH);
 			if (stricmp(FilePath + strlen(FilePath) - 8, ".Huffman"))
 			{//Ñ¹Ëõ
@@ -148,6 +148,7 @@ HRESULT CALLBACK MainWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPar
 DWORD WINAPI Zip(LPVOID lpParameter)
 {
 	FILE* TargetFile = fopen((char*)lpParameter, "rb+");
+	delete lpParameter;
 	CharWidget CharMapTmp[256] = { 0 };
 	for (int i = 0; i < 256; i++)
 		CharMapTmp[i].Index = i;
@@ -235,6 +236,7 @@ DWORD WINAPI UnZip(LPVOID lpParameter)
 	HuffmanTree.LeftChild = new Binary_Tree<unsigned char>();
 	HuffmanTree.RightChild = new Binary_Tree<unsigned char>();
 	auto ZipFile = BitFILE::fopenbit((char*)lpParameter, "rb+");
+	delete lpParameter;
 	//ZipFile->fgetbit();
 	HuffmanTree.Travel([ZipFile](Binary_Tree<unsigned char>* CurTree, int CurDepth, bool IsFromLeftChild, void *&TravelData)
 	{
