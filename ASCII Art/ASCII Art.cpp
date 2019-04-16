@@ -1,10 +1,11 @@
-#include <stdio.h>
+ï»¿#include <stdio.h>
 #include <string.h>
 #include <windows.h>
 #include "FreeImage/FreeImage.h"
+#include <algorithm>
 #pragma comment(lib,"FreeImage/FreeImage.lib")
 
-char AArtPixelMap[] = { ' ','.','-','*','+','^','0','?','o','8','#','%','&','@' };
+WCHAR AArtPixelMap[] = { L' ',L'.',L'â–‘',L'â–’',L'â–“',L'â–ˆ' };
 
 int main(int argc, char *argv[])
 {
@@ -25,24 +26,24 @@ int main(int argc, char *argv[])
 	OPENFILENAME OpenFN = { NULL };
 	OpenFN.lStructSize = sizeof(OPENFILENAME);
 	//OpenFN.hwndOwner = hwnd;
-	OpenFN.lpstrFilter = TEXT("Í¼Æ¬ÎÄ¼ş\0*.jpg\0\0");
+	OpenFN.lpstrFilter = TEXT("å›¾ç‰‡æ–‡ä»¶\0*.jpg\0\0");
 	OpenFN.nMaxFile = MAX_PATH;
 	OpenFN.lpstrFile = filename;
 	OpenFN.Flags = OFN_FILEMUSTEXIST;
-	OpenFN.lpstrTitle = TEXT("Ñ¡ÔñÍ¼Æ¬ÎÄ¼ş");
+	OpenFN.lpstrTitle = TEXT("é€‰æ‹©å›¾ç‰‡æ–‡ä»¶");
 	if (GetOpenFileName(&OpenFN))
 	{
 		FIBITMAP* SourceImage= FreeImage_LoadU(FIF_JPEG, OpenFN.lpstrFile);
 		FIBITMAP* TargetImage = NULL;
 		//image.Load(OFN.lpstrFile);
-		printf("ÊäÈë×Ö·û»­µÄ³¤¿í(X,Y),»òÊäÈëX×ÔÊÊÓ¦±ÈÀı(x,Y)(X,x)£¬µ¥¸öÊı×ÖÔòµÈ±ÈËõ·Å(ÒÔ1.0Îª»ù×¼)\n");
+		wprintf(TEXT("è¾“å…¥å­—ç¬¦ç”»çš„é•¿å®½(X,Y),æˆ–è¾“å…¥Xè‡ªé€‚åº”æ¯”ä¾‹(x,Y)(X,x)ï¼Œå•ä¸ªæ•°å­—åˆ™ç­‰æ¯”ç¼©æ”¾(ä»¥1.0ä¸ºåŸºå‡†)\n"));
 		float X,Y;
 		char tmpS[1024];
 		scanf("%[^,\n]", tmpS);
 		if (getchar() == '\n')
 		{
 			sscanf(tmpS, "%f", &X);
-			//µÈ±ÈËõ·Å
+			//ç­‰æ¯”ç¼©æ”¾
 			TargetImage=FreeImage_Rescale(SourceImage, FreeImage_GetWidth(SourceImage)*X, FreeImage_GetHeight(SourceImage)*X);
 			//CxImageInstance.Resample(CxImageInstance.GetWidth()*X, CxImageInstance.GetHeight()*X);
 		}
@@ -91,19 +92,19 @@ int main(int argc, char *argv[])
 				if (Invert)
 					if (DoubleWidth)
 					{
-						printf("%c", AArtPixelMap[(int)(12 - (color.rgbRed * 30 + color.rgbGreen * 59 + color.rgbBlue * 11 + 50) / 100 / 256.f * 12)]);
-						printf("%c", AArtPixelMap[(int)(12 - (color.rgbRed * 30 + color.rgbGreen * 59 + color.rgbBlue * 11 + 50) / 100 / 256.f * 12)]);
+						wprintf(TEXT("%c"), AArtPixelMap[sizeof(AArtPixelMap)-1-(int)(std::clamp<float>((color.rgbRed * 30 + color.rgbGreen * 59 + color.rgbBlue * 11 + 50) / 100 / 256.f,0,0.999f) * sizeof(AArtPixelMap))]);
+						wprintf(TEXT("%c"), AArtPixelMap[sizeof(AArtPixelMap)-1-(int)(std::clamp<float>((color.rgbRed * 30 + color.rgbGreen * 59 + color.rgbBlue * 11 + 50) / 100 / 256.f,0,0.999f) * sizeof(AArtPixelMap))]);
 					}
 					else
-						printf("%c", AArtPixelMap[(int)(12 - (color.rgbRed * 30 + color.rgbGreen * 59 + color.rgbBlue * 11 + 50) / 100 / 256.f * 12)]);
+						wprintf(TEXT("%c"), AArtPixelMap[sizeof(AArtPixelMap)-1-(int)(std::clamp<float>((color.rgbRed * 30 + color.rgbGreen * 59 + color.rgbBlue * 11 + 50) / 100 / 256.f,0,0.999f) * sizeof(AArtPixelMap))]);
 				else
 					if (DoubleWidth)
 					{
-						printf("%c", AArtPixelMap[(int)((color.rgbRed * 30 + color.rgbGreen * 59 + color.rgbBlue * 11 + 50) / 100 / 256.f * 12)]);
-						printf("%c", AArtPixelMap[(int)((color.rgbRed * 30 + color.rgbGreen * 59 + color.rgbBlue * 11 + 50) / 100 / 256.f * 12)]);
+						wprintf(TEXT("%c"), AArtPixelMap[(int)(std::clamp<float>((color.rgbRed * 30 + color.rgbGreen * 59 + color.rgbBlue * 11 + 50) / 100 / 256.f,0,0.999f) * sizeof(AArtPixelMap))]);
+						wprintf(TEXT("%c"), AArtPixelMap[(int)(std::clamp<float>((color.rgbRed * 30 + color.rgbGreen * 59 + color.rgbBlue * 11 + 50) / 100 / 256.f, 0, 0.999f)* sizeof(AArtPixelMap))]);
 					}
 					else
-						printf("%c", AArtPixelMap[(int)((color.rgbRed * 30 + color.rgbGreen * 59 + color.rgbBlue * 11 + 50) / 100 / 256.f * 12)]);
+						wprintf(TEXT("%c"), AArtPixelMap[(int)(std::clamp<float>((color.rgbRed * 30 + color.rgbGreen * 59 + color.rgbBlue * 11 + 50) / 100 / 256.f,0,0.999f) * sizeof(AArtPixelMap))]);
 			}
 			printf("\n");
 		}
