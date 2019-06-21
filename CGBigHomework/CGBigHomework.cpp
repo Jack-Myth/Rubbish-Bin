@@ -1,3 +1,4 @@
+#define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <windows.h>
 #include <vector>
@@ -139,6 +140,37 @@ void ProcessInput(GLFWwindow* pWindow)
 		pMyCamera->Move(glm::vec3(-0.2f, 0, 0) * moveSpeed);
 	if (glfwGetKey(pWindow, GLFW_KEY_D) == GLFW_PRESS)
 		pMyCamera->Move(glm::vec3(0.2f, 0, 0) * moveSpeed);
+	if (glfwGetKey(pWindow, GLFW_KEY_HOME) == GLFW_PRESS || glfwGetKey(pWindow, GLFW_KEY_SPACE) == GLFW_PRESS)
+	{
+		char FileP[1024] = { 0 };
+		OPENFILENAMEA OpenFN = { NULL };
+		OpenFN.lStructSize = sizeof(OPENFILENAMEA);
+		OpenFN.Flags = OFN_FILEMUSTEXIST;
+		OpenFN.lpstrFilter = "控制点数据文件\0*.txt\0\0";
+		OpenFN.nMaxFile = MAX_PATH;
+		OpenFN.lpstrFile = FileP;
+		OpenFN.hInstance = GetModuleHandle(NULL);
+		OpenFN.lpstrTitle = "控制点数据文件";
+		if (GetOpenFileNameA(&OpenFN))
+		{
+			FILE* DataFile = fopen(OpenFN.lpstrFile, "r");
+			int uCount, vCount;
+			(void)fscanf(DataFile, "%d,%d", &uCount, &vCount);
+			GlobalBSurface.SizeU = uCount;
+			GlobalBSurface.SizeV = vCount;
+			GlobalBSurface.ControlPoints.clear();
+			GlobalBSurface.ControlPoints.resize(uCount * vCount);
+			for (int v=0;v<vCount;v++)
+			{
+				for (int u=0;u<uCount;u++)
+				{
+					int x, y, z;
+					(void)fscanf(DataFile, "%d,%d,%d;", &x, &y, &z);
+					GlobalBSurface.ControlPoints[v * uCount + u] = glm::vec3(x, y, z);
+				}
+			}
+		}
+	}
 
 
 	//Move
@@ -156,17 +188,17 @@ void Render()
 	//Clear
 	glClearColor(1, 1, 1, 1);
 	glClear(GL_COLOR_BUFFER_BIT);
+	glLineWidth(5);
 	glm::mat4 ProjectionMatrix = pMyCamera->GetProjectionMatrix();
 	glm::mat4 ViewMatrix = pMyCamera->GetViewMatrix();
-	for (float u=0;u<=1.f;u+=0.1f)
+	for (float u=0;u<=1.f;u+=0.05f)
 	{
 		glm::vec4 WorkingPoint = ProjectionMatrix * ViewMatrix * ModelM * glm::vec4(GlobalBSurface.Calculate(u, 0.f),1.f);
 		WorkingPoint /= WorkingPoint.z;
-		for (float v = 0.1f; v <= 1.f;v += 0.1f)
+		for (float v = 0.05f; v <= 1.f;v += 0.05f)
 		{
 			glm::vec4 tmpPoint = ProjectionMatrix * ViewMatrix * ModelM * glm::vec4(GlobalBSurface.Calculate(u, v), 1.f);
 			tmpPoint /= tmpPoint.z;
-			glLineWidth(30);
 			glColor3f(0.4, 0.8, 1.f);
 			glBegin(GL_LINES);
 			glVertex2f(WorkingPoint.x, WorkingPoint.y);
@@ -177,15 +209,14 @@ void Render()
 			WorkingPoint = tmpPoint;
 		}
 	}
-	for (float v = 0; v <= 1.f; v += 0.1f)
+	for (float v = 0; v <= 1.f; v += 0.05f)
 	{
 		glm::vec4 WorkingPoint = ProjectionMatrix *ViewMatrix * ModelM * glm::vec4(GlobalBSurface.Calculate(0.f, v), 1.f);
 		WorkingPoint /= WorkingPoint.z;
-		for (float u = 0.1f; u <= 1.f; u += 0.1f)
+		for (float u = 0.05f; u <= 1.f; u += 0.05f)
 		{
 			glm::vec4 tmpPoint = ProjectionMatrix * ViewMatrix * ModelM * glm::vec4(GlobalBSurface.Calculate(u, v), 1.f);
 			tmpPoint /= tmpPoint.z;
-			glLineWidth(30);
 			glColor3f(0.4, 0.8, 1.f);
 			glBegin(GL_LINES);
 			glVertex2f(WorkingPoint.x, WorkingPoint.y);
@@ -197,7 +228,7 @@ void Render()
 		}
 	}
 	//Draw Control Point
-	
+	glLineWidth(2);
 	for (int y = 0; y < GlobalBSurface.SizeV; y++)
 	{
 		glm::vec4 WorkingPoint = ProjectionMatrix * ViewMatrix * ModelM * glm::vec4(GlobalBSurface.ControlPoints[y * GlobalBSurface.SizeU], 1.f);
@@ -206,7 +237,6 @@ void Render()
 		{
 			glm::vec4 tmpPoint = ProjectionMatrix * ViewMatrix * ModelM * glm::vec4(GlobalBSurface.ControlPoints[y * GlobalBSurface.SizeU+x], 1.f);
 			tmpPoint /= tmpPoint.z;
-			glLineWidth(10);
 			glColor3f(1.f, 0.8, 0.4f);
 			glBegin(GL_LINES);
 			glVertex2f(WorkingPoint.x, WorkingPoint.y);
@@ -223,7 +253,6 @@ void Render()
 		{
 			glm::vec4 tmpPoint = ProjectionMatrix * ViewMatrix * ModelM * glm::vec4(GlobalBSurface.ControlPoints[y * GlobalBSurface.SizeU + x], 1.f);
 			tmpPoint /= tmpPoint.z;
-			glLineWidth(10);
 			glColor3f(1.f, 0.8, 0.4f);
 			glBegin(GL_LINES);
 			glVertex2f(WorkingPoint.x, WorkingPoint.y);

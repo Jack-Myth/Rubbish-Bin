@@ -14,6 +14,7 @@
 
 void ProcessInput(GLFWwindow* pWindow);
 void ConstructShape(float ShapeHeight, float RoundSize, int HightSplit, int RoundSplit);
+void Animation();
 void Render();
 
 GLFWMainWindow* pMainWindow;
@@ -37,10 +38,17 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	while (!glfwWindowShouldClose(pMainWindow->GetWindow()))
 	{
 		ProcessInput(pMainWindow->GetWindow());
+		Animation();
 		Render();
 		glfwSwapBuffers(pMainWindow->GetWindow());
 		glfwPollEvents();
 	}
+}
+
+void Animation()
+{
+	glm::mat4 tmpZero(1.f);
+	ModelM = glm::rotate(tmpZero, sinf(glfwGetTime()), glm::vec3(0, 0, 1));
 }
 
 void ProcessInput(GLFWwindow* pWindow)
@@ -118,8 +126,11 @@ void Render()
 	for (std::vector<glm::vec3>& Fragment:Fragments)
 	{
 		//Check Normal
-		glm::vec3 NormalVector = glm::normalize(glm::cross(Fragment[0] - Fragment[1], Fragment[2] - Fragment[1]));
-		glm::vec3 CameraDirectionVector = Fragment[0] - pMyCamera->GetCameraLocation();
+		std::vector<glm::vec3> tmpFragment = Fragment;
+		for (int i=0;i<3;i++)
+			tmpFragment[i] = ModelM*glm::vec4(tmpFragment[i], 1.f);
+		glm::vec3 NormalVector = glm::normalize(glm::cross(tmpFragment[0] - tmpFragment[1], tmpFragment[2] - tmpFragment[1]));
+		glm::vec3 CameraDirectionVector = tmpFragment[0] - pMyCamera->GetCameraLocation();
 		//CameraForwardVector = glm::vec3(CameraForwardVector.z, CameraForwardVector.x, CameraForwardVector.x);
 		if (glm::dot(CameraDirectionVector, NormalVector) <= 0)
 		{
