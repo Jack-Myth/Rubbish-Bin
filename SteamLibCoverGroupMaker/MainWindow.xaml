@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="551.197" Width="385.168" ResizeMode="NoResize">
     <Grid x:Name="MainGrid" VerticalAlignment="Center" HorizontalAlignment="Center">
-        <Image x:Name="PreviewImage" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+        <Image x:Name="PreviewImage" VerticalAlignment="Center" HorizontalAlignment="Center" Stretch="None"/>
 
     </Grid>
 </Window>
