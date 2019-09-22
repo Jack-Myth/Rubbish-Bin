@@ -124,8 +124,10 @@ namespace SteamLibCoverGroupMaker
                 mMainWindow=new MainWindow();
             mMainWindow.Show();
             mMainWindow.PreviewImage.Source = BitmapToImageSource(PreviewImg);
-            mMainWindow.Width = PreviewImg.Width/DpiX;
-            mMainWindow.Height = PreviewImg.Height / DpiY + SystemParameters.CaptionHeight;
+            mMainWindow.Width = PreviewImg.Width/DpiX+10;
+            mMainWindow.Height = PreviewImg.Height / DpiY + SystemParameters.CaptionHeight+10;
+            mMainWindow.PreviewImage.Width = PreviewImg.Width / DpiX;
+            mMainWindow.PreviewImage.Height = PreviewImg.Height / DpiY;
             RefreshPreviewPositionRect();
             this.Export.IsEnabled = true;
         }
@@ -143,6 +145,9 @@ namespace SteamLibCoverGroupMaker
             int defaultwidth = 558;
             int defaultheight = 800;
             int defaultSplitY = 115;
+
+            double L = (mMainWindow.MainGrid.ActualWidth - mMainWindow.PreviewImage.Width) / 2;
+            double T = (mMainWindow.MainGrid.ActualHeight - mMainWindow.PreviewImage.Height) / 2;
 
             //Add element if not enough
             if (PreviewPositionRect.Count < HCount * VCount)
@@ -174,9 +179,9 @@ namespace SteamLibCoverGroupMaker
                     PreviewPositionRect[x * VCount + y].HorizontalAlignment = HorizontalAlignment.Left;
                     PreviewPositionRect[x * VCount + y].VerticalAlignment = VerticalAlignment.Top;
                     tmpMargin.Left = ((SplitX + defaultwidth) * x *
-                                      Scale+ PreviewImg.Width* StartPosX)/DpiX + mMainWindow.PreviewImage.Margin.Left;
+                                      Scale+ PreviewImg.Width* StartPosX)/DpiX + L;
                     tmpMargin.Top = ((defaultSplitY+ defaultheight) * y * 
-                                     Scale + PreviewImg.Height* StartPosY) / DpiY+ mMainWindow.PreviewImage.Margin.Top;
+                                     Scale + PreviewImg.Height* StartPosY) / DpiY+ T;
                     PreviewPositionRect[x * VCount + y].Margin = tmpMargin;
                 }
             }
