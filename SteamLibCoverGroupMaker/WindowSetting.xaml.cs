@@ -41,6 +41,25 @@ namespace SteamLibCoverGroupMaker
         public WindowSetting()
         {
             InitializeComponent();
+            //Check if ffmpeg is installed.
+            try
+            {
+                string EVPath = Environment.GetEnvironmentVariable("path");
+                if (EVPath!="")
+                {
+                    var EVPathArray = EVPath.Split(";".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+                    for (int i = 0; i < EVPathArray.Length; i++)
+                    {
+                        if (System.IO.File.Exists(System.IO.Path.Combine(EVPathArray[i], "ffmpeg.exe")))
+                        {
+                            FFmpegPath = System.IO.Path.Combine(EVPathArray[i], "ffmpeg.exe");
+                            this.SelectFFmpeg.Content = "已使用环境变量中的FFMPEG";
+                            break;
+                        }
+                    }
+                }
+            }
+            catch { }
         }
 
         BitmapImage BitmapToImageSource(Bitmap bitmap)
