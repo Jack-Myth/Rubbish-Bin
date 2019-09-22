@@ -17,7 +17,7 @@
             <Slider x:Name="ScaleSlider" HorizontalAlignment="Left" Margin="39,73,0,0" VerticalAlignment="Top" Width="181" Maximum="2" Minimum="0.01" Value="1" ValueChanged="Slider_ValueChanged" LargeChange="0.1" SmallChange="0.01"/>
             <Button x:Name="Export" Content="导出" HorizontalAlignment="Right" Margin="0,0,10,10.5" VerticalAlignment="Bottom" Width="75" IsEnabled="False" Click="Export_Click"/>
             <TextBlock HorizontalAlignment="Left" Margin="10,53,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Text="间隔"/>
-            <Slider x:Name="SplitSlider" HorizontalAlignment="Left" Margin="39,53,0,0" VerticalAlignment="Top" Width="181" Maximum="5" Minimum="0.01" Value="1" ValueChanged="Slider_ValueChanged" LargeChange="0.1" SmallChange="0.01"/>
+            <Slider x:Name="SplitSlider" HorizontalAlignment="Left" Margin="39,53,0,0" VerticalAlignment="Top" Width="181" Maximum="80" Minimum="80" Value="80" ValueChanged="Slider_ValueChanged" LargeChange="0.1" SmallChange="0.01"/>
             <TextBlock HorizontalAlignment="Left" Margin="10,96,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Text="起点X"/>
             <Slider x:Name="XStartSlider" HorizontalAlignment="Left" Margin="47,96,0,0" VerticalAlignment="Top" Width="173" SmallChange="0.01" ValueChanged="Slider_ValueChanged" Maximum="1" LargeChange="0.1"/>
             <TextBlock HorizontalAlignment="Left" Margin="10,119,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Text="起点Y"/>

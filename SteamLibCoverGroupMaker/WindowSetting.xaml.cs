@@ -72,7 +72,7 @@ namespace SteamLibCoverGroupMaker
             System.IO.File.Delete(tmpName);
             System.Diagnostics.ProcessStartInfo psi = new System.Diagnostics.ProcessStartInfo(FFmpegPath);
             psi.CreateNoWindow = true;
-            psi.Arguments = "-i \"" + filePath + "\" -vframes 1 \"" + tmpName+"\"";
+            psi.Arguments = "-i \"" + filePath + "\" -y -vframes 1 \"" + tmpName+"\"";
             psi.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
             psi.UseShellExecute = false;
             var process = System.Diagnostics.Process.Start(psi);
@@ -137,14 +137,12 @@ namespace SteamLibCoverGroupMaker
             int HCount = (int)this.HCountSlider.Value;
             int VCount = (int)this.VCountSlider.Value;
             float Scale = (float) this.ScaleSlider.Value;
-            float SplitXScale = (float) this.SplitSlider.Value;
+            float SplitX = (float) this.SplitSlider.Value;
             float StartPosX = (float) this.XStartSlider.Value;
             float StartPosY = (float) this.YStartSlider.Value;
             int defaultwidth = 558;
             int defaultheight = 800;
             int defaultSplitY = 115;
-            int defaultSplitX = 77;
-            
 
             //Add element if not enough
             if (PreviewPositionRect.Count < HCount * VCount)
@@ -175,7 +173,7 @@ namespace SteamLibCoverGroupMaker
                     Thickness tmpMargin= PreviewPositionRect[x * VCount + y].Margin;
                     PreviewPositionRect[x * VCount + y].HorizontalAlignment = HorizontalAlignment.Left;
                     PreviewPositionRect[x * VCount + y].VerticalAlignment = VerticalAlignment.Top;
-                    tmpMargin.Left = ((defaultSplitX * SplitXScale + defaultwidth) * x *
+                    tmpMargin.Left = ((SplitX + defaultwidth) * x *
                                       Scale+ PreviewImg.Width* StartPosX)/DpiX + mMainWindow.PreviewImage.Margin.Left;
                     tmpMargin.Top = ((defaultSplitY+ defaultheight) * y * 
                                      Scale + PreviewImg.Height* StartPosY) / DpiY+ mMainWindow.PreviewImage.Margin.Top;
@@ -187,6 +185,17 @@ namespace SteamLibCoverGroupMaker
 
         private void Slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
+            if (sender==this.HCountSlider)
+            {
+                int HCount = (int)this.HCountSlider.Value;
+                if (HCount > 1)
+                {
+                    int defaultwidth = 558;
+                    int MinSplitX = 80;
+                    int MaxSplitX = (defaultwidth + HCount * MinSplitX) / (HCount - 1);
+                    this.SplitSlider.Maximum = MaxSplitX;
+                }
+            }
             RefreshPreviewPositionRect();
         }
 
@@ -219,7 +228,10 @@ namespace SteamLibCoverGroupMaker
         private async void Export_Click(object sender, RoutedEventArgs e)
         {
             SaveFileDialog dialog = new SaveFileDialog();
-            dialog.Filter = "PNG(Actually WebP)(*.png)|*.png";
+            if (Useffmpeg)
+                dialog.Filter = "PNG(Actually WebP)(*.png)|*.png";
+            else
+                dialog.Filter = "PNG(*.png)|*.png";
             if (dialog.ShowDialog() != true)
                 return;
             string TargetFileNameBase = dialog.FileName;
@@ -228,13 +240,12 @@ namespace SteamLibCoverGroupMaker
             int HCount = (int) this.HCountSlider.Value;
             int VCount = (int) this.VCountSlider.Value;
             float Scale = (float) this.ScaleSlider.Value;
-            float SplitXScale = (float) this.SplitSlider.Value;
+            float SplitX = (float)this.SplitSlider.Value;
             float StartPosX = (float) this.XStartSlider.Value;
             float StartPosY = (float) this.YStartSlider.Value;
             int defaultwidth = 558;
             int defaultheight = 800;
             int defaultSplitY = 115;
-            int defaultSplitX = 77;
 
             if (!Useffmpeg)
             {
@@ -246,8 +257,8 @@ namespace SteamLibCoverGroupMaker
                         var workingGraph = Graphics.FromImage(TargetImage);
                         workingGraph.DrawImage(PreviewImg,
                             new System.Drawing.Rectangle(0, 0, TargetImage.Width, TargetImage.Height),
-                            (defaultSplitX * SplitXScale + defaultwidth) * x * Scale + PreviewImg.Width * StartPosX,
-                            (defaultSplitY + defaultheight) * y * Scale + PreviewImg.Height * StartPosY,
+                            (SplitX + defaultwidth) * x * Scale + PreviewImg.Width * StartPosX+(float)mMainWindow.PreviewImage.Margin.Left,
+                            (defaultSplitY + defaultheight) * y * Scale + PreviewImg.Height * StartPosY +(float)mMainWindow.PreviewImage.Margin.Top,
                             defaultwidth * Scale, defaultheight * Scale, GraphicsUnit.Pixel);
                         string TargeFilename = System.IO.Path.Combine(FilePath, FileName +
                                                                                 "_" + x.ToString() + "_" +
@@ -260,6 +271,8 @@ namespace SteamLibCoverGroupMaker
             {
                 this.Export.IsEnabled = false;
                 this.Processing.IsIndeterminate = true;
+                float left = (float)mMainWindow.PreviewImage.Margin.Left;
+                float top = (float)mMainWindow.PreviewImage.Margin.Top;
                 await Task.Run(() =>
                 {
                     for (int x = 0; x < HCount; x++)
@@ -274,11 +287,11 @@ namespace SteamLibCoverGroupMaker
                                                                                      y.ToString() + ".png");
                             System.Diagnostics.ProcessStartInfo psi = new System.Diagnostics.ProcessStartInfo(FFmpegPath);
                             psi.CreateNoWindow = true;
-                            psi.Arguments = "-i \"" + SourceFile + "\" -an -vf crop="+ 
+                            psi.Arguments = "-i \"" + SourceFile + "\" -an -y -loop 0 -vf crop="+ 
                                             ((int)(defaultwidth*Scale)).ToString()+":"+
                                             ((int)(defaultheight * Scale)).ToString()+":" +
-                                            ((int)((defaultSplitX * SplitXScale + defaultwidth) * x * Scale + PreviewImg.Width * StartPosX)).ToString()+":"+
-                                            ((int)((defaultSplitY + defaultheight) * y * Scale + PreviewImg.Height* StartPosY)).ToString()+":"+" "+
+                                            ((int)((SplitX + defaultwidth) * x * Scale + PreviewImg.Width * StartPosX + left)).ToString()+":"+
+                                            ((int)((defaultSplitY + defaultheight) * y * Scale + PreviewImg.Height* StartPosY+ top)).ToString()+":"+" "+
                                             tmpName;
                             psi.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
                             psi.UseShellExecute = false;
@@ -288,6 +301,8 @@ namespace SteamLibCoverGroupMaker
                             process.WaitForExit();
                             if (!System.IO.File.Exists(tmpName))
                                 return;
+                            if (System.IO.File.Exists(TargetFilename))
+                                System.IO.File.Delete(TargetFilename);
                             System.IO.File.Move(tmpName, TargetFilename);
                         }
                     }
