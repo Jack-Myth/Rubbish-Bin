@@ -38,7 +38,7 @@ namespace SteamLibCoverGroupMaker
         double DpiY = Graphics.FromHwnd(IntPtr.Zero).DpiY / 96.0;
         private Bitmap PreviewImg;
         private MainWindow mMainWindow;
-        private List<Button> PreviewPositionRect=new List<Button>();
+        private List<System.Windows.Shapes.Rectangle> PreviewPositionRect=new List<System.Windows.Shapes.Rectangle>();
         private bool Useffmpeg = false;
         private string SourceFile;
         private string FFmpegPath;
@@ -151,8 +151,23 @@ namespace SteamLibCoverGroupMaker
             mMainWindow.Height = PreviewImg.Height / DpiY + SystemParameters.CaptionHeight+10;
             mMainWindow.PreviewImage.Width = PreviewImg.Width / DpiX;
             mMainWindow.PreviewImage.Height = PreviewImg.Height / DpiY;
+            RefreshPreviewImage();
             RefreshPreviewPositionRect();
             this.Export.IsEnabled = true;
+        }
+
+        private void RefreshPreviewImage()
+        {
+            mMainWindow.PreviewImage.Opacity = 0.7;
+            for (int i = 0; i < PreviewPositionRect.Count; i++)
+            {
+                var imgBrush = new System.Windows.Media.ImageBrush(mMainWindow.PreviewImage.Source);
+                imgBrush.TileMode = TileMode.None;
+                imgBrush.Stretch = Stretch.None;
+                imgBrush.AlignmentX = AlignmentX.Left;
+                imgBrush.AlignmentY = AlignmentY.Top;
+                PreviewPositionRect[i].Fill = imgBrush;
+            }
         }
 
         private void RefreshPreviewPositionRect()
@@ -175,8 +190,14 @@ namespace SteamLibCoverGroupMaker
                 int RemainCount = HCount * VCount - PreviewPositionRect.Count;
                 for (int i = 0; i < RemainCount; i++)
                 {
-                    var newrect = new Button();
-                    newrect.Opacity = 0.7;
+                    var newrect = new System.Windows.Shapes.Rectangle();
+                    newrect.Stroke = System.Windows.Media.Brushes.Black;
+                    var imgBrush=new System.Windows.Media.ImageBrush(mMainWindow.PreviewImage.Source);
+                    imgBrush.TileMode = TileMode.None;
+                    imgBrush.Stretch = Stretch.None;
+                    imgBrush.AlignmentX = AlignmentX.Left;
+                    imgBrush.AlignmentY = AlignmentY.Top;
+                    newrect.Fill = imgBrush;
                     mMainWindow.MainGrid.Children.Add(newrect);
                     newrect.Visibility = Visibility.Visible;
                     PreviewPositionRect.Add(newrect);
@@ -203,6 +224,16 @@ namespace SteamLibCoverGroupMaker
                     tmpMargin.Top = ((defaultSplitY+ defaultheight) * y * 
                                      Scale + PreviewImg.Height* StartPosY) / DpiY+ T;
                     PreviewPositionRect[x * VCount + y].Margin = tmpMargin;
+                    var ImgBrush = (ImageBrush) PreviewPositionRect[x * VCount + y].Fill;
+                    if (ImgBrush!=null)
+                    {
+                        var tmpViewbox = ImgBrush.Viewbox;
+                        tmpViewbox.X = PreviewPositionRect[x * VCount + y].Margin.Left/mMainWindow.PreviewImage.Width;
+                        tmpViewbox.Y = PreviewPositionRect[x * VCount + y].Margin.Top / mMainWindow.PreviewImage.Height;
+                        //ImgBrush.Viewport = tmpViewport;
+                        ImgBrush.Viewbox = tmpViewbox;
+                        //PreviewPositionRect[x * VCount + y].Fill = ImgBrush;
+                    }
                 }
             }
             mMainWindow.MainGrid.UpdateLayout();
