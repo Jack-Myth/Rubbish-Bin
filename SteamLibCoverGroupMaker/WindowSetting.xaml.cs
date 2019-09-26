@@ -30,6 +30,10 @@ namespace SteamLibCoverGroupMaker
     /// </summary>
     public partial class WindowSetting : Window
     {
+        const int defaultwidth = 600;
+        const int defaultheight = 900;
+        const int defaultSplitY = 130;
+
         double DpiX = Graphics.FromHwnd(IntPtr.Zero).DpiX / 96.0;
         double DpiY = Graphics.FromHwnd(IntPtr.Zero).DpiY / 96.0;
         private Bitmap PreviewImg;
@@ -161,9 +165,6 @@ namespace SteamLibCoverGroupMaker
             float SplitX = (float) this.SplitSlider.Value;
             float StartPosX = (float) this.XStartSlider.Value;
             float StartPosY = (float) this.YStartSlider.Value;
-            int defaultwidth = 558;
-            int defaultheight = 800;
-            int defaultSplitY = 115;
 
             double L = (mMainWindow.MainGrid.ActualWidth - mMainWindow.PreviewImage.Width) / 2;
             double T = (mMainWindow.MainGrid.ActualHeight - mMainWindow.PreviewImage.Height) / 2;
@@ -214,8 +215,7 @@ namespace SteamLibCoverGroupMaker
                 int HCount = (int)this.HCountSlider.Value;
                 if (HCount > 1)
                 {
-                    int defaultwidth = 558;
-                    int MinSplitX = 80;
+                    int MinSplitX = 86;
                     int MaxSplitX = (defaultwidth + HCount * MinSplitX) / (HCount - 1);
                     this.SplitSlider.Maximum = MaxSplitX;
                 }
@@ -267,9 +267,6 @@ namespace SteamLibCoverGroupMaker
             float SplitX = (float)this.SplitSlider.Value;
             float StartPosX = (float) this.XStartSlider.Value;
             float StartPosY = (float) this.YStartSlider.Value;
-            int defaultwidth = 558;
-            int defaultheight = 800;
-            int defaultSplitY = 115;
 
             if (!Useffmpeg)
             {
