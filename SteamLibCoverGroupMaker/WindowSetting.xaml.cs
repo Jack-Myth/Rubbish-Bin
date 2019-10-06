@@ -228,10 +228,10 @@ namespace SteamLibCoverGroupMaker
                     if (ImgBrush!=null)
                     {
                         var tmpViewbox = ImgBrush.Viewbox;
-                        tmpViewbox.X = PreviewPositionRect[x * VCount + y].Margin.Left/mMainWindow.PreviewImage.Width;
-                        tmpViewbox.X += PreviewPositionRect[x * VCount + y].StrokeThickness;
-                        tmpViewbox.Y = PreviewPositionRect[x * VCount + y].Margin.Top / mMainWindow.PreviewImage.Height;
-                        tmpViewbox.Y+= PreviewPositionRect[x * VCount + y].StrokeThickness;
+                        tmpViewbox.X = (PreviewPositionRect[x * VCount + y].Margin.Left-L)/mMainWindow.PreviewImage.Width;
+                        tmpViewbox.X += PreviewPositionRect[x * VCount + y].StrokeThickness/mMainWindow.PreviewImage.Width;
+                        tmpViewbox.Y = (PreviewPositionRect[x * VCount + y].Margin.Top-T) / mMainWindow.PreviewImage.Height;
+                        tmpViewbox.Y+= PreviewPositionRect[x * VCount + y].StrokeThickness/mMainWindow.PreviewImage.Height;
                         //ImgBrush.Viewport = tmpViewport;
                         ImgBrush.Viewbox = tmpViewbox;
                         //PreviewPositionRect[x * VCount + y].Fill = ImgBrush;
