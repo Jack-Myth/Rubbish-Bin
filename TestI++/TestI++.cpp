@@ -1,38 +1,35 @@
 ﻿#include <stdio.h>
+#include <vector>
+#include <algorithm>
 
-class A
+bool compaire(int& a, int& b)
 {
-public:
-	int a;
-};
-
-class B :public A
-{
-public:
-	int aa;
-	virtual void VFunc() {};
-};
-
-class I
-{
-public:
-	int ii;
-	
-	virtual void VFunc2() {};
-	virtual void VFunc3() {};
-	virtual void VFunc4() {};
-	virtual void VFunc5() {};
-};
-
-class C :public A, public I
-{
-public:
-	int cc;
-};
+	return a < b;
+}
 
 int main()
 {
-	B* b = new B();
-	A* a = (A*)b;
-	printf("%d  %d", sizeof(I),sizeof(B));
+	std::vector<int> a;
+	std::sort(a.begin(), a.end(), compaire);
+	std::sort(a.begin(), a.end(), [](int& a, int& b) {return a < b; });
+	auto tmpfunc = [](int& a, int& b)
+	{
+		return a < b;
+	};
+
+	[]() {}();
+
+	int Max;
+	for (int i = 0; i < a.size(); i++)
+	{
+		[&Max](int& a, int& b)
+		{
+			if (a > b)
+			{
+				if (a > Max)
+					return a;
+				return Max;
+			}
+		}(a[0], a[i]);
+	}
 }
