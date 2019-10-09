@@ -1,0 +1,13 @@
+﻿<Window x:Class="FullHeart.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:FullHeart"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="100" Width="100" WindowStyle="None" Topmost="True">
+    <Grid>
+        <Label Content="♥" HorizontalAlignment="Center" Margin="0" VerticalAlignment="Center" FontSize="48"/>
+
+    </Grid>
+</Window>

@@ -159,6 +159,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SteamLibCoverGroupMaker", "
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ProgramArgsForwarder", "ProgramArgsForwarder\ProgramArgsForwarder.vcxproj", "{07E3B7F6-6AF5-4A31-BC32-24A4926D8ADB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FullHeart", "FullHeart\FullHeart.csproj", "{E8C8EF27-314A-4574-AD04-F18F3D2095E2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -1336,6 +1338,26 @@ Global
 		{07E3B7F6-6AF5-4A31-BC32-24A4926D8ADB}.Release|x64.Build.0 = Release|x64
 		{07E3B7F6-6AF5-4A31-BC32-24A4926D8ADB}.Release|x86.ActiveCfg = Release|Win32
 		{07E3B7F6-6AF5-4A31-BC32-24A4926D8ADB}.Release|x86.Build.0 = Release|Win32
+		{E8C8EF27-314A-4574-AD04-F18F3D2095E2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E8C8EF27-314A-4574-AD04-F18F3D2095E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E8C8EF27-314A-4574-AD04-F18F3D2095E2}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{E8C8EF27-314A-4574-AD04-F18F3D2095E2}.Debug|ARM.Build.0 = Debug|Any CPU
+		{E8C8EF27-314A-4574-AD04-F18F3D2095E2}.Debug|ARM64.ActiveCfg = Debug|Any CPU
+		{E8C8EF27-314A-4574-AD04-F18F3D2095E2}.Debug|ARM64.Build.0 = Debug|Any CPU
+		{E8C8EF27-314A-4574-AD04-F18F3D2095E2}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{E8C8EF27-314A-4574-AD04-F18F3D2095E2}.Debug|x64.Build.0 = Debug|Any CPU
+		{E8C8EF27-314A-4574-AD04-F18F3D2095E2}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{E8C8EF27-314A-4574-AD04-F18F3D2095E2}.Debug|x86.Build.0 = Debug|Any CPU
+		{E8C8EF27-314A-4574-AD04-F18F3D2095E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E8C8EF27-314A-4574-AD04-F18F3D2095E2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E8C8EF27-314A-4574-AD04-F18F3D2095E2}.Release|ARM.ActiveCfg = Release|Any CPU
+		{E8C8EF27-314A-4574-AD04-F18F3D2095E2}.Release|ARM.Build.0 = Release|Any CPU
+		{E8C8EF27-314A-4574-AD04-F18F3D2095E2}.Release|ARM64.ActiveCfg = Release|Any CPU
+		{E8C8EF27-314A-4574-AD04-F18F3D2095E2}.Release|ARM64.Build.0 = Release|Any CPU
+		{E8C8EF27-314A-4574-AD04-F18F3D2095E2}.Release|x64.ActiveCfg = Release|Any CPU
+		{E8C8EF27-314A-4574-AD04-F18F3D2095E2}.Release|x64.Build.0 = Release|Any CPU
+		{E8C8EF27-314A-4574-AD04-F18F3D2095E2}.Release|x86.ActiveCfg = Release|Any CPU
+		{E8C8EF27-314A-4574-AD04-F18F3D2095E2}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
