@@ -8,6 +8,7 @@
 #include <dshow.h>
 #include <map>
 #include <vector>
+#include <string>
 #pragma comment(lib, "WINMM.LIB")
 #pragma comment(lib, "d2d1.lib")
 #pragma comment(lib, "dwrite.lib")
