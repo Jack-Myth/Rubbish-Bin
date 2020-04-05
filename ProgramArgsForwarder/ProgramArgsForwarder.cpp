@@ -9,22 +9,30 @@ int WINAPI WinMain(
 	int nCmdShow
 )
 {
-	FILE* fp;
-	fopen_s(&fp, "PAF.cfg", "r");
-	if (!fp)
+	const char* EXEName;
+	char ForwardPath[MAX_PATH];
+	char WorkingPath[MAX_PATH];
+	EXEName = __argv[0] + strlen(__argv[0]) - 1;
+	for (; *EXEName != '\\'; EXEName--);
+	EXEName++; // "\\EXEName.exe",Add 1 to "EXEName.exe"
+	//Read REG
+	HKEY hKEY;
+	std::string RegPath = "SOFTWARE\\JackMyth\\ProgramArgsForwarder\\";
+	RegPath += EXEName;
+	if (ERROR_SUCCESS == RegOpenKeyEx(HKEY_LOCAL_MACHINE, RegPath.c_str(), 0, KEY_READ, &hKEY))
 	{
-		std::string  argStr = lpCmdLine;
-		MessageBoxA(nullptr, argStr.c_str(), "ProgramArgsForwarder", MB_OK);
-		return 0;
+		DWORD dwType = REG_SZ;
+		DWORD fp_size = MAX_PATH;
+		RegQueryValueEx(hKEY, "ForwardPath",0, &dwType, (LPBYTE)ForwardPath, &fp_size);
+		fp_size = MAX_PATH;
+		RegQueryValueEx(hKEY, "WorkingPath",0, &dwType, (LPBYTE)WorkingPath, &fp_size);
 	}
-	char FilePath[1024];
-	char FullPath[2048];
-	std::string ParentPath;
-	fscanf_s(fp, "%s", FilePath, 1024);
-	_fullpath(FullPath, FilePath, 2048);
-	ParentPath = FullPath;
-	ParentPath = ParentPath.substr(0, ParentPath.find_last_of("\\"));
-	ShellExecute(nullptr, "open", FilePath, lpCmdLine, ParentPath.c_str(),SW_NORMAL);
+	else
+	{
+		return -1;
+	}
+	RegCloseKey(hKEY);
+	ShellExecute(nullptr, "open", ForwardPath, lpCmdLine, WorkingPath, nCmdShow);
 	return 0;
 }
 

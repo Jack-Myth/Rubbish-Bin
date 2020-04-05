@@ -39,4 +39,5 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	input[2].ki.wVk = input[5].ki.wVk = 'S';
 	input[3].ki.dwFlags = input[4].ki.dwFlags =input[5].ki.dwFlags = KEYEVENTF_KEYUP; 
 	SendInput(6, input, sizeof(INPUT));
+	return 0;
 }
