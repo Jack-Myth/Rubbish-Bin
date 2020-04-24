@@ -22,7 +22,7 @@ except:
     exit()
 
 #配置
-MAX_THREAD=8    #并发线程数
+MAX_THREAD=32    #并发线程数
 MAX_TIMEOUT=5    #弱网适用，最大连接时间(秒)，超时会重新连接
 MAX_DOWNLOADTIME=10    #弱网适用，每张截图的最大下载时间(秒)，超时会重新下载
 
