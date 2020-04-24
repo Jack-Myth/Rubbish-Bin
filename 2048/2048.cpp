@@ -684,6 +684,7 @@ bool IsMovableOneLine(ANIMSTAGE AS,int MoveAxis)
 	default:
 		break;
 	}
+	return false;
 }
 
 bool IsMovableLocal(ANIMSTAGE AS)

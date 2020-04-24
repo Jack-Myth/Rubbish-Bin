@@ -161,6 +161,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ProgramArgsForwarder", "Pro
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FullHeart", "FullHeart\FullHeart.csproj", "{E8C8EF27-314A-4574-AD04-F18F3D2095E2}"
 EndProject
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "SteamScreenshotSyncer", "SteamScreenshotSyncer\SteamScreenshotSyncer.pyproj", "{95941C99-6E5F-4BB9-9D3F-2EA8B58F5E3C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -1363,6 +1365,16 @@ Global
 		{E8C8EF27-314A-4574-AD04-F18F3D2095E2}.Release|x64.Build.0 = Release|Any CPU
 		{E8C8EF27-314A-4574-AD04-F18F3D2095E2}.Release|x86.ActiveCfg = Release|Any CPU
 		{E8C8EF27-314A-4574-AD04-F18F3D2095E2}.Release|x86.Build.0 = Release|Any CPU
+		{95941C99-6E5F-4BB9-9D3F-2EA8B58F5E3C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{95941C99-6E5F-4BB9-9D3F-2EA8B58F5E3C}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{95941C99-6E5F-4BB9-9D3F-2EA8B58F5E3C}.Debug|ARM64.ActiveCfg = Debug|Any CPU
+		{95941C99-6E5F-4BB9-9D3F-2EA8B58F5E3C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{95941C99-6E5F-4BB9-9D3F-2EA8B58F5E3C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{95941C99-6E5F-4BB9-9D3F-2EA8B58F5E3C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{95941C99-6E5F-4BB9-9D3F-2EA8B58F5E3C}.Release|ARM.ActiveCfg = Release|Any CPU
+		{95941C99-6E5F-4BB9-9D3F-2EA8B58F5E3C}.Release|ARM64.ActiveCfg = Release|Any CPU
+		{95941C99-6E5F-4BB9-9D3F-2EA8B58F5E3C}.Release|x64.ActiveCfg = Release|Any CPU
+		{95941C99-6E5F-4BB9-9D3F-2EA8B58F5E3C}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

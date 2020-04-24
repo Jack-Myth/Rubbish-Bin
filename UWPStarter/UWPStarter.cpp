@@ -1,15 +1,17 @@
 #define _CRT_SECURE_NO_WARNINGS
-#include <stdlib.h>
-#include <stdio.h>
+#include <windows.h>
 #include <string.h>
 
-int main(int argv,char* argc[])
+int WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nShowCmd )
 {
-	if (argv <1)
-		exit(-1);
-	char pathx[10240] = "explorer shell:AppsFolder\\";
-	strcat(pathx, argc[1]);
-	system(pathx);
-	system("pause");
+	ShellExecute(nullptr, "open", "shell:AppsFolder\\Microsoft.WindowsTerminal_8wekyb3d8bbwe!App", 
+		lpCmdLine, nullptr, nShowCmd);
+	/*SHELLEXECUTEINFO sei = {NULL};
+	sei.cbSize = sizeof(SHELLEXECUTEINFO);
+	sei.hInstApp = hPrevInstance;
+	sei.lpParameters = lpCmdLine;
+	sei.lpFile = "shell:AppsFolder\Microsoft.WindowsTerminal_8wekyb3d8bbwe!App";
+	sei.nShow = nShowCmd;
+	ShellExecuteEx(&sei);*/
+	return 0;
 }
-//Microsoft.SpartaUWP.886d4fbfa1_8wekyb3d8bbwe!GearGameShippingPublic
