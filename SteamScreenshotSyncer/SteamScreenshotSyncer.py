@@ -215,6 +215,7 @@ class downloadWorkingThread(threading.Thread):
             if syncMode==False:
                 with open(syncFolder+"\\"+hscreenshot+".jpg","wb+") as f:
                     f.write(screenshotData.content)
+                cur_ss+=1
             else:
                 timestr = str(year)+str(month)+str(day)+str(hour)+str(minute)
                 ss_index=1
