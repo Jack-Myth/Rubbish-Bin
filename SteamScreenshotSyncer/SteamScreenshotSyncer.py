@@ -300,7 +300,7 @@ if isLogin==True:
     print("2.公开的截图")
     print("3.仅好友可见的截图")
     print("4.私密的截图")
-    print("5.所有非公开的截图")
+    print("5.非公开的截图")
     privacySelect=input()
     if privacyList.__contains__(privacySelect) == False:
         print("输入有误，将同步所有截图")
@@ -310,8 +310,7 @@ if isLogin==True:
 print("选择要同步的游戏：")
 print("1. 同步所有游戏(默认)")
 print("2. 列出列表以便选择游戏")
-print("如果你有游戏的AppID,也可以直接输入:")
-syncGameSelect=input()
+syncGameSelect=input("如果你有游戏的AppID,也可以直接输入:")
 if syncGameSelect=="" or syncGameSelect.isnumeric()==False or int(syncGameSelect)==1:
     targetAppID=0
 elif int(syncGameSelect)==2:
