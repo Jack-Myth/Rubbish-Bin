@@ -1,3 +1,5 @@
+# Copyright 2020 JackMyth. All Rights Reserved. 
+
 import os
 import json
 import re
