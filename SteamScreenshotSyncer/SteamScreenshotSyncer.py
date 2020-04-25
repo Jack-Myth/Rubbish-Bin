@@ -22,7 +22,7 @@ except:
     os.system("pip install vdf")
     print("请重启脚本")
     os.system("pause>nul")
-    exit(0)
+    sys.exit(0)
 
 #配置
 MAX_THREAD=32    #并发线程数
@@ -36,11 +36,11 @@ def login():
     if rsajson==None:
         print("登陆失败，无法连接到Steam")
         os.system("pause>nul")
-        exit(-1)
+        sys.exit(-1)
     if rsajson["success"]!=True:
         print("登陆失败，未知错误。")
         os.system("pause>nul")
-        exit(-1)
+        sys.exit(-1)
     pkey_mod=rsajson["publickey_mod"]
     pkey_exp=rsajson["publickey_exp"]
     timestamp=rsajson["timestamp"]
@@ -63,7 +63,7 @@ def login():
     if resultJson==None:
         print("登陆失败，无法连接到Steam")
         os.system("pause>nul")
-        exit(-1)
+        sys.exit(-1)
     if resultJson["success"]!=True:
         if resultJson["requires_twofactor"]!=None and resultJson["requires_twofactor"]==True:
             print("登陆失败，二步验证码不正确。")
@@ -79,7 +79,7 @@ def login():
             print(resultJson["message"])
             print("登陆失败")
             os.system("pause>nul")
-            exit(-1)
+            sys.exit(-1)
         #登陆成功
     print("登陆成功!")
     isLogin=True
@@ -92,7 +92,7 @@ def getScreenshotFolder():
     if reg_steam==None:
         print("你的电脑看起来并没有安装Steam")
         os.system("pause>nul")
-        exit(0)
+        sys.exit(0)
     SteamPath = winreg.QueryValueEx(reg_steam,"SteamPath")[0]
     reg_users=winreg.OpenKeyEx(winreg.HKEY_CURRENT_USER,"SOFTWARE\\Valve\\Steam\\Users")
     userlist=[]
@@ -106,7 +106,7 @@ def getScreenshotFolder():
         print("你的Steam看起来没有登陆过任何账号")
         print("找不到截图文件夹")
         os.system("pause>nul")
-        exit(0)
+        sys.exit(0)
     elif len(userlist)==1:
         return SteamPath+"\\userdata\\"+userlist[0]+"\\760\\remote"
     elif len(userlist)>1:
@@ -271,7 +271,7 @@ if sys.argv.__contains__("-h"):
     print ("\t-mt N 设置最大线程数为N")
     print ("\t-mto N 设置连接超时时间为N，超时将重新连接")
     print ("\t-mdt N 设置每张图的最大下载时间为N，超时会重新下载")
-    exit(0)
+    sys.exit(0)
 for argIndex in range(len(sys.argv)):
     if  sys.argv[argIndex]=="-mt":
         if len(sys.argv)>argIndex+1 and sys.argv[argIndex+1].isnumeric():
@@ -453,4 +453,4 @@ while True:
     if isFinished:
         print("\b同步完成，任意键退出"+" "*20+"\b"*20)
         os.system("pause>nul")
-        exit(0)
+        sys.exit(0)
