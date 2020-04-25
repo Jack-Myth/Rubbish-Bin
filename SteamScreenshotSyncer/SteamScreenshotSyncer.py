@@ -77,6 +77,7 @@ def login():
         else:
             print(resultJson["message"])
             print("登陆失败")
+            os.system("pause>nul")
             exit(-1)
         #登陆成功
     print("登陆成功!")
