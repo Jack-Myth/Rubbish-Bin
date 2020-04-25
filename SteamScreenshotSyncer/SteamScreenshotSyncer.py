@@ -21,7 +21,7 @@ except:
     os.system("pip install vdf")
     print("请重启脚本")
     os.system("pause>nul")
-    exit()
+    exit(0)
 
 #配置
 MAX_THREAD=32    #并发线程数
@@ -39,7 +39,7 @@ def login():
     if rsajson["success"]!=True:
         print("登陆失败，未知错误。")
         os.system("pause>nul")
-        exit()
+        exit(-1)
     pkey_mod=rsajson["publickey_mod"]
     pkey_exp=rsajson["publickey_exp"]
     timestamp=rsajson["timestamp"]
@@ -77,7 +77,7 @@ def login():
         else:
             print(resultJson["message"])
             print("登陆失败")
-            exit()
+            exit(-1)
         #登陆成功
     print("登陆成功!")
     isLogin=True
@@ -90,7 +90,7 @@ def getScreenshotFolder():
     if reg_steam==None:
         print("你的电脑看起来并没有安装Steam")
         os.system("pause>nul")
-        exit()
+        exit(0)
     SteamPath = winreg.QueryValueEx(reg_steam,"SteamPath")[0]
     reg_users=winreg.OpenKeyEx(winreg.HKEY_CURRENT_USER,"SOFTWARE\\Valve\\Steam\\Users")
     userlist=[]
@@ -104,7 +104,7 @@ def getScreenshotFolder():
         print("你的Steam看起来没有登陆过任何账号")
         print("找不到截图文件夹")
         os.system("pause>nul")
-        exit()
+        exit(0)
     elif len(userlist)==1:
         return SteamPath+"\\userdata\\"+userlist[0]+"\\760\\remote"
     elif len(userlist)>1:
@@ -152,12 +152,17 @@ def collectExistedScreenshot():
 def analyzePage(curPage):
     global screenshotDownloadList
     imgList_page = curPage.xpath("//a[contains(@class,\"profile_media_item\")]")
+    if len(imgList_page)==0:
+        return False
     for img_page in imgList_page:
         gameAppID = img_page.get("data-appid")
         publishedfileid=img_page.get("data-publishedfileid")
+        if int(gameAppID)==0:
+            gameAppID="480"     #将所有非Steam游戏截图同步至Spacewar的截图里
         if screenshotDownloadList.__contains__(gameAppID)==False:
             screenshotDownloadList[gameAppID]=[]
         screenshotDownloadList[gameAppID].append(publishedfileid)
+    return True
 
 class downloadWorkingThread(threading.Thread):
     def run(self):
@@ -192,6 +197,7 @@ class downloadWorkingThread(threading.Thread):
             if match_result!=None:
                 hscreenshot=match_result.group(1)
             if existedScreenshot.__contains__(hscreenshot):
+                cur_ss+=1
                 continue
             dataPage=filepage_html.xpath("//div[@class=\"detailsStatsContainerRight\"]")[0]
             match_result=getresRe.search(dataPage[2].text)
@@ -366,13 +372,16 @@ while True:
     if firstPage.ok==False:
         print("\n获取内容出错，正在重试...")
     else:
+        firstPage=etree.HTML(firstPage.text)
+        if analyzePage(firstPage) ==False:
+            print("截图首页为空，将重新获取")
+            print("若多次重新获取仍然为空，请检查你的输入是否正确。")
+            continue
         break
-firstPage=etree.HTML(firstPage.text)
 pagenumbers = firstPage.xpath("//a[@class=\"pagingPageLink\"]")
 for pagenumber in pagenumbers:
     if int(pagenumber.text)>max_page:
         max_page=int(pagenumber.text)
-analyzePage(firstPage)
 for i in range(2,max_page+1):
     args["p"]=i
     print("\r正在获取截图列表......["+str(i)+"/"+str(max_page)+ "]"+" "*20+"\b"*20,end='')
@@ -384,9 +393,10 @@ for i in range(2,max_page+1):
         if firstPage.ok==False:
             print("\n获取内容出错，正在重试...")
         else:
+            firstPage=etree.HTML(firstPage.text)
+            if analyzePage(firstPage)== False:
+                continue
             break
-    firstPage=etree.HTML(firstPage.text)
-    analyzePage(firstPage)
 threadlock=threading.Lock()
 gethscreenshotRe=re.compile("ugc/(\\d*)/")
 gettimeRe=re.compile("(\\d*)年(\\d*)月(\\d*)日(\\S*)午(\\d*):(\\d*)")
@@ -403,9 +413,9 @@ for i in range(MAX_THREAD):
 animL=["-","\\","|","/"]
 animI=0
 while True:
+    time.sleep(0.25)
     print("\r正在下载截图["+str(cur_ss)+"/"+str(max_ss)+"]......"+animL[animI]+" "*20+"\b"*20,end='')
     animI=(animI+1)%4
-    time.sleep(0.25)
     isFinished=True
     for thread in ThreadList:
         if thread.is_alive():
@@ -414,4 +424,4 @@ while True:
     if isFinished:
         print("\b同步完成，任意键退出"+" "*20+"\b"*20)
         os.system("pause>nul")
-        exit()
+        exit(0)
