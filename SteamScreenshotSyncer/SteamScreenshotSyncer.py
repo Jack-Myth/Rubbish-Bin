@@ -7,6 +7,7 @@ import threading
 import time
 import getpass
 import base64
+import sys
 try:
     import requests
     from lxml import etree
@@ -263,6 +264,33 @@ class downloadWorkingThread(threading.Thread):
                     f.write(vdf.dumps(screenshotCfg))
                 cur_ss+=1
                 threadlock.release()
+
+if sys.argv.__contains__("-h"):
+    print ("蛇牌Steam截图同步工具 by JackMyth")
+    print ("\t-h:显示帮助信息")
+    print ("\t-mt N 设置最大线程数为N")
+    print ("\t-mto N 设置连接超时时间为N，超时将重新连接")
+    print ("\t-mdt N 设置每张图的最大下载时间为N，超时会重新下载")
+    exit(0)
+for argIndex in range(len(sys.argv)):
+    if  sys.argv[argIndex]=="-mt":
+        if len(sys.argv)>argIndex+1 and sys.argv[argIndex+1].isnumeric():
+            print("已指定最大并发数为:"+sys.argv[argIndex+1]+",默认:"+str(MAX_THREAD))
+            MAX_THREAD=int(sys.argv[argIndex+1])
+        else:
+            print("-mt 需要一个参数，最大并发数将不会修改")
+    elif sys.argv[argIndex]=="-mto":
+        if len(sys.argv)>argIndex+1 and sys.argv[argIndex+1].isnumeric():
+            print("已指定连接超时时间为:"+sys.argv[argIndex+1]+",默认:"+str(MAX_TIMEOUT))
+            MAX_TIMEOUT=int(sys.argv[argIndex+1])
+        else:
+            print("-mto 需要一个参数，连接超时时间将不会修改")
+    elif  sys.argv[argIndex]=="-mdt":
+        if len(sys.argv)>argIndex+1 and sys.argv[argIndex+1].isnumeric():
+            print("已指定每张图的最大下载时间为:"+sys.argv[argIndex+1]+",默认:"+str(MAX_DOWNLOADTIME))
+            MAX_DOWNLOADTIME=int(sys.argv[argIndex+1])
+        else:
+            print("-mdt 需要一个参数，最大下载时间将不会修改")
 
 os.system("title 蛇牌Steam截图同步工具 by JackMyth")
 requests.packages.urllib3.disable_warnings()
