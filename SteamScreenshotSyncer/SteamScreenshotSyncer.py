@@ -138,15 +138,20 @@ def getScreenshotFolder():
             return SteamPath+"\\userdata\\"+userdic[int(selectedIndex)][1]+"\\760\\remote"
 
 def collectExistedScreenshot():
-    global existedScreenshot,syncFolder
+    global existedScreenshot,syncFolder,ScreenshotsKey
     if os.path.exists(syncFolder+"\\..\\screenshots.vdf")==False:
         return
     fp=open(syncFolder+"\\..\\screenshots.vdf","r",encoding="utf8")
     screenshotCfg=vdf.load(fp)
     fp.close()
-    if "Screenshots" not in screenshotCfg:
+    if len(screenshotCfg)<1:
     	return
-    for (app,app_content) in screenshotCfg["Screenshots"].items():
+    for x in screenshotCfg.keys():
+    	if x.capitalize()=="Screenshots":
+    		ScreenshotsKey=x
+    		break
+    print(ScreenshotsKey)
+    for (app,app_content) in screenshotCfg[ScreenshotsKey].items():
         if app.isnumeric()==False:
             continue
         for (screenshotIndex,screenshotItem) in app_content.items():
@@ -241,12 +246,12 @@ class downloadWorkingThread(threading.Thread):
                     fp=open(syncFolder+"\\..\\screenshots.vdf","r",encoding="utf8")
                     screenshotCfg=vdf.load(fp)
                     fp.close()
-                else:
-                    screenshotCfg={"Screenshots":{}}
-                if curKey not in screenshotCfg["Screenshots"]:
-                    screenshotCfg["Screenshots"][curKey]={}
-                targetIndex=len(screenshotCfg["Screenshots"][curKey].keys())
-                screenshotCfg["Screenshots"][curKey][str(targetIndex)]={
+                if ScreenshotsKey not in screenshotCfg:
+	                screenshotCfg={ScreenshotsKey:{}}
+                if curKey not in screenshotCfg[ScreenshotsKey]:
+                    screenshotCfg[ScreenshotsKey][curKey]={}
+                targetIndex=len(screenshotCfg[ScreenshotsKey][curKey].keys())
+                screenshotCfg[ScreenshotsKey][curKey][str(targetIndex)]={
                     "type":"1",
 			        "filename":curKey+ "/screenshots/"+timestr+"00_"+str(ss_index)+".jpg",
                     "thumbnail":curKey+ "/screenshots/thumbnails/"+timestr+"00_"+str(ss_index)+".jpg",
@@ -391,6 +396,7 @@ else:
 
 max_page=1
 cur_page=1
+ScreenshotsKey="Screenshots"
 screenshotDownloadList={}
 args={"appid":targetAppID,"p":1,"privacy":privacy,"browsefilter":"myfiles","sort":"newestfirst","view":"grid"}
 print("正在获取截图列表...",end='')
