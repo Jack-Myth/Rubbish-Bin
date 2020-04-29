@@ -150,7 +150,6 @@ def collectExistedScreenshot():
     	if x.capitalize()=="Screenshots":
     		ScreenshotsKey=x
     		break
-    print(ScreenshotsKey)
     for (app,app_content) in screenshotCfg[ScreenshotsKey].items():
         if app.isnumeric()==False:
             continue
