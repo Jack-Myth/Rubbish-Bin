@@ -144,6 +144,8 @@ def collectExistedScreenshot():
     fp=open(syncFolder+"\\..\\screenshots.vdf","r",encoding="utf8")
     screenshotCfg=vdf.load(fp)
     fp.close()
+    if "Screenshots" not in screenshotCfg:
+    	return
     for (app,app_content) in screenshotCfg["Screenshots"].items():
         if app.isnumeric()==False:
             continue
