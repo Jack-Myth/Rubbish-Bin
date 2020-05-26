@@ -30,6 +30,7 @@ except:
 MAX_THREAD=32    #并发线程数
 MAX_TIMEOUT=5    #弱网适用，最大连接时间(秒)，超时会重新连接
 MAX_DOWNLOADTIME=10    #弱网适用，每张截图的最大下载时间(秒)，超时会重新下载
+CREATE_THUMBNAILS=True      #是否创建缩略图
 
 def login():
     global username,password,twofactor,emailauth,screenshotsURL,isLogin
@@ -158,7 +159,7 @@ def collectExistedScreenshot():
         for (screenshotIndex,screenshotItem) in app_content.items():
             if screenshotItem["hscreenshot"]!="18446744073709551615":  #图片已被上传
                 existedScreenshot.append(screenshotItem["hscreenshot"])
-                if not os.path.exists(syncFolder+"\\"+screenshotItem["thumbnail"]):
+                if CREATE_THUMBNAILS==True and not os.path.exists(syncFolder+"\\"+screenshotItem["thumbnail"]):
                     ppath=os.path.abspath(syncFolder+"\\"+screenshotItem["thumbnail"]+"\\..\\")
                     os.makedirs(ppath,exist_ok=True)
                     img = Image.open(syncFolder+"\\"+screenshotItem["filename"])
@@ -259,8 +260,16 @@ class downloadWorkingThread(threading.Thread):
                 while os.path.exists(syncFolder+"\\"+curKey+"\\screenshots\\"+timestr+"00_"+str(ss_index)+".jpg"):
                     ss_index+=1
                 os.makedirs(syncFolder+"\\"+curKey+"\\screenshots",exist_ok=True)
-                with open(syncFolder+"\\"+curKey+"\\screenshots\\"+timestr+"00_"+str(ss_index)+".jpg","wb+") as f:
+                screenshotFilename=syncFolder+"\\"+curKey+"\\screenshots\\"+timestr+"00_"+str(ss_index)+".jpg"
+                with open(screenshotFilename,"wb+") as f:
                     f.write(screenshotData.content)
+                if CREATE_THUMBNAILS==True:
+                    ppath=syncFolder+"\\"+curKey+"\\screenshots\\thumbnails"
+                    os.makedirs(ppath,exist_ok=True)
+                    img = Image.open(screenshotFilename)
+                    img1=img.resize((200,int(200.0/img.size[0]*img.size[1])),Image.BILINEAR)
+                    img1.save(syncFolder+"\\"+curKey+"\\screenshots\\thumbnails\\"+timestr+"00_"+str(ss_index)+".jpg")
+                    del img,img1
                 threadlock.acquire()
                 if os.path.exists(syncFolder+"\\..\\screenshots.vdf"):
                     fp=open(syncFolder+"\\..\\screenshots.vdf","r",encoding="utf8")
@@ -297,10 +306,12 @@ class downloadWorkingThread(threading.Thread):
 
 if sys.argv.__contains__("-h"):
     print ("蛇牌Steam截图同步工具 by JackMyth")
-    print ("\t-h:显示帮助信息")
-    print ("\t-mt N 设置最大线程数为N")
-    print ("\t-mto N 设置连接超时时间为N，超时将重新连接")
-    print ("\t-mdt N 设置每张图的最大下载时间为N，超时会重新下载")
+    print ("\t-h\t显示帮助信息")
+    print ("\t-mt N\t设置最大线程数为N")
+    print ("\t-mto N\t设置连接超时时间为N，超时将重新连接")
+    print ("\t-mdt N\t设置每张图的最大下载时间为N，超时会重新下载")
+    print ("\t -no_thumbnails\t禁止创建缩略图")
+    print ("\t -create_thumbnails\t创建缩略图(默认)")
     sys.exit(0)
 for argIndex in range(len(sys.argv)):
     if  sys.argv[argIndex]=="-mt":
@@ -321,6 +332,11 @@ for argIndex in range(len(sys.argv)):
             MAX_DOWNLOADTIME=int(sys.argv[argIndex+1])
         else:
             print("-mdt 需要一个参数，最大下载时间将不会修改")
+    elif sys.argv[argIndex]=="-no_thumbnails":
+        CREATE_THUMBNAILS=False
+        print("已禁止创建缩略图")
+    elif sys.argv[argIndex]=="-create_thumbnails":
+        CREATE_THUMBNAILS=True
 
 os.system("title 蛇牌Steam截图同步工具 by JackMyth")
 requests.packages.urllib3.disable_warnings()
