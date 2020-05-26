@@ -9,13 +9,15 @@ import getpass
 import base64
 import sys
 try:
+    from PIL import Image
     import requests
     from lxml import etree
     import rsa
     import vdf
 except:
     print("缺失组件，正在尝试安装。。。")
-    print("如果安装失败，请手动安装以下包：\nrequests\nlxml\nvdf\nrsa")
+    print("如果安装失败，请手动安装以下包：\npillow\nrequests\nlxml\nvdf\nrsa")
+    os.system("pip install pillow")
     os.system("pip install requests")
     os.system("pip install lxml")
     os.system("pip install rsa")
@@ -156,6 +158,18 @@ def collectExistedScreenshot():
         for (screenshotIndex,screenshotItem) in app_content.items():
             if screenshotItem["hscreenshot"]!="18446744073709551615":  #图片已被上传
                 existedScreenshot.append(screenshotItem["hscreenshot"])
+                if not os.path.exists(syncFolder+"\\"+screenshotItem["thumbnail"]):
+                    ppath=os.path.abspath(syncFolder+"\\"+screenshotItem["thumbnail"]+"\\..\\")
+                    os.makedirs(ppath,exist_ok=True)
+                    img = Image.open(syncFolder+"\\"+screenshotItem["filename"])
+                    img1=img.resize((200,int(200.0/img.size[0]*img.size[1])),Image.BILINEAR)
+                    img1.save(syncFolder+"\\"+screenshotItem["thumbnail"])
+                    del img,img1
+
+class ScreenshotInfo:
+    def __init__(self):
+        self.IsSpoiler=False
+        self.FileID=-1
 
 def analyzePage(curPage):
     global screenshotDownloadList
@@ -165,11 +179,18 @@ def analyzePage(curPage):
     for img_page in imgList_page:
         gameAppID = img_page.get("data-appid")
         publishedfileid=img_page.get("data-publishedfileid")
+        spoilercovers = img_page.xpath(".//div[@class=\"image_wall_spoiler_cover\"]")
         if int(gameAppID)==0:
             gameAppID="480"     #将所有非Steam游戏截图同步至Spacewar的截图里
         if screenshotDownloadList.__contains__(gameAppID)==False:
             screenshotDownloadList[gameAppID]=[]
-        screenshotDownloadList[gameAppID].append(publishedfileid)
+        info=ScreenshotInfo()
+        info.FileID=publishedfileid
+        if  len(spoilercovers)>=1:
+            info.IsSpoiler=True
+        else:
+            info.IsSpoiler=False
+        screenshotDownloadList[gameAppID].append(info)
     return True
 
 class downloadWorkingThread(threading.Thread):
@@ -182,13 +203,13 @@ class downloadWorkingThread(threading.Thread):
                 return
             else:
                 curKey=list(screenshotDownloadList.keys())[0]
-                fileID = screenshotDownloadList[curKey].pop()
+                ssInfo = screenshotDownloadList[curKey].pop()
                 if len(screenshotDownloadList[curKey])==0:
                     screenshotDownloadList.pop(curKey)
                 threadlock.release()
             while(True):
                 try:
-                    filepage = steamSession.request("get","https://steamcommunity.com/sharedfiles/filedetails/?id="+str(fileID)+"&l=schinese",verify=False,timeout=MAX_TIMEOUT) 
+                    filepage = steamSession.request("get","https://steamcommunity.com/sharedfiles/filedetails/?id="+str(ssInfo.FileID)+"&l=schinese",verify=False,timeout=MAX_TIMEOUT) 
                 except:
                     continue
                 if filepage.ok==True:
@@ -256,6 +277,7 @@ class downloadWorkingThread(threading.Thread):
                     "thumbnail":curKey+ "/screenshots/thumbnails/"+timestr+"00_"+str(ss_index)+".jpg",
                     "vrfilename":"",
     	    		"imported":"1",
+                    "spoiler":"1",
 	    	    	"width":width,
 		    	    "height":height,
     	    		"gameid"	:curKey,
@@ -266,6 +288,8 @@ class downloadWorkingThread(threading.Thread):
 			        "Permissions":"8",
 			        "hscreenshot"	:hscreenshot,
                 }
+                if ssInfo.IsSpoiler==False:
+                    del screenshotCfg[ScreenshotsKey][curKey][str(targetIndex)]["spoiler"]
                 with open(syncFolder+"\\..\\screenshots.vdf","w+",encoding="utf8") as f:
                     f.write(vdf.dumps(screenshotCfg))
                 cur_ss+=1
