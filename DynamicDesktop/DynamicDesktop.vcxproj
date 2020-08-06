@@ -149,8 +149,10 @@
     <ClInclude Include="IModelBase.h" />
     <ClInclude Include="LineAndCircle.h" />
     <ClInclude Include="D2DUtils.h" />
+    <ClInclude Include="MediaFoundationUtils.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Stars.h" />
+    <ClInclude Include="Utils.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc">

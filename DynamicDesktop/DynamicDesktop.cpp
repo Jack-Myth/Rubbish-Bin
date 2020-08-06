@@ -9,6 +9,7 @@
 #include "Stars.h"
 #include <corecrt_io.h>
 #include <fcntl.h>
+#include "MediaFoundationUtils.h"
 #pragma comment(lib,"d2d1.lib")
 #pragma comment(lib,"mfplat.lib")
 #pragma comment(lib,"mf.lib")
@@ -22,6 +23,15 @@ struct ID2D1Factory* D2D1Factory = NULL;
 struct ID2D1HwndRenderTarget* D2D1HwndRenderTarget = NULL;
 struct IWICImagingFactory* WICImagingFactory = NULL;
 //////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////
+IMFMediaSession* MediaSession = nullptr;
+IMFSourceResolver* MediaResolver=nullptr;
+IMFByteStream* CurMFByteStream=nullptr;
+IMFMediaSource* CurMediaSource = NULL;
+IMFTopology* pTopology = NULL;
+//////////////////////////////////////////////////////////////////////////
+
 
 HWND DesktopHwnd=NULL;
 HWND DesktopWindowHwnd=NULL;
@@ -50,111 +60,6 @@ inline void GetDesktopBackgroundHwnd()
 	} while (WorkerWHwnd);
 	DesktopHwnd = WorkerWHwnd;
 }
-
-class MediaEventCallback :public IMFAsyncCallback
-{
-	IMFMediaSession* MFSession = nullptr;
-	int MediaWidth, MediaHeight;
-public:
-	MediaEventCallback(IMFMediaSession* _MFSession,int _MediaWidth,int _MediaHeight)
-	{
-		MFSession = _MFSession;
-		MediaWidth = _MediaWidth;
-		MediaHeight = _MediaHeight;
-	}
-	virtual HRESULT STDMETHODCALLTYPE GetParameters(__RPC__out DWORD* pdwFlags, __RPC__out DWORD* pdwQueue)
-	{
-		return S_OK;
-	}
-
-
-	virtual HRESULT STDMETHODCALLTYPE Invoke(__RPC__in_opt IMFAsyncResult* pAsyncResult)
-	{
-		IMFMediaEvent* Mediaevent;
-		MFSession->EndGetEvent(pAsyncResult, &Mediaevent);
-		MediaEventType met;
-		Mediaevent->GetType(&met);
-		switch (met)
-		{
-		case MEEndOfPresentation:
-			if (ShouldLoop)
-			{
-				PROPVARIANT varStart;
-				PropVariantInit(&varStart);
-				varStart.vt = VT_I8;
-				varStart.hVal.LowPart = 0;
-				HRESULT hr = MFSession->Start(&GUID_NULL, &varStart);
-				PropVariantClear(&varStart);
-			}
-			else
-				exit(0);
-			break;
-		case MESessionClosed:
-			exit(0);
-			break;
-		case MESessionTopologyStatus:
-		{
-			UINT32 status;
-			HRESULT hr = Mediaevent->GetUINT32(MF_EVENT_TOPOLOGY_STATUS, &status);
-			if (SUCCEEDED(hr) && (status == MF_TOPOSTATUS_READY))
-			{
-
-				// Get the IMFVideoDisplayControl interface from EVR. This call is
-				// expected to fail if the media file does not have a video stream.
-				IMFVideoDisplayControl* m_pVideoDisplay;
-				(void)MFGetService(MFSession, MR_VIDEO_RENDER_SERVICE,
-					IID_PPV_ARGS(&m_pVideoDisplay));
-				float DPIScale = GetDpiForWindow(DesktopHwnd) / 96.f;
-				if (FullVideo)
-				{
-					RECT rcDest = { 0, 0, long(ScreenWidth * DPIScale) ,long(ScreenHeight* DPIScale)};
-					m_pVideoDisplay->SetVideoPosition(nullptr, &rcDest);
-				}
-				else
-				{
-					if ((float)MediaWidth / (float)MediaHeight > (float)ScreenWidth / (float)ScreenHeight)
-					{
-						int TargetWidth =(int)(ScreenHeight * (float)MediaWidth / (float)MediaHeight * DPIScale);
-						int offet = (int)(TargetWidth - ScreenWidth* DPIScale);
-						RECT rcDest = { -offet / 2, 0, -offet/2 + TargetWidth , int(ScreenHeight * DPIScale)};
-						m_pVideoDisplay->SetVideoPosition(nullptr, &rcDest);
-					}
-					else
-					{
-						int TargetHeight = int(ScreenWidth * (float)MediaHeight/ (float)MediaWidth * DPIScale);
-						int offet =(int)(TargetHeight - ScreenHeight* DPIScale);
-						RECT rcDest = { 0,-offet / 2, (int)(ScreenWidth*DPIScale), -offet/2+ TargetHeight };
-						m_pVideoDisplay->SetVideoPosition(nullptr, &rcDest);
-					}
-				}
-				break;
-			}
-		}
-		default:
-			break;
-		}
-		return MFSession->BeginGetEvent(this, NULL);
-	}
-
-
-	virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppvObject)
-	{
-		return S_OK;
-	}
-
-
-	virtual ULONG STDMETHODCALLTYPE AddRef(void)
-	{
-		return S_OK;
-	}
-
-
-	virtual ULONG STDMETHODCALLTYPE Release(void)
-	{
-		return S_OK;
-	}
-
-};
 
 LRESULT CALLBACK LowLevelMouseProc(INT nCode, WPARAM wParam, LPARAM lParam);
 
@@ -230,79 +135,14 @@ int WINAPI wWinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 	else
 	{
 		//Play Video
-		if (MFStartup(MF_VERSION) != S_OK)
+		if (!InitMediaFoundation())
 		{
 			MessageBox(nullptr, TEXT("³õÊ¼»¯Media FoundationÊ§°Ü"), TEXT("Dynamic Desktop"), MB_OK);
 			exit(-1);
 		}
-		IMFMediaSession* MediaSession=nullptr;
-		MFCreateMediaSession(nullptr, &MediaSession);
-		IMFSourceResolver* MediaResolver;
-		MFCreateSourceResolver(&MediaResolver);
-		MF_OBJECT_TYPE OBJType;
-		IUnknown* MediaSource=NULL;
-		MediaResolver->CreateObjectFromURL(VideoPath.c_str(),
-			MF_RESOLUTION_MEDIASOURCE,
-			NULL,
-			&OBJType,
-			&MediaSource);
-		IMFMediaSource* pMediaSource=NULL;
-		MediaSource->QueryInterface(IID_PPV_ARGS(&pMediaSource));
-		IMFPresentationDescriptor* PresentationDescriptor;
-		pMediaSource->CreatePresentationDescriptor(&PresentationDescriptor);
-		IMFTopology* pTopology = NULL;
-		MFCreateTopology(&pTopology);
-		DWORD cSourceStreams = 0;
-		PresentationDescriptor->GetStreamDescriptorCount(&cSourceStreams);
-		UINT32 MediaHeight = 0, MediaWidth = 0;
-		for (DWORD i = 0; i < cSourceStreams; i++)
-		{
-			BOOL Selected=FALSE;
-			IMFStreamDescriptor* pSD = NULL;
-			PresentationDescriptor->GetStreamDescriptorByIndex(i, &Selected, &pSD);
-			if (Selected)
-			{
-				IMFMediaTypeHandler* MediaTypeHandler;
-				pSD->GetMediaTypeHandler(&MediaTypeHandler);
-				GUID MajorType;
-				MediaTypeHandler->GetMajorType(&MajorType);
-				IMFActivate* pActivate = NULL;
-				if (MajorType == MFMediaType_Audio)
-				{
-					if (NoSound)
-						continue;
-					else
-						MFCreateAudioRendererActivate(&pActivate);
-				}
-				else if (MajorType == MFMediaType_Video)
-				{
-					MFCreateVideoRendererActivate(DesktopHwnd, &pActivate);
-					IMFMediaType* MediaType;
-					MediaTypeHandler->GetCurrentMediaType(&MediaType);
-
-					MFGetAttributeSize(MediaType, MF_MT_FRAME_SIZE, &MediaWidth, &MediaHeight);
-				}
-				IMFTopologyNode* SourceTopologyNode,*OutputTopologyNode;
-				MFCreateTopologyNode(MF_TOPOLOGY_SOURCESTREAM_NODE, &SourceTopologyNode);
-				SourceTopologyNode->SetUnknown(MF_TOPONODE_SOURCE, pMediaSource);
-				SourceTopologyNode->SetUnknown(MF_TOPONODE_PRESENTATION_DESCRIPTOR, PresentationDescriptor);
-				SourceTopologyNode->SetUnknown(MF_TOPONODE_STREAM_DESCRIPTOR, pSD);
-				pTopology->AddNode(SourceTopologyNode);
-				MFCreateTopologyNode(MF_TOPOLOGY_OUTPUT_NODE, &OutputTopologyNode);
-				OutputTopologyNode->SetObject(pActivate);
-				OutputTopologyNode->SetUINT32(MF_TOPONODE_NOSHUTDOWN_ON_REMOVE, TRUE);
-				OutputTopologyNode->SetUINT32(MF_TOPONODE_STREAMID, 0);
-				SourceTopologyNode->ConnectOutput(0, OutputTopologyNode, 0);
-				pTopology->AddNode(OutputTopologyNode);
-			}
-		}
-		MediaSession->SetTopology(MFSESSION_SETTOPOLOGY_IMMEDIATE, pTopology);
-		PROPVARIANT varStart;
-		PropVariantInit(&varStart);
-		varStart.vt = VT_EMPTY;
-		HRESULT hr = MediaSession->Start(&GUID_NULL, &varStart);
-		PropVariantClear(&varStart);
-		MediaSession->BeginGetEvent(new MediaEventCallback(MediaSession,MediaWidth,MediaHeight), NULL);
+		auto* callback = new MediaEventCallback();
+		callback->OnMediaEnd = []() {exit(0); };
+		PlayVideoByURL(VideoPath.c_str(), DesktopHwnd, !NoSound, callback, ShouldLoop, FullVideo);
 		while (1)
 			Sleep(16);
 	}

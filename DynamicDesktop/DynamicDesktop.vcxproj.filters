@@ -38,6 +38,12 @@
     <ClInclude Include="Stars.h">
       <Filter>Header Files\Mods</Filter>
     </ClInclude>
+    <ClInclude Include="MediaFoundationUtils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc">
