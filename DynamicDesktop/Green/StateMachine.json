@@ -1,0 +1,263 @@
+[
+  {
+    "StateName": "Enter",
+    "Video": "",
+    "Transform": [
+      {
+        "Logic": "Random",
+        "To": [
+          "Intro0",
+          "Intro1",
+          "Intro2"
+        ]
+      }
+    ]
+  },
+  {
+    "StateName": "Intro0",
+    "Video": "Intro0",
+    "Transform": [
+      {
+        "Logic": "Random",
+        "To": [
+          "Idle"
+        ]
+      }
+    ]
+  },
+  {
+    "StateName": "Intro1",
+    "Video": "Intro1",
+    "Transform": [
+      {
+        "Logic": "Random",
+        "To": [
+          "Idle"
+        ]
+      }
+    ]
+  },
+  {
+    "StateName": "Intro2",
+    "Video": "Intro2",
+    "Transform": [
+      {
+        "Logic": "Random",
+        "To": [
+          "Idle"
+        ]
+      }
+    ]
+  },
+  {
+    "StateName": "Idle",
+    "Video": "Idle",
+    "TransformLogic": [
+      {
+        "Logic": "CheckSleep",
+        "To": [
+          "IdleToSleepA"
+        ]
+      },
+      {
+        "Logic": "CheckLookAt",
+        "To": [
+          "SeeLeft",
+          "SeeRight"
+        ]
+      },
+      {
+        "Logic": "CheckWake",
+        "To": [
+          "Play0",
+          "Play1",
+          "Play2"
+        ]
+      }
+    ]
+  },
+  {
+    "StateName": "Play0",
+    "Video": "Play0",
+    "Transform": [
+      {
+        "Logic": "CheckSleep",
+        "To": [
+          "IdleToSleepA"
+        ]
+      },
+      {
+        "Logic": "CheckLookAt",
+        "To": [
+          "SeeLeft",
+          "SeeRight"
+        ]
+      },
+      {
+        "Logic": "CheckWake",
+        "To": [
+          "Idle",
+          "Play1"
+        ]
+      }
+    ]
+  },
+  {
+    "StateName": "Play1",
+    "Video": "Play1",
+    "Transform": [
+      {
+        "Logic": "CheckSleep",
+        "To": [
+          "IdleToSleepA"
+        ]
+      },
+      {
+        "Logic": "CheckLookAt",
+        "To": [
+          "SeeLeft",
+          "SeeRight"
+        ]
+      },
+      {
+        "Logic": "CheckWake",
+        "To": [
+          "Idle",
+          "Play1"
+        ]
+      }
+    ]
+  },
+  {
+    "StateName": "SeeLeft",
+    "Video": "SeeLeft",
+    "Transform": [
+      {
+        "Logic": "CheckSleep",
+        "To": [
+          "IdleToSleepA"
+        ]
+      },
+      {
+        "Logic": "Random",
+        "To": [
+          "Idle",
+          "Play0",
+          "Play1"
+        ]
+      }
+    ]
+  },
+  {
+    "StateName": "SeeRight",
+    "Video": "SeeRight",
+    "Transform": [
+      {
+        "Logic": "CheckSleep",
+        "To": [
+          "IdleToSleepA"
+        ]
+      },
+      {
+        "Logic": "Random",
+        "To": [
+          "Idle",
+          "Play0",
+          "Play1"
+        ]
+      }
+    ]
+  },
+  {
+    "StateName": "IdleToSleepA",
+    "Video": "IdleToSleepA",
+    "Transform": [
+      {
+        "Logic": "CheckSleep",
+        "To": [
+          "SleepA0",
+          "SleepA1",
+          "SleepALoop"
+        ]
+      },
+      {
+        "Logic": "CheckWake",
+        "To": [
+          "SleepAToIdle"
+        ]
+      }
+    ]
+  },
+  {
+    "StateName": "SleepA0",
+    "Video": "SleepA0",
+    "Transform": [
+      {
+        "Logic": "CheckSleep",
+        "To": [
+          "SleepA1",
+          "SleepALoop",
+          "SleepAToSleepB"
+        ]
+      },
+      {
+        "Logic": "CheckWake",
+        "To": [
+          "SleepAToIdle"
+        ]
+      }
+    ]
+  },
+  {
+    "StateName": "SleepA1",
+    "Video": "SleepA1",
+    "Transform": [
+      {
+        "Logic": "CheckSleep",
+        "To": [
+          "SleepA0",
+          "SleepALoop",
+          "SleepAToSleepB"
+        ]
+      },
+      {
+        "Logic": "CheckWake",
+        "To": [
+          "SleepAToIdle"
+        ]
+      }
+    ]
+  },
+  {
+    "StateName": "SleepALoop",
+    "Video": "SleepALoop",
+    "Transform": [
+      {
+        "Logic": "CheckSleep",
+        "To": [
+          "SleepA0",
+          "SleepA1",
+          "SleepAToSleepB"
+        ]
+      },
+      {
+        "Logic": "CheckWake",
+        "To": [
+          "SleepAToIdle"
+        ]
+      }
+    ]
+  },
+  {
+    "StateName": "SleepBLoop",
+    "Video": "SleepBLoop",
+    "Transform": [
+      {
+        "Logic": "CheckWake",
+        "To": [
+          "SleepBToIdle"
+        ]
+      }
+    ]
+  }
+]

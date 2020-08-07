@@ -13,7 +13,7 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// Chinese (Simplified, PRC) resources
+// 中文(简体，中国) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
@@ -54,7 +54,15 @@ IDB_STAR                PNG                     "star.png"
 
 IDB_CSTAR               PNG                     "ColorfulStar.png"
 
-#endif    // Chinese (Simplified, PRC) resources
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Json
+//
+
+IDR_GREEN_STATEMACHINE  Json                    "Green\\StateMachine.json"
+
+#endif    // 中文(简体，中国) resources
 /////////////////////////////////////////////////////////////////////////////
 
 

@@ -44,6 +44,9 @@
     <ClInclude Include="Utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Green.h">
+      <Filter>Header Files\Mods</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc">
@@ -57,5 +60,13 @@
     <Image Include="star.png">
       <Filter>Resource Files</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="green1.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Green\StateMachine.json">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>
