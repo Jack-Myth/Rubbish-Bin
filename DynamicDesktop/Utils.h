@@ -1,15 +1,17 @@
 #pragma once
 #include <windows.h>
+#include "resource1.h"
 
-inline LPVOID CreateBufferFromResource(LPCWSTR Name,int Type,int* pLength=nullptr)
+inline LPVOID CreateBufferFromResource(LPCWSTR Type,int Resource,int* pLength=nullptr)
 {
-	auto hRresource = FindResource(GetModuleHandle(NULL), Name, MAKEINTRESOURCE(Type));
-	auto hG = LoadResource(GetModuleHandle(NULL), hRresource);
+	auto hResource = FindResource(GetModuleHandle(NULL), MAKEINTRESOURCE(Resource),Type);
+	auto hG = LoadResource(GetModuleHandle(NULL), hResource);
 	LPVOID pData = LockResource(hG);
-	DWORD resourceSize = SizeofResource(GetModuleHandle(NULL), hRresource);
+	DWORD resourceSize = SizeofResource(GetModuleHandle(NULL), hResource);
 	LPVOID pMemData = new char[resourceSize];
 	memcpy(pMemData, pData, resourceSize);
 	UnlockResource(hG);
+	FreeResource(hG);
 	if (pLength)
 		*pLength = resourceSize;
 	return pMemData;

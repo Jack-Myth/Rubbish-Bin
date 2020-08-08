@@ -47,9 +47,15 @@
     <ClInclude Include="Green.h">
       <Filter>Header Files\Mods</Filter>
     </ClInclude>
+    <ClInclude Include="resource1.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="Green.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>
@@ -68,5 +74,23 @@
     <None Include="Green\StateMachine.json">
       <Filter>Resource Files</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Media Include="Green\Idle.mp4" />
+    <Media Include="Green\IdleToSleepA.mp4" />
+    <Media Include="Green\Intro0.mp4" />
+    <Media Include="Green\Intro1.mp4" />
+    <Media Include="Green\Intro2.mp4" />
+    <Media Include="Green\Play0.mp4" />
+    <Media Include="Green\Play1.mp4" />
+    <Media Include="Green\SeeLeft.mp4" />
+    <Media Include="Green\SeeRight.mp4" />
+    <Media Include="Green\SleepA0.mp4" />
+    <Media Include="Green\SleepA1.mp4" />
+    <Media Include="Green\SleepALoop.mp4" />
+    <Media Include="Green\SleepAToIdle.mp4" />
+    <Media Include="Green\SleepAToSleepB.mp4" />
+    <Media Include="Green\SleepBLoop.mp4" />
+    <Media Include="Green\SleepBToIdle.mp4" />
   </ItemGroup>
 </Project>

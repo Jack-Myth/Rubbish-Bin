@@ -1,3 +1,4 @@
+#define _CRTDBG_MAP_ALLOC
 #include <stdio.h>
 #include <mfapi.h>
 #include <windows.h>
@@ -10,6 +11,7 @@
 #include <corecrt_io.h>
 #include <fcntl.h>
 #include "MediaFoundationUtils.h"
+#include "Green.h"
 #pragma comment(lib,"d2d1.lib")
 #pragma comment(lib,"mfplat.lib")
 #pragma comment(lib,"mf.lib")
@@ -29,6 +31,7 @@ IMFMediaSession* MediaSession = nullptr;
 IMFSourceResolver* MediaResolver=nullptr;
 IMFByteStream* CurMFByteStream=nullptr;
 IMFMediaSource* CurMediaSource = NULL;
+IMFMediaSource* PendingKillMediaSource = NULL;
 IMFTopology* pTopology = NULL;
 //////////////////////////////////////////////////////////////////////////
 
@@ -65,6 +68,7 @@ LRESULT CALLBACK LowLevelMouseProc(INT nCode, WPARAM wParam, LPARAM lParam);
 
 int WINAPI wWinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nShowCmd )
 {
+	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 	srand((unsigned int)time(NULL));
 	GetDesktopBackgroundHwnd();
 	int Argc=1;
@@ -97,22 +101,25 @@ int WINAPI wWinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 	}
 	if (VideoPath == TEXT("") || wcslen(lpCmdLine)==0)
 	{
-		switch (rand()%2)
+		switch (rand()%1)
 		{
 		case 0:
+			CurModel = new Green();
+			break;
+		case 1:
 		{
 			auto* lac = new LineAndCircle();
 			CurModel = lac;
 			break;
 		}
-		case 1:
+		case 2:
 			auto * s = new Stars();
 			CurModel = s;
 			break;
 		}
 		CurModel->StartupModel();
 #ifndef _DEBUG
-		hHook=SetWindowsHookEx(WH_MOUSE_LL, (HOOKPROC)LowLevelMouseProc, hInstance, NULL);
+		//hHook=SetWindowsHookEx(WH_MOUSE_LL, (HOOKPROC)LowLevelMouseProc, hInstance, NULL);
 #endif
 		using namespace std::chrono;
 		auto t = std::chrono::system_clock::now();

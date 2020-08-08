@@ -152,10 +152,12 @@
     <ClInclude Include="D2DUtils.h" />
     <ClInclude Include="MediaFoundationUtils.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="resource1.h" />
     <ClInclude Include="Stars.h" />
     <ClInclude Include="Utils.h" />
   </ItemGroup>
   <ItemGroup>
+    <ResourceCompile Include="Green.rc" />
     <ResourceCompile Include="Resource.rc">
       <DeploymentContent>false</DeploymentContent>
     </ResourceCompile>
@@ -171,6 +173,24 @@
   <ItemGroup>
     <None Include="green1.bin" />
     <None Include="Green\StateMachine.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <Media Include="Green\Idle.mp4" />
+    <Media Include="Green\IdleToSleepA.mp4" />
+    <Media Include="Green\Intro0.mp4" />
+    <Media Include="Green\Intro1.mp4" />
+    <Media Include="Green\Intro2.mp4" />
+    <Media Include="Green\Play0.mp4" />
+    <Media Include="Green\Play1.mp4" />
+    <Media Include="Green\SeeLeft.mp4" />
+    <Media Include="Green\SeeRight.mp4" />
+    <Media Include="Green\SleepA0.mp4" />
+    <Media Include="Green\SleepA1.mp4" />
+    <Media Include="Green\SleepALoop.mp4" />
+    <Media Include="Green\SleepAToIdle.mp4" />
+    <Media Include="Green\SleepAToSleepB.mp4" />
+    <Media Include="Green\SleepBLoop.mp4" />
+    <Media Include="Green\SleepBToIdle.mp4" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

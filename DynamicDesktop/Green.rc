@@ -1,0 +1,99 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource1.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "winres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Chinese (Simplified, PRC) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+#pragma code_page(936)
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource1.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""winres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// GREEN
+//
+
+IDR_IDLE                GREEN                   "Green\\Idle.mp4"
+
+IDR_IDLETOSLEEPA        GREEN                   "Green\\IdleToSleepA.mp4"
+
+IDR_INTRO0              GREEN                   "Green\\Intro0.mp4"
+
+IDR_INTRO1              GREEN                   "Green\\Intro1.mp4"
+
+IDR_INTRO2              GREEN                   "Green\\Intro2.mp4"
+
+IDR_PLAY0               GREEN                   "Green\\Play0.mp4"
+
+IDR_PLAY1               GREEN                   "Green\\Play1.mp4"
+
+IDR_SEELEFT             GREEN                   "Green\\SeeLeft.mp4"
+
+IDR_SEERIGHT            GREEN                   "Green\\SeeRight.mp4"
+
+IDR_SLEEPA0             GREEN                   "Green\\SleepA0.mp4"
+
+IDR_SLEEPA1             GREEN                   "Green\\SleepA1.mp4"
+
+IDR_SLEEPALOOP          GREEN                   "Green\\SleepALoop.mp4"
+
+IDR_SLEEPATOIDLE        GREEN                   "Green\\SleepAToIdle.mp4"
+
+IDR_SLEEPATOSLEEPB      GREEN                   "Green\\SleepAToSleepB.mp4"
+
+IDR_SLEEPBLOOP          GREEN                   "Green\\SleepBLoop.mp4"
+
+IDR_SLEEPBTOIDLE        GREEN                   "Green\\SleepBToIdle.mp4"
+
+#endif    // Chinese (Simplified, PRC) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

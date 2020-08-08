@@ -5,10 +5,13 @@
 #include "Utils.h"
 #include <functional>
 #include <map>
+#include "resource1.h"
+#include "MediaFoundationUtils.h"
 
 class Green : public IModelBase
 {
 	using json= nlohmann::json;
+
 	struct GreenStateTransform
 	{
 		std::string Logic;
@@ -19,33 +22,104 @@ class Green : public IModelBase
 		std::string VideoName;
 		std::vector<GreenStateTransform> TransformLogic;
 	};
-	std::map<std::string, std::function<bool(std::vector<std::string>)>> TransformFunctions;
+	std::map<std::string, std::function<int(const std::vector<std::string>&)>> TransformFunctions;
 	std::map<std::string, int> VideoResourceMapper;
 
-	std::vector<GreenState> StateCollection;
+	std::map<std::string,GreenState> StateCollection;
+	
+	std::string CurrentState;
+
+	bool ForceWakeUp=false;
+	inline static int Random(const std::vector<std::string>& States)
+	{
+		return rand() % States.size();
+	}
+
+	inline static int CheckSleep(const std::vector<std::string>& States)
+	{
+		return Random(States);
+	}
+
+	inline int CheckWake(const std::vector<std::string>& States)
+	{
+		if (ForceWakeUp)
+		{
+			ForceWakeUp = false;
+			return Random(States);
+		}
+		return -1;
+	}
+
+	inline static int CheckLookAt(const std::vector<std::string>& States)
+	{
+		return rand() % 2 ? -1: Random(States);
+	}
+
+	MediaEventCallback* GreenMFCallback=nullptr;
+	int LastTryExitTime = 0;
+	int TryExitCount = 0;
+	bool NeedTransform = false,NeedReleaseMem=false;
+	bool Played=false;
 public:
+	void TransformState()
+	{
+		auto& CurrentGreenState = StateCollection[CurrentState];
+		for (auto& CurGST:CurrentGreenState.TransformLogic)
+		{
+			int To = TransformFunctions[CurGST.Logic](CurGST.To);
+			if (To >= 0 && To < CurGST.To.size())
+			{
+				CurrentState = CurGST.To[To];
+				break;
+			}
+		}
+		PlayVideoByResource(TEXT("Green"),
+			VideoResourceMapper[StateCollection[CurrentState].VideoName],
+			DesktopHwnd, false, GreenMFCallback, false, false);
+	}
+
 	void StartupModel() override
 	{
+		InitMediaFoundation();
 		//////////////////////////////////////////////////////////////////////////
 		// Video Mapper and Function Mapper
 		//////////////////////////////////////////////////////////////////////////
+		VideoResourceMapper.insert_or_assign("Intro0", IDR_INTRO0);
+		VideoResourceMapper.insert_or_assign("Intro1", IDR_INTRO1);
+		VideoResourceMapper.insert_or_assign("Intro2", IDR_INTRO2);
+		VideoResourceMapper.insert_or_assign("Idle", IDR_IDLE);
+		VideoResourceMapper.insert_or_assign("IdleToSleepA", IDR_IDLETOSLEEPA);
+		VideoResourceMapper.insert_or_assign("Play0", IDR_PLAY0);
+		VideoResourceMapper.insert_or_assign("Play1", IDR_PLAY1);
+		VideoResourceMapper.insert_or_assign("SeeLeft", IDR_SEELEFT);
+		VideoResourceMapper.insert_or_assign("SeeRight", IDR_SEERIGHT);
+		VideoResourceMapper.insert_or_assign("SleepA0", IDR_SLEEPA0);
+		VideoResourceMapper.insert_or_assign("SleepA1", IDR_SLEEPA1);
+		VideoResourceMapper.insert_or_assign("SleepALoop", IDR_SLEEPALOOP);
+		VideoResourceMapper.insert_or_assign("SleepAToIdle", IDR_SLEEPATOIDLE);
+		VideoResourceMapper.insert_or_assign("SleepAToSleepB", IDR_SLEEPATOSLEEPB);
+		VideoResourceMapper.insert_or_assign("SleepBLoop", IDR_SLEEPBLOOP);
+		VideoResourceMapper.insert_or_assign("SleepBToIdle", IDR_SLEEPBTOIDLE);
 
-
-
+		TransformFunctions.insert_or_assign("Random", Random);
+		TransformFunctions.insert_or_assign("CheckWake", 
+			[this](const std::vector<std::string>& States){return CheckWake(States);});
+		TransformFunctions.insert_or_assign("CheckSleep", CheckSleep);
+		TransformFunctions.insert_or_assign("CheckLookAt", CheckLookAt);
 		//////////////////////////////////////////////////////////////////////////
 		// End Video Mapper and Function Mapper
 		//////////////////////////////////////////////////////////////////////////
 		int Length = 0;
-		char* StateMachineBuffer = (char*)CreateBufferFromResource("Json", IDR_GREEN_STATEMACHINE,&Length);
+		char* StateMachineBuffer = (char*)CreateBufferFromResource(TEXT("JSON"), IDR_GREEN_STATEMACHINE,&Length);
 		char* SMStr = new char[Length + 1];
-		memcpy(SMStr, StateMachineBuffer);
+		memcpy(SMStr, StateMachineBuffer,Length);
 		SMStr[Length] = 0;
 		delete StateMachineBuffer;
 		json StateList= json::parse(SMStr);
 		for (auto& CurStateJson : StateList)
 		{
 			GreenState CurState;
-			std::string VideoName = CurStateJson["VideoName"];
+			CurState.VideoName = CurStateJson["Video"];
 			auto& TransformList = CurStateJson["Transform"];
 			for (auto& CurTransformJson:TransformList)
 			{
@@ -55,31 +129,62 @@ public:
 					CurTransform.To.push_back(ToJson);
 				CurState.TransformLogic.push_back(CurTransform);
 			}
+			StateCollection.insert_or_assign(CurStateJson["StateName"], CurState);
 		}
+		CurrentState = "Enter";
+		GreenMFCallback = new MediaEventCallback();
+		GreenMFCallback->OnMediaEnd = [this]() 
+		{
+			this->NeedTransform = true;
+		};
+		TransformState();
 	}
 
 
 	void ShutdownModel() override
 	{
-		throw std::logic_error("The method or operation is not implemented.");
 	}
 
 
 	void Tick(float delta) override
 	{
-		throw std::logic_error("The method or operation is not implemented.");
+		if (NeedTransform)
+		{
+			NeedTransform = false;
+			TransformState();
+		}
+
 	}
 
 
 	void OnMouseDown(int VKey, bool IsOnDesktop) override
 	{
-		throw std::logic_error("The method or operation is not implemented.");
+		if (!IsOnDesktop)
+			return;
+		switch (VKey)
+		{
+		case VK_LBUTTON:
+			ForceWakeUp = true;
+			break;
+		case VK_MBUTTON:
+			if (LastTryExitTime < 1000)
+				TryExitCount += 1;
+			else
+				TryExitCount = 0;
+			LastTryExitTime = 0;
+			if (TryExitCount >= 5)
+			{
+				MessageBox(NULL, TEXT("Designed By JackMyth"), TEXT("Dynamic Desktop"), MB_OK);
+				exit(0);
+			}
+			break;
+		default:
+			break;
+		}
 	}
-
 
 	void OnMouseUp(int VKey) override
 	{
-		throw std::logic_error("The method or operation is not implemented.");
-	}
 
+	}
 };

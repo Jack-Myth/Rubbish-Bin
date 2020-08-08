@@ -41,7 +41,6 @@ public:
 		return S_OK;
 	}
 
-
 	virtual HRESULT STDMETHODCALLTYPE Invoke(__RPC__in_opt IMFAsyncResult* pAsyncResult)
 	{
 		IMFMediaEvent* Mediaevent;
@@ -61,10 +60,10 @@ public:
 				PropVariantClear(&varStart);
 			}
 			else
+			{
+				//pVideoDisplay = NULL;
 				OnMediaEnd();
-			break;
-		case MESessionClosed:
-			exit(0);
+			}
 			break;
 		case MESessionTopologyStatus:
 		{
@@ -72,17 +71,25 @@ public:
 			HRESULT hr = Mediaevent->GetUINT32(MF_EVENT_TOPOLOGY_STATUS, &status);
 			if (SUCCEEDED(hr) && (status == MF_TOPOSTATUS_READY))
 			{
-
+				//第一时间把视频缩为最小，避免显示出黑屏
+				IMFVideoDisplayControl* pVideoDisplay;
+				(void)MFGetService(MFSession, MR_VIDEO_RENDER_SERVICE,
+					IID_PPV_ARGS(&pVideoDisplay));
+				RECT rcDest = { 0,0,0,0 };
+				pVideoDisplay->SetVideoPosition(nullptr, &rcDest);
+			}
+			else if(SUCCEEDED(hr) && (status ==MF_TOPOSTATUS_STARTED_SOURCE))
+			{
 				// Get the IMFVideoDisplayControl interface from EVR. This call is
 				// expected to fail if the media file does not have a video stream.
-				IMFVideoDisplayControl* m_pVideoDisplay;
+				IMFVideoDisplayControl* pVideoDisplay;
 				(void)MFGetService(MFSession, MR_VIDEO_RENDER_SERVICE,
-					IID_PPV_ARGS(&m_pVideoDisplay));
+					IID_PPV_ARGS(&pVideoDisplay));
 				float DPIScale = GetDpiForWindow(DesktopHwnd) / 96.f;
 				if (m_FullVideo)
 				{
 					RECT rcDest = { 0, 0, long(ScreenWidth * DPIScale) ,long(ScreenHeight * DPIScale) };
-					m_pVideoDisplay->SetVideoPosition(nullptr, &rcDest);
+					pVideoDisplay->SetVideoPosition(nullptr, &rcDest);
 				}
 				else
 				{
@@ -91,14 +98,14 @@ public:
 						int TargetWidth = (int)(ScreenHeight * (float)MediaWidth / (float)MediaHeight * DPIScale);
 						int offet = (int)(TargetWidth - ScreenWidth * DPIScale);
 						RECT rcDest = { -offet / 2, 0, -offet / 2 + TargetWidth , int(ScreenHeight * DPIScale) };
-						m_pVideoDisplay->SetVideoPosition(nullptr, &rcDest);
+						pVideoDisplay->SetVideoPosition(nullptr, &rcDest);
 					}
 					else
 					{
 						int TargetHeight = int(ScreenWidth * (float)MediaHeight / (float)MediaWidth * DPIScale);
 						int offet = (int)(TargetHeight - ScreenHeight * DPIScale);
 						RECT rcDest = { 0,-offet / 2, (int)(ScreenWidth * DPIScale), -offet / 2 + TargetHeight };
-						m_pVideoDisplay->SetVideoPosition(nullptr, &rcDest);
+						pVideoDisplay->SetVideoPosition(nullptr, &rcDest);
 					}
 				}
 				break;
@@ -158,10 +165,9 @@ inline void PlayCurrentVideoInternal(HWND TargetHwnd, bool HaveSound, MediaEvent
 			}
 			else if (MajorType == MFMediaType_Video)
 			{
-				MFCreateVideoRendererActivate(DesktopHwnd, &pActivate);
+				MFCreateVideoRendererActivate(TargetHwnd, &pActivate);
 				IMFMediaType* MediaType;
 				MediaTypeHandler->GetCurrentMediaType(&MediaType);
-
 				MFGetAttributeSize(MediaType, MF_MT_FRAME_SIZE, &MediaWidth, &MediaHeight);
 			}
 			IMFTopologyNode* SourceTopologyNode, * OutputTopologyNode;
@@ -172,7 +178,7 @@ inline void PlayCurrentVideoInternal(HWND TargetHwnd, bool HaveSound, MediaEvent
 			pTopology->AddNode(SourceTopologyNode);
 			MFCreateTopologyNode(MF_TOPOLOGY_OUTPUT_NODE, &OutputTopologyNode);
 			OutputTopologyNode->SetObject(pActivate);
-			OutputTopologyNode->SetUINT32(MF_TOPONODE_NOSHUTDOWN_ON_REMOVE, TRUE);
+			OutputTopologyNode->SetUINT32(MF_TOPONODE_NOSHUTDOWN_ON_REMOVE, FALSE);
 			OutputTopologyNode->SetUINT32(MF_TOPONODE_STREAMID, 0);
 			SourceTopologyNode->ConnectOutput(0, OutputTopologyNode, 0);
 			pTopology->AddNode(OutputTopologyNode);
@@ -192,9 +198,9 @@ inline bool InitMediaFoundation()
 {
 	if (FAILED(MFStartup(MF_VERSION)))
 		return false;
-	if (FAILED(MFCreateMediaSession(nullptr, &MediaSession)))
-		return false;
 	if (FAILED(MFCreateSourceResolver(&MediaResolver)))
+		return false;
+	if (FAILED(MFCreateMediaSession(nullptr, &MediaSession)))
 		return false;
 	return true;
 }
@@ -230,8 +236,8 @@ inline void PlayVideoByURL(
 }
 
 inline void PlayVideoByResource(
-	LPCWSTR Name,
-	int Type,
+	LPCWSTR Type,
+	int Name,
 	HWND TargetHwnd,
 	bool HaveSound,
 	MediaEventCallback* Callback,
@@ -241,18 +247,21 @@ inline void PlayVideoByResource(
 	if (CurMediaSource)
 	{
 		CurMediaSource->Stop();
+		//CurMediaSource->Shutdown();
 		CurMediaSource->Release();
 		pTopology->Release();
+		CurMediaSource = NULL;
 	}
 	if (CurMFByteStream)
 	{
 		CurMFByteStream->Close();
 		CurMFByteStream->Release();
+		CurMFByteStream = NULL;
 	}
 	MF_OBJECT_TYPE OBJType;
 	IUnknown* MediaSource = NULL;
 	int Length = 0;
-	auto VideoResourceBuffer = CreateBufferFromResource(Name, Type, &Length);
+	auto VideoResourceBuffer = CreateBufferFromResource(Type, Name, &Length);
 	HRESULT hr=MFCreateTempFile(
 		MF_ACCESSMODE_READWRITE,
 		MF_OPENMODE_DELETE_IF_EXIST,
@@ -263,11 +272,15 @@ inline void PlayVideoByResource(
 		return;
 	ULONG wroteBytes = 0;
 	CurMFByteStream->Write((BYTE*)VideoResourceBuffer, Length, &wroteBytes);
-	MediaResolver->CreateObjectFromByteStream(CurMFByteStream, nullptr,
+	CurMFByteStream->SetCurrentPosition(0);
+	delete VideoResourceBuffer;
+	hr=MediaResolver->CreateObjectFromByteStream(CurMFByteStream, TEXT("1.mp4"),
 		MF_RESOLUTION_MEDIASOURCE,
 		NULL,
 		&OBJType,
 		&MediaSource);
+	if (FAILED(hr))
+		return;
 	MediaSource->QueryInterface(IID_PPV_ARGS(&CurMediaSource));
 	PlayCurrentVideoInternal(TargetHwnd, HaveSound, Callback, _ShouldLoop, _FullVideo);
 }
