@@ -8,6 +8,8 @@
 #include "resource1.h"
 #include "MediaFoundationUtils.h"
 
+extern HWND DesktopWindowHwnd;
+
 class Green : public IModelBase
 {
 	using json= nlohmann::json;
@@ -37,7 +39,15 @@ class Green : public IModelBase
 
 	inline static int CheckSleep(const std::vector<std::string>& States)
 	{
-		return Random(States);
+		RECT rcRect;
+		HWND CurWindow = GetForegroundWindow();
+		if (CurWindow == DesktopWindowHwnd)
+			return -1;
+		GetWindowRect(CurWindow, &rcRect);
+		if (rcRect.right >= ScreenWidth * 0.55f && rcRect.left <= ScreenWidth * 0.45f)
+			return Random(States);
+		else
+			return -1;
 	}
 
 	inline int CheckWake(const std::vector<std::string>& States)
@@ -47,12 +57,28 @@ class Green : public IModelBase
 			ForceWakeUp = false;
 			return Random(States);
 		}
+		else if (CheckSleep(States) < 0)
+		{
+			return Random(States);
+		}
 		return -1;
 	}
 
 	inline static int CheckLookAt(const std::vector<std::string>& States)
 	{
-		return rand() % 2 ? -1: Random(States);
+		RECT rcRect;
+		//判断太过简单粗暴，实际上还可能会有竖屏的情况
+		//所以理论上应当加入屏幕长宽比进行计算
+		HWND CurWindow = GetForegroundWindow();
+		if (CurWindow == DesktopWindowHwnd)
+			return -1;
+		GetWindowRect(CurWindow, &rcRect);
+		if (rcRect.right < ScreenWidth * 0.45f)
+			return 0;
+		else if (rcRect.left > ScreenWidth * 0.55f)
+			return 1;
+		else 
+			return -1;
 	}
 
 	MediaEventCallback* GreenMFCallback=nullptr;
@@ -104,7 +130,8 @@ public:
 		TransformFunctions.insert_or_assign("Random", Random);
 		TransformFunctions.insert_or_assign("CheckWake", 
 			[this](const std::vector<std::string>& States){return CheckWake(States);});
-		TransformFunctions.insert_or_assign("CheckSleep", CheckSleep);
+		TransformFunctions.insert_or_assign("CheckSleep", 
+			[this](const std::vector<std::string>& States) {return ForceWakeUp?-1:CheckSleep(States); });
 		TransformFunctions.insert_or_assign("CheckLookAt", CheckLookAt);
 		//////////////////////////////////////////////////////////////////////////
 		// End Video Mapper and Function Mapper
@@ -155,7 +182,6 @@ public:
 		}
 
 	}
-
 
 	void OnMouseDown(int VKey, bool IsOnDesktop) override
 	{

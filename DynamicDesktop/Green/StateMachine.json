@@ -52,7 +52,7 @@
   {
     "StateName": "Idle",
     "Video": "Idle",
-    "TransformLogic": [
+    "Transform": [
       {
         "Logic": "CheckSleep",
         "To": [
@@ -184,6 +184,34 @@
         "Logic": "CheckWake",
         "To": [
           "SleepAToIdle"
+        ]
+      }
+    ]
+  },
+  {
+    "StateName": "SleepAToIdle",
+    "Video": "SleepAToIdle",
+    "Transform": [
+      {
+        "Logic": "CheckSleep",
+        "To": [
+          "SleepA0",
+          "SleepA1",
+          "SleepALoop"
+        ]
+      },
+      {
+        "Logic": "CheckLookAt",
+        "To": [
+          "SeeLeft",
+          "SeeRight"
+        ]
+      },
+      {
+        "Logic": "CheckWake",
+        "To": [
+          "Play0",
+          "Play1"
         ]
       }
     ]
